@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thư Viện AI Chatbot Web</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <!-- Sidebar chọn model -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h2>
+                <span>🧠</span><span> </span>
+                <span>T</span><span>h</span><span>ư</span><span> </span>
+                <span>V</span><span>i</span><span>ệ</span><span>n</span><span> </span>
+                <span>A</span><span>I</span>
+            </h2>
+            <div class="user-section" id="user-section" style="display: none;">
+                <div class="user-info">
+                    <span id="user-name">User</span>
+                    <span id="user-credits" class="credits">0 credits</span>
+                </div>
+                <div class="user-actions">
+                    <a href="dashboard.html" class="btn-dashboard">Dashboard</a>
+                    <a href="pricing.html" class="btn-pricing">Nạp credits</a>
+                    <button onclick="logout()" class="btn-logout">Đăng xuất</button>
+                </div>
+            </div>
+            <div class="auth-section" id="auth-section">
+                <a href="login.html" class="btn-login">Đăng nhập</a>
+                <a href="register.html" class="btn-register">Đăng ký</a>
+            </div>
+        </div>
+        <label for="model-select">Chọn mô hình:</label>
+        <select id="model-select">
+            <option value="ensemble">🤖 Tất cả AI (Ensemble)</option>
+            <option value="o3-mini">1. OpenAI o3-mini</option>
+            <option value="o3">2. OpenAI o3</option>
+            <option value="GPT-4O">3. GPT-4O</option>
+            <option value="gpt-4-turbo">4. GPT-4 Turbo</option>
+            <option value="gemini-2-5-pro">5. Gemini 2.5 Pro</option>
+            <option value="gemini-pro">6. Gemini Pro 1.5</option>
+            <option value="gemini-ultra">7. Gemini Ultra</option>
+            <option value="claude-3-5-sonnet">8. Claude 3.5 Sonnet</option>
+            <option value="claude-3-5-haiku">9. Claude 3.5 Haiku</option>
+            <option value="claude-3-opus">10. Claude 3 Opus</option>
+            <option value="grok-2">11. Grok-2</option>
+            <option value="grok-2-mini">12. Grok-2 Mini</option>
+            <option value="llama-3-3-70b">13. Llama 3.3 70B</option>
+            <option value="llama-3-1-405b">14. Llama 3.1 405B</option>
+            <option value="qwen-2-5-72b">15. Qwen 2.5 72B</option>
+            <option value="qwen-2-5-coder">16. Qwen 2.5 Coder</option>
+            <option value="deepseek-v3">17. DeepSeek-V3</option>
+            <option value="deepseek-coder">18. DeepSeek Coder V2</option>
+            <option value="mistral-large">19. Mistral Large 2</option>
+            <option value="mistral-nemo">20. Mistral Nemo</option>
+            <option value="yi-large">21. Yi-Large</option>alo
+            Arctic</option>
+            <option value="wizardlm-2">26. WizardLM-2</option>
+            <option value="solar-pro">27. Solar Pro</option>
+            <option value="mixtral-8x22b">28. Mixtral 8x22B</option>
+        </select>
+        <!-- Upload tài liệu -->
+        <div class="document-section">
+            <h3>📄 Tài liệu</h3>
+            <button id="manage-docs-btn" class="manage-docs-button">📚 Quản lý tài liệu</button>
+            <input type="file" id="document-upload" accept=".pdf,.doc,.docx,.xls,.xlsx,.txt" style="display:none">
+            <button id="upload-btn" class="upload-button">📎 Tải nhanh</button>
+            <div id="document-info" class="document-info" style="display:none">
+                <p id="doc-name"></p>
+                <button id="remove-doc" class="remove-doc">❌ Xóa</button>
+            </div>
+        </div>
+
+        <!-- Chế độ xử lý -->
+        <div class="processing-mode">
+            <h3>⚙️ Chế độ xử lý</h3>
+            <label>
+                <input type="radio" name="processing-mode" value="single" checked>
+                <span>Đơn lẻ (1 AI)</span>
+            </label>
+            <label>
+                <input type="radio" name="processing-mode" value="ensemble">
+                <span>Ensemble (4 AI hàng đầu)</span>
+            </label>
+            <label>
+                <input type="radio" name="processing-mode" value="distributed">
+                <span>🚀 Phân tán (28 AI phân công)</span>
+            </label>
+        </div>
+
+        <div class="mode-info">
+            <p><strong>Chế độ Phân tán:</strong></p>
+            <p>28 AI sẽ phân công nhiệm vụ thông minh: AI mạnh xử lý việc nặng, AI khác kiểm duyệt và hoàn thiện!</p>
+        </div>
+        <footer>© Thư Viện AI</footer>
+    </aside>
+    <!-- Khu vực chat -->
+    <main class="chat-container">
+        <header class="chat-header">
+            <span>Trợ lý AI trong công việc</span>
+            <span id="loading" class="loading" style="display:none">Đang xử lý...</span>
+        </header>
+        <section id="chat-area" class="chat-area">
+            <!-- Tin nhắn sẽ được thêm vào đây -->
+        </section>
+        <!-- Progress bar cho chế độ phân tán -->
+        <div id="progress-container" class="progress-container" style="display:none">
+            <div class="progress-bar">
+                <div id="progress-fill" class="progress-fill"></div>
+            </div>
+            <p id="progress-text">Đang xử lý...</p>
+        </div>
+
+        <form id="chat-form" class="chat-form">
+            <input type="text" id="chat-input" placeholder="Nhập tin nhắn hoặc hỏi về tài liệu..." autocomplete="off"
+                required />
+            <button type="submit" id="send-btn">Gửi</button>
+        </form>
+    </main>
+    <!-- Thư viện xử lý tài liệu -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <!-- Scripts của ứng dụng -->
+    <script src="config.js?v=3"></script>
+    <script src="script-backend.js?v=3"></script>
+    
+    <!-- Script quản lý trạng thái đăng nhập -->
+    <script>
+        // Kiểm tra trạng thái đăng nhập khi trang load
+        document.addEventListener('DOMContentLoaded', function() {
+            checkLoginStatus();
+        });
+
+        function checkLoginStatus() {
+            const userData = localStorage.getItem('user');
+            const authSection = document.getElementById('auth-section');
+            const userSection = document.getElementById('user-section');
+            
+            if (userData) {
+                // User đã đăng nhập
+                try {
+                    const user = JSON.parse(userData);
+                    
+                    // Ẩn section đăng nhập/đăng ký
+                    if (authSection) {
+                        authSection.style.display = 'none';
+                    }
+                    
+                    // Hiện section user
+                    if (userSection) {
+                        userSection.style.display = 'block';
+                        
+                        // Cập nhật thông tin user
+                        const userNameElement = document.getElementById('user-name');
+                        const userCreditsElement = document.getElementById('user-credits');
+                        
+                        if (userNameElement) {
+                            userNameElement.textContent = user.username || 'User';
+                        }
+                        
+                        if (userCreditsElement) {
+                            userCreditsElement.textContent = (user.credits || 0) + ' credits';
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error parsing user data:', error);
+                    // Nếu có lỗi, hiển thị lại section đăng nhập
+                    showAuthSection();
+                }
+            } else {
+                // User chưa đăng nhập
+                showAuthSection();
+            }
+        }
+
+        function showAuthSection() {
+            const authSection = document.getElementById('auth-section');
+            const userSection = document.getElementById('user-section');
+            
+            if (authSection) {
+                authSection.style.display = 'block';
+            }
+            
+            if (userSection) {
+                userSection.style.display = 'none';
+            }
+        }
+
+        function logout() {
+            // Xóa dữ liệu user khỏi localStorage
+            localStorage.removeItem('user');
+            localStorage.removeItem('token');
+            
+            // Hiển thị lại section đăng nhập/đăng ký
+            showAuthSection();
+            
+            // Thông báo đăng xuất thành công
+            alert('Đăng xuất thành công!');
+            
+            // Reload trang để đảm bảo trạng thái được cập nhật
+            window.location.reload();
+        }
+
+        // Lắng nghe sự kiện storage để cập nhật khi đăng nhập từ tab khác
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'user') {
+                checkLoginStatus();
+            }
+        });
+    </script>
+</body>
+
+</html>
