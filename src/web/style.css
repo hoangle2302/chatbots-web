@@ -595,6 +595,40 @@ body {
     }
 }
 
+/* ===== AUTH BUTTONS SPACING FIX ===== */
+.auth-section {
+    display: flex;
+    gap: 30px !important;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.btn-login {
+    margin-right: 20px !important;
+    padding: 12px 24px !important;
+}
+
+.btn-register {
+    margin-left: 10px !important;
+    padding: 12px 24px !important;
+}
+
+/* Ensure buttons have proper styling */
+.btn-login, .btn-register {
+    border-radius: 25px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: inline-block;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.btn-login:hover, .btn-register:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
 /* ===== PROVIDER LIST STYLES ===== */
 .provider-container {
     margin-bottom: 25px;

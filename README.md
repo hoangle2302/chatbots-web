@@ -561,6 +561,7 @@ MIT License - Xem file [LICENSE](LICENSE) để biết thêm chi tiết.
 ---
 
 **© 2025 Thư Viện AI. All rights reserved.**
+<<<<<<< HEAD
 
 ---
 
@@ -621,5 +622,15 @@ MIT License - Xem file [LICENSE](LICENSE) để biết thêm chi tiết.
 #                         \|/
 #                        {   } 
 #                     a di đà phật
+=======
+## Danh sách thành viên đóng góp cho dự án
+| STT | Họ và Tên | MSSV | Vai Trò |
+|--|--|--|--|
+| 01 | <div align="center">Trần Hải Bằng</div> | <div align="center">000</div> | <div align="center">Nhóm Trưởng</div> |
+| 02 | <div align="center">Lê Huy Hoàng</div> | <div align="center">077205003839</div> | <div align="center">Thành Viên</div> |
+| 03 | <div align="center">Lương Thị Bích Hằng</div> | <div align="center">000</div> | <div align="center">Thành Viên</div> |
+| 04 | <div align="center">Phan Minh Hòa</div> | <div align="center">000</div> | <div align="center">Thành Viên</div> |
+| 05 | <div align="center">Hồ Ngọc Quyền</div> | <div align="center">000</div> | <div align="center">Thành Viên</div> |
+>>>>>>> f5dc12ac1adc6b616da13bea29435aac97e9a94a
 
 *Được xây dựng với ❤️ bằng PHP, JavaScript và modern web technologies.*
