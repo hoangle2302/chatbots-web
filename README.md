@@ -1,48 +1,77 @@
-# 🧠 Thư Viện AI - Hệ thống AI Chat & Authentication
+# 🧠 Thư Viện AI - Hệ thống AI Chat & Authentication với 449 AI Models
 
 [![PHP Version](https://img.shields.io/badge/PHP-8.4+-blue.svg)](https://php.net)
 [![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-yellow.svg)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
 [![HTML5](https://img.shields.io/badge/HTML5-5.0-orange.svg)](https://developer.mozilla.org/en-US/docs/Web/HTML)
 [![CSS3](https://img.shields.io/badge/CSS3-3.0-blue.svg)](https://developer.mozilla.org/en-US/docs/Web/CSS)
+[![AI Models](https://img.shields.io/badge/AI_Models-449-purple.svg)](AI_MODELS_LIST.md)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-Hệ thống AI Chat hiện đại với authentication hoàn chỉnh, hỗ trợ đăng nhập/đăng ký và quản lý trạng thái người dùng thông minh.
+Hệ thống AI Chat hiện đại với authentication hoàn chỉnh, tích hợp 449 AI models từ các nhà cung cấp hàng đầu, hỗ trợ ENSEMBLE mode và Qwen AI miễn phí.
 
 ## 🎯 **Tổng quan dự án**
 
 **Thư Viện AI** là một hệ thống web application hoàn chỉnh bao gồm:
+
+### 🔐 **Core Features:**
 - ✅ **Authentication System** - Đăng nhập/đăng ký với localStorage
-- ✅ **Real AI Chat Interface** - Chat với AI models thật (GPT-4, Claude, Gemini...)
-- ✅ **Key4U API Integration** - Kết nối với AI models thật qua Key4U API
-- ✅ **Qwen API Integration** - Tích hợp Qwen AI với streaming response
-- ✅ **ENSEMBLE Mode** - Chế độ kết hợp nhiều AI models
 - ✅ **User Management** - Quản lý trạng thái người dùng
+- ✅ **Document Processing** - Upload và phân tích tài liệu
 - ✅ **Responsive Design** - Giao diện thích ứng mọi thiết bị
 - ✅ **Clean Architecture** - Kiến trúc gọn gàng, dễ bảo trì
+
+### 🤖 **AI Integration:**
+- ✅ **449 AI Models** - Hỗ trợ đầy đủ các loại AI models
+- ✅ **Key4U API Integration** - GPT-4, Claude, Gemini, DALL-E, Midjourney...
+- ✅ **Qwen AI Integration** - Miễn phí với streaming response
+- ✅ **ENSEMBLE Mode** - Kết hợp multiple AI responses
+- ✅ **Real-time Chat** - Chat interface với streaming
+- ✅ **Multi-modal Support** - Text, Image, Audio, Video processing
+
+### 📊 **AI Models Breakdown:**
+- 🗣️ **Chat/Text Models** (147) - GPT-4, Claude, Gemini, Qwen, Llama
+- 🎨 **Image Models** (95) - DALL-E, Midjourney, Stable Diffusion
+- 🎵 **Audio Models** (31) - TTS, STT, Music Generation
+- 🎬 **Video Models** (19) - Runway, Pika Labs, Stable Video
+- 🔍 **Embedding Models** (31) - OpenAI, Cohere, Hugging Face
+- 🛡️ **Moderation Models** (19) - Content moderation
+- ⚡ **Special Models** (107) - Code generation, Math, Tools
 
 ## 🏗️ **Kiến trúc hệ thống**
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                        THƯ VIỆN AI                            │
+│                    THƯ VIỆN AI - 449 AI MODELS                │
 ├─────────────────────────────────────────────────────────────────┤
 │  Frontend (Port 8001)     │  Backend PHP (Port 8000)          │
 │  ┌─────────────────────┐  │  ┌─────────────────────────────┐   │
 │  │ • index.html        │  │  │ • auth-login.php           │   │
 │  │ • login.html        │  │  │ • auth-register.php        │   │
 │  │ • register.html     │  │  │ • auth.php                 │   │
-│  │ • script-backend.js │  │  │ • documents.php            │   │
-│  │ • style.css         │  │  │ • health.php               │   │
-│  │ • config.js         │  │  │ • index.php (Router)       │   │
-│  └─────────────────────┘  │  └─────────────────────────────┘   │
-│                            │                                    │
-│  Authentication Flow:      │  API Endpoints:                   │
-│  ┌─────────────────────┐  │  ┌─────────────────────────────┐   │
-│  │ 1. User đăng ký     │◄─┼──│ POST /api/auth-register.php │   │
-│  │ 2. Lưu vào localStorage│ │  POST /api/auth-login.php    │   │
-│  │ 3. Ẩn nút đăng nhập  │  │  GET  /api/health.php        │   │
-│  │ 4. Hiện thông tin user│ │  POST /api/documents.php     │   │
-│  └─────────────────────┘  │  └─────────────────────────────┘   │
+│  │ • dashboard.html    │  │  │ • chat-real.php (AI Chat)  │   │
+│  │ • document-manager  │  │  │ • documents.php            │   │
+│  │ • pricing.html      │  │  │ • health.php               │   │
+│  │ • script-backend.js │  │  │ • index.php (Router)       │   │
+│  │ • style.css         │  │  └─────────────────────────────┘   │
+│  │ • config.js         │  │                                    │
+│  └─────────────────────┘  │  AI Services:                      │
+│                            │  ┌─────────────────────────────┐   │
+│  AI Models Integration:    │  │ • Key4UService.php (449)   │   │
+│  ┌─────────────────────┐  │  │ • QwenService.php (Free)   │   │
+│  │ • 449 AI Models     │  │  │ • AIService.php (Core)     │   │
+│  │ • ENSEMBLE Mode     │  │  │ • DocumentService.php      │   │
+│  │ • Real-time Chat    │  │  │ • UserService.php          │   │
+│  │ • Multi-modal UI    │  │  └─────────────────────────────┘   │
+│  └─────────────────────┘  │                                    │
+│                            │  API Endpoints:                   │
+│  Authentication Flow:      │  ┌─────────────────────────────┐   │
+│  ┌─────────────────────┐  │  │ POST /api/auth-register.php │   │
+│  │ 1. User đăng ký     │◄─┼──│ POST /api/auth-login.php    │   │
+│  │ 2. Lưu vào localStorage│ │  │ POST /api/chat-real.php    │   │
+│  │ 3. Ẩn nút đăng nhập  │  │  │ GET  /api/health.php       │   │
+│  │ 4. Hiện thông tin user│ │  │ POST /api/documents.php    │   │
+│  │ 5. Chọn AI Model    │  │  └─────────────────────────────┘   │
+│  └─────────────────────┘  │                                    │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -78,20 +107,14 @@ Hệ thống AI Chat hiện đại với authentication hoàn chỉnh, hỗ tr�
 ## 📁 **Cấu trúc thư mục**
 
 ```
-ThuVienAI/
-├── 📁 assets/                     # Tài nguyên tĩnh
-├── 📁 config/                     # Cấu hình toàn cục
-│   └── 📄 config.js               # Cấu hình frontend
-├── 📁 data/                       # Database & uploads
-│   ├── 📁 database/
-│   │   └── 📄 thuvien_ai.db      # SQLite database
-│   └── 📁 uploads/               # File uploads
+ThuVienAI/ (449 AI MODELS)
 ├── 📁 src/
-│   ├── 📁 php-backend/           # Backend PHP
-│   │   ├── 📁 api/               # API Endpoints (7 files)
+│   ├── 📁 php-backend/           # Backend PHP (8 API + 5 Services)
+│   │   ├── 📁 api/               # API Endpoints (8 files)
 │   │   │   ├── 📄 auth-login.php    # API đăng nhập
 │   │   │   ├── 📄 auth-register.php # API đăng ký
 │   │   │   ├── 📄 auth.php          # API auth chính
+│   │   │   ├── 📄 chat-real.php     # AI Chat API (449 models)
 │   │   │   ├── 📄 documents.php     # API tài liệu
 │   │   │   ├── 📄 health.php        # Health check
 │   │   │   ├── 📄 index.php         # Router chính
@@ -101,38 +124,49 @@ ThuVienAI/
 │   │   │   └── 📄 Database.php       # Database connection
 │   │   ├── 📁 middleware/        # Middleware
 │   │   │   └── 📄 AuthMiddleware.php # Authentication
-│   │   ├── 📁 models/            # Data Models
+│   │   ├── 📁 models/            # Data Models (4 files)
 │   │   │   ├── 📄 AIQueryHistory.php # Chat history
 │   │   │   ├── 📄 Document.php       # Document model
 │   │   │   ├── 📄 Log.php            # Logging model
 │   │   │   └── 📄 User.php           # User model
-│   │   ├── 📁 services/          # Business Logic
-│   │   │   ├── 📄 AIService.php      # AI processing
+│   │   ├── 📁 services/          # AI Services (5 files)
+│   │   │   ├── 📄 AIService.php      # AI processing core
 │   │   │   ├── 📄 DocumentService.php # Document processing
-│   │   │   ├── 📄 Key4UService.php   # Key4U API service
-│   │   │   ├── 📄 QwenService.php    # Qwen AI API service
+│   │   │   ├── 📄 Key4UService.php   # Key4U API (449 models)
+│   │   │   ├── 📄 QwenService.php    # Qwen AI (Free streaming)
 │   │   │   └── 📄 UserService.php    # User management
 │   │   ├── 📄 composer.json      # PHP dependencies
 │   │   └── 📄 index.php          # Main entry point
-│   └── 📁 web/                   # Frontend
-│       ├── 📄 index.html         # Trang chủ (với auth logic)
+│   └── 📁 web/                   # Frontend (8 files)
+│       ├── 📄 index.html         # Trang chủ (AI Chat)
 │       ├── 📄 login.html         # Trang đăng nhập
 │       ├── 📄 register.html      # Trang đăng ký
+│       ├── 📄 dashboard.html     # Dashboard người dùng
+│       ├── 📄 document-manager.html # Quản lý tài liệu
+│       ├── 📄 pricing.html       # Bảng giá
 │       ├── 📄 script-backend.js  # JavaScript chính
-│       ├── 📄 style.css          # CSS styling
+│       ├── 📄 style.css          # CSS styling (Glass effects)
 │       ├── 📄 config.js          # Frontend config
 │       ├── 📄 background.webp    # Background image
 │       └── 📄 favicon.ico        # Site icon
-├── 📄 README.md                  # Tài liệu này
+├── 📁 data/                      # Database & uploads
+│   ├── 📁 database/
+│   │   └── 📄 thuvien_ai.db      # SQLite database
+│   └── 📁 uploads/               # File uploads
+├── 📁 config/                    # Cấu hình toàn cục
+│   └── 📄 config.js              # Cấu hình frontend
+├── 📄 README.md                  # Tài liệu chính (489 lines)
+├── 📄 AI_MODELS_LIST.md          # Danh sách 449 AI models
+├── 📄 PROJECT_STATUS.md          # Trạng thái dự án
 ├── 📄 CONFIGURATION.md           # Hướng dẫn cấu hình
 ├── 📄 HUONG_DAN_CAI_DAT.md       # Hướng dẫn cài đặt
 ├── 📄 DEPLOYMENT_SUMMARY.md      # Tóm tắt triển khai
-├── 📄 CLEANUP_REPORT.md          # Báo cáo dọn dẹp
+├── 📄 API_KEY_SETUP.md           # Hướng dẫn API keys
 ├── 📄 start-powershell.bat       # Script khởi động chính
-├── 📄 start.bat                  # Script khởi động đơn giản
-├── 📄 startfull.bat              # Script khởi động đầy đủ
+├── 📄 start-ai.bat               # Script khởi động AI
 ├── 📄 config.env                 # Environment variables
-└── 📄 config.env.example         # Environment template
+├── 📄 config.env.example         # Environment template
+└── 📄 qwen api.py                # Qwen API reference
 ```
 
 ## 🚀 **Tính năng chính**
@@ -151,14 +185,17 @@ ThuVienAI/
 - ✅ **Smooth Transitions** - CSS animations, loading states
 - ✅ **Error Handling** - User-friendly error messages
 
-### **3. AI Chat System**
-- ✅ **Multiple AI Models** - Support for various AI providers (Key4U, Qwen)
-- ✅ **Real-time Chat** - Instant messaging interface with streaming
+### **3. AI Chat System (449 Models)**
+- ✅ **449 AI Models** - Complete support for all AI model types
+- ✅ **Key4U Integration** - GPT-4, Claude, Gemini, DALL-E, Midjourney...
+- ✅ **Qwen AI Integration** - Free streaming AI with high quality
+- ✅ **ENSEMBLE Mode** - Combine multiple AI responses intelligently
+- ✅ **Real-time Streaming** - Live chat responses with streaming
+- ✅ **Multi-modal Support** - Text, Image, Audio, Video processing
 - ✅ **Document Processing** - Upload and analyze documents
 - ✅ **Processing Modes** - Single, ensemble, distributed
-- ✅ **ENSEMBLE Mode** - Combine multiple AI responses
-- ✅ **Qwen Integration** - Direct Qwen AI API with streaming
-- ✅ **History Tracking** - Chat history and user queries
+- ✅ **History Tracking** - Complete chat history and user queries
+- ✅ **Error Handling** - Robust error management for AI services
 
 ### **4. API Architecture**
 - ✅ **RESTful APIs** - Clean, consistent endpoints
@@ -224,6 +261,12 @@ python -m http.server 8001
 | `/api/auth-login.php` | POST | Đăng nhập user | `{username, password}` |
 | `/api/auth.php` | POST | Auth chính (với actions) | `{action: register/login}` |
 
+### **AI Chat APIs**
+| Endpoint | Method | Mô tả | Request Body |
+|----------|--------|-------|--------------|
+| `/api/chat-real.php` | POST | AI Chat với 449 models | `{message, model, mode}` |
+| `/api/chat-simple.php` | POST | Simple AI Chat | `{message, model}` |
+
 ### **Utility APIs**
 | Endpoint | Method | Mô tả | Response |
 |----------|--------|-------|----------|
@@ -232,6 +275,65 @@ python -m http.server 8001
 | `/api/index.php` | GET/POST | Main router | Depends on route |
 
 ### **Request/Response Examples**
+
+#### **AI Chat Request:**
+```json
+POST /api/chat-real.php
+{
+  "message": "Hello, how are you?",
+  "model": "gpt-4o",
+  "mode": "single"
+}
+```
+
+#### **AI Chat Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "content": "Hello! I'm doing well, thank you for asking. How can I assist you today?",
+    "model": "gpt-4o",
+    "mode": "single",
+    "source": "key4u",
+    "tokens_used": 25,
+    "response_time": 1.2,
+    "timestamp": "2025-09-30 10:30:00"
+  }
+}
+```
+
+#### **ENSEMBLE Mode Request:**
+```json
+POST /api/chat-real.php
+{
+  "message": "Explain quantum computing",
+  "model": "ensemble",
+  "mode": "single"
+}
+```
+
+#### **ENSEMBLE Mode Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "content": "🤖 **QWEN AI RESPONSE**\n\n✅ Qwen (qwen3-235b-a22b):\nQuantum computing is a revolutionary computing paradigm...",
+    "model": "ensemble",
+    "source": "ensemble",
+    "tokens_used": 150,
+    "response_time": 2.5,
+    "timestamp": "2025-09-30 10:30:00",
+    "ensemble_responses": {
+      "qwen": {
+        "provider": "Qwen",
+        "model": "qwen3-235b-a22b",
+        "content": "Quantum computing is a revolutionary computing paradigm...",
+        "success": true
+      }
+    }
+  }
+}
+```
 
 #### **Register Request:**
 ```json
@@ -254,54 +356,39 @@ POST /api/auth-register.php
     "email": "test@example.com",
     "credits": 100,
     "role": "user",
-    "created_at": "2025-01-29 10:30:00"
+    "created_at": "2025-09-30 10:30:00"
   }
-}
-```
-
-#### **Login Request:**
-```json
-POST /api/auth-login.php
-{
-  "username": "testuser",
-  "password": "password123"
-}
-```
-
-#### **Login Response:**
-```json
-{
-  "success": true,
-  "message": "Login successful",
-  "user": {
-    "id": 1234,
-    "username": "testuser",
-    "credits": 100,
-    "role": "user"
-  },
-  "token": "jwt_token_here",
-  "expires_in": 86400
 }
 ```
 
 ## 🎨 **Giao diện người dùng**
 
 ### **Trang chủ (index.html)**
-- **Sidebar** - Model selection, user info, document management
-- **Chat Area** - Real-time messaging interface
+- **AI Model Selection** - 449 AI models với phân loại rõ ràng
+- **Chat Interface** - Real-time messaging với streaming
+- **ENSEMBLE Mode** - Kết hợp multiple AI responses
 - **Authentication UI** - Dynamic login/register buttons
 - **User Dashboard** - Credits, profile, logout
 
-### **Authentication Pages**
-- **Login (login.html)** - Clean login form with validation
-- **Register (register.html)** - Registration form with password confirmation
-- **Auto-redirect** - Seamless navigation after auth
+### **AI Chat Features**
+- **Model Categories** - Chat/Text, Image, Audio, Video, Embedding, Moderation
+- **Real-time Streaming** - Live responses từ AI models
+- **Glass Effect UI** - Modern design với animations
+- **Error Handling** - User-friendly error messages
+- **History Tracking** - Complete chat history
+
+### **Additional Pages**
+- **Dashboard (dashboard.html)** - User management interface
+- **Document Manager (document-manager.html)** - File upload và processing
+- **Pricing (pricing.html)** - Bảng giá và plans
+- **Login/Register** - Authentication forms với validation
 
 ### **Responsive Features**
 - **Mobile-first** - Optimized for mobile devices
 - **Flexible Layout** - Adapts to different screen sizes
 - **Touch-friendly** - Large buttons, easy navigation
 - **Fast Loading** - Optimized assets, minimal dependencies
+- **Glass Effects** - Modern UI với blur và transparency
 
 ## 🔒 **Bảo mật**
 
@@ -424,23 +511,37 @@ DEBUG_MODE=false
 - [x] API documentation
 
 ### **Phase 2** ✅ (Completed)
-- [x] AI chat integration (Key4U + Qwen)
+- [x] AI chat integration (449 models)
+- [x] Key4U API integration (GPT-4, Claude, Gemini...)
+- [x] Qwen AI integration (Free streaming)
 - [x] ENSEMBLE mode
-- [x] Qwen API streaming
+- [x] Multi-modal support (Text, Image, Audio, Video)
 - [x] Document processing
 - [x] User dashboard
 - [x] Advanced features
+- [x] Glass effect UI
+- [x] Error handling
 
 ### **Phase 3** 📋 (Planned)
 - [ ] Multi-language support
 - [ ] Plugin system
 - [ ] Admin dashboard
-- [ ] Analytics
+- [ ] Analytics dashboard
 - [ ] Performance optimization
+- [ ] Mobile app
+- [ ] API rate limiting
+- [ ] Advanced AI features
 
 ## 📞 **Support**
 
-- **Documentation**: README.md, CONFIGURATION.md
+- **Documentation**: 
+  - README.md (489 lines) - Tài liệu chính
+  - AI_MODELS_LIST.md - Danh sách 449 AI models
+  - PROJECT_STATUS.md - Trạng thái dự án
+  - CONFIGURATION.md - Hướng dẫn cấu hình
+  - HUONG_DAN_CAI_DAT.md - Hướng dẫn cài đặt
+  - DEPLOYMENT_SUMMARY.md - Tóm tắt triển khai
+  - API_KEY_SETUP.md - Hướng dẫn API keys
 - **Issues**: GitHub Issues
 - **Email**: support@thuvienai.com
 - **Community**: Thư Viện AI Discord
@@ -452,13 +553,48 @@ MIT License - Xem file [LICENSE](LICENSE) để biết thêm chi tiết.
 ## 👥 **Team**
 
 - **Lead Developer**: Thư Viện AI Team
-- **Backend**: PHP, Authentication, APIs
-- **Frontend**: HTML5, CSS3, JavaScript
-- **DevOps**: PowerShell, Batch Scripts
+- **Backend**: PHP, Authentication, APIs, AI Integration
+- **Frontend**: HTML5, CSS3, JavaScript, Glass Effects
+- **AI Integration**: Key4U API, Qwen AI, 449 Models
+- **DevOps**: PowerShell, Batch Scripts, Deployment
 
 ---
 
 **© 2025 Thư Viện AI. All rights reserved.**
+
+---
+
+## 🎯 **Quick Start Guide**
+
+### **1. Khởi động nhanh:**
+```bash
+# Cách 1: Khởi động với AI models
+.\start-ai.bat
+
+# Cách 2: Khởi động chi tiết
+.\start-powershell.bat
+```
+
+### **2. Truy cập ứng dụng:**
+- **Frontend**: http://127.0.0.1:8001/index.html
+- **Backend**: http://127.0.0.1:8000/test-simple.php
+
+### **3. Sử dụng AI:**
+1. **Chọn AI Model** - 449 models có sẵn
+2. **Chọn ENSEMBLE** - Sử dụng Qwen AI miễn phí
+3. **Chat** - Gửi tin nhắn và nhận response
+4. **Upload Documents** - Phân tích tài liệu
+
+### **4. Tính năng chính:**
+- ✅ **449 AI Models** - GPT-4, Claude, Gemini, DALL-E, Midjourney...
+- ✅ **Qwen AI Free** - Streaming AI miễn phí
+- ✅ **ENSEMBLE Mode** - Kết hợp multiple AI
+- ✅ **Multi-modal** - Text, Image, Audio, Video
+- ✅ **Authentication** - Đăng ký/đăng nhập
+- ✅ **Document Processing** - Upload và phân tích
+- ✅ **Modern UI** - Glass effects và animations
+
+**🚀 Sẵn sàng sử dụng ngay với 449 AI models!**
 #
 #                      _oo0oo_
 #                     088888880
