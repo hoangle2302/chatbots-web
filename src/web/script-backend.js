@@ -4,6 +4,49 @@
 // Kiểm tra trạng thái đăng nhập
 let currentUser = null;
 
+// Hàm format ensemble response
+function formatEnsembleResponse(content) {
+    // Tách các phần response
+    const parts = content.split(/\*\*✅|\*\*❌/);
+    let formatted = '<div class="ensemble-container">';
+    
+    // Header - check if it's QWEN or ENSEMBLE
+    if (content.includes('**QWEN AI RESPONSE**')) {
+        formatted += '<div class="ensemble-header">🤖 <strong>QWEN AI RESPONSE</strong></div>';
+    } else {
+        formatted += '<div class="ensemble-header">🤖 <strong>ENSEMBLE AI RESPONSE</strong></div>';
+    }
+    
+    // Xử lý từng response
+    for (let i = 1; i < parts.length; i++) {
+        const part = parts[i].trim();
+        if (!part) continue;
+        
+        const lines = part.split('\n');
+        const header = lines[0];
+        const responseContent = lines.slice(1).join('\n').trim();
+        
+        if (header && responseContent) {
+            const isSuccess = header.includes('✅');
+            const provider = header.replace(/[✅❌]/g, '').trim();
+            
+            formatted += `<div class="ensemble-item ${isSuccess ? 'success' : 'error'}">`;
+            formatted += `<div class="ensemble-provider">${isSuccess ? '✅' : '❌'} ${provider}</div>`;
+            formatted += `<div class="ensemble-content">${responseContent}</div>`;
+            formatted += '</div>';
+        }
+    }
+    
+    // Footer
+    const footerMatch = content.match(/(⚠️|ℹ️|✨).*$/);
+    if (footerMatch) {
+        formatted += `<div class="ensemble-footer">${footerMatch[0]}</div>`;
+    }
+    
+    formatted += '</div>';
+    return formatted;
+}
+
 // Hàm thông minh để phân loại model theo provider
 function getModelProvider(modelValue) {
     const modelLower = modelValue.toLowerCase();
@@ -130,6 +173,11 @@ function getModelDisplayName(modelId) {
         return modelId;
     }
     
+    // Xử lý đặc biệt cho ensemble
+    if (modelId === 'ensemble') {
+        return '🤖 Tất cả AI (Ensemble)';
+    }
+    
     // Tìm trong select options
     const modelSelect = document.getElementById('model-select');
     if (modelSelect) {
@@ -197,7 +245,15 @@ async function addBubble(sender, content, model = null) {
     // Thêm nội dung chính
     const contentDiv = document.createElement('div');
     contentDiv.className = 'message-text';
-    contentDiv.innerHTML = content;
+    
+    // Xử lý đặc biệt cho ensemble response
+    if (model === 'ensemble' && (content.includes('**ENSEMBLE AI RESPONSE**') || content.includes('**QWEN AI RESPONSE**'))) {
+        contentDiv.innerHTML = formatEnsembleResponse(content);
+        contentDiv.classList.add('ensemble-response');
+    } else {
+        contentDiv.innerHTML = content;
+    }
+    
     messageContent.appendChild(contentDiv);
     
     // Thêm timestamp

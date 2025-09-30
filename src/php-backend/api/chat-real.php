@@ -42,6 +42,9 @@ try {
     $message = trim($input['message']);
     $model = $input['model'] ?? 'gpt-4-turbo';
     $mode = $input['mode'] ?? 'single';
+    
+    // Check if ensemble mode is requested
+    $isEnsemble = ($model === 'ensemble');
 
     // Basic validation
     if (strlen($message) < 1) {
@@ -63,8 +66,17 @@ try {
     $source = "simulated";
     $tokensUsed = 0;
     $responseTime = 0;
+    $ensembleResponses = [];
     
-    if (!$apiKey || $apiKey === 'your_key4u_api_key_here') {
+    if ($isEnsemble) {
+        // Ensemble mode - only call Qwen API
+        $ensembleResult = handleQwenOnlyMode($message);
+        $response = $ensembleResult['content'];
+        $ensembleResponses = $ensembleResult['responses'];
+        $source = 'ensemble';
+        $tokensUsed = strlen($message) + strlen($response);
+        $responseTime = 2; // Ensemble takes longer
+    } elseif (!$apiKey || $apiKey === 'your_key4u_api_key_here') {
         // Fallback to simulated response if no API key
         $response = generateSimulatedResponse($message, $model, $mode);
         $source = 'simulated';
@@ -84,17 +96,24 @@ try {
 
     // Return success response
     http_response_code(200);
+    $responseData = [
+        'content' => $response,
+        'model' => $isEnsemble ? 'ensemble' : $model,
+        'mode' => $mode,
+        'source' => $source,
+        'tokens_used' => $tokensUsed,
+        'response_time' => $responseTime,
+        'timestamp' => date('Y-m-d H:i:s')
+    ];
+    
+    // Add ensemble responses if available
+    if ($isEnsemble && !empty($ensembleResponses)) {
+        $responseData['ensemble_responses'] = $ensembleResponses;
+    }
+    
     echo json_encode([
         'success' => true,
-        'data' => [
-            'content' => $response,
-            'model' => $model,
-            'mode' => $mode,
-            'source' => $source,
-            'tokens_used' => $tokensUsed,
-            'response_time' => $responseTime,
-            'timestamp' => date('Y-m-d H:i:s')
-        ]
+        'data' => $responseData
     ]);
 
 } catch (Exception $e) {
@@ -106,6 +125,226 @@ try {
     ]);
 }
 
+
+/**
+ * Handle Qwen Only Mode - Only call Qwen API
+ */
+function handleQwenOnlyMode($message) {
+    $responses = [];
+    $errors = [];
+    
+    // Try Qwen API only
+    try {
+        $qwenServicePath = __DIR__ . '/../services/QwenService.php';
+        if (file_exists($qwenServicePath)) {
+            // Suppress errors during include
+            $oldErrorReporting = error_reporting(0);
+            $includeResult = include_once $qwenServicePath;
+            error_reporting($oldErrorReporting);
+            
+            if ($includeResult && class_exists('QwenService')) {
+                $qwenService = new QwenService();
+                $qwenResponse = $qwenService->chat($message, 'qwen3-235b-a22b');
+                
+                if ($qwenResponse['success']) {
+                    $responses['qwen'] = [
+                        'provider' => 'Qwen',
+                        'model' => 'qwen3-235b-a22b',
+                        'content' => $qwenResponse['content'],
+                        'success' => true
+                    ];
+                } else {
+                    $responses['qwen'] = [
+                        'provider' => 'Qwen',
+                        'model' => 'qwen3-235b-a22b',
+                        'content' => 'Lỗi từ Qwen API',
+                        'success' => false
+                    ];
+                }
+            } else {
+                $responses['qwen'] = [
+                    'provider' => 'Qwen',
+                    'model' => 'qwen3-235b-a22b',
+                    'content' => 'Không thể load QwenService class',
+                    'success' => false
+                ];
+            }
+        } else {
+            $responses['qwen'] = [
+                'provider' => 'Qwen',
+                'model' => 'qwen3-235b-a22b',
+                'content' => 'QwenService.php không tồn tại',
+                'success' => false
+            ];
+        }
+    } catch (Exception $e) {
+        $errors['qwen'] = $e->getMessage();
+        $responses['qwen'] = [
+            'provider' => 'Qwen',
+            'model' => 'qwen3-235b-a22b',
+            'content' => 'Lỗi kết nối: ' . $e->getMessage(),
+            'success' => false
+        ];
+    } catch (Error $e) {
+        $errors['qwen'] = $e->getMessage();
+        $responses['qwen'] = [
+            'provider' => 'Qwen',
+            'model' => 'qwen3-235b-a22b',
+            'content' => 'Lỗi PHP: ' . $e->getMessage(),
+            'success' => false
+        ];
+    }
+    
+    // Combine responses
+    $combinedResponse = "🤖 **QWEN AI RESPONSE**\n\n";
+    
+    foreach ($responses as $provider => $response) {
+        $status = $response['success'] ? '✅' : '❌';
+        $combinedResponse .= "**{$status} {$response['provider']} ({$response['model']}):**\n";
+        $combinedResponse .= $response['content'] . "\n\n";
+    }
+    
+    // Add summary
+    $successCount = count(array_filter($responses, function($r) { return $r['success']; }));
+    if ($successCount === 0) {
+        $combinedResponse .= "⚠️ **Qwen AI gặp lỗi. Đang sử dụng response mô phỏng.**\n\n";
+        $combinedResponse .= "**🤖 Qwen AI (Simulated):**\n";
+        $combinedResponse .= "Xin chào! Tôi là Qwen AI. Hiện tại tôi đang gặp vấn đề kết nối, nhưng tôi vẫn có thể giúp bạn. Bạn có câu hỏi gì không?\n\n";
+        $combinedResponse .= "ℹ️ **Lưu ý:** Để sử dụng Qwen AI thật, vui lòng kiểm tra cookies và API endpoint.";
+    } else {
+        $combinedResponse .= "✨ **Qwen AI hoạt động tốt!**";
+    }
+    
+    return [
+        'content' => $combinedResponse,
+        'responses' => $responses
+    ];
+}
+
+/**
+ * Handle Ensemble Mode - Call both Key4U and Qwen APIs
+ */
+function handleEnsembleMode($message, $apiKey) {
+    
+    $responses = [];
+    $errors = [];
+    
+    // Try Key4U API first
+    if ($apiKey && $apiKey !== 'your_key4u_api_key_here') {
+        try {
+            $key4uResponse = callKey4UAPI($message, 'gpt-4-turbo', $apiKey);
+            $responses['key4u'] = [
+                'provider' => 'Key4U',
+                'model' => 'gpt-4-turbo',
+                'content' => $key4uResponse,
+                'success' => true
+            ];
+        } catch (Exception $e) {
+            $errors['key4u'] = $e->getMessage();
+            $responses['key4u'] = [
+                'provider' => 'Key4U',
+                'model' => 'gpt-4-turbo',
+                'content' => 'Lỗi kết nối: ' . $e->getMessage(),
+                'success' => false
+            ];
+        }
+    } else {
+        $responses['key4u'] = [
+            'provider' => 'Key4U',
+            'model' => 'gpt-4-turbo',
+            'content' => 'API key chưa được cấu hình',
+            'success' => false
+        ];
+    }
+    
+    // Try Qwen API
+    try {
+        $qwenServicePath = __DIR__ . '/../services/QwenService.php';
+        if (file_exists($qwenServicePath)) {
+            // Suppress errors during include
+            $oldErrorReporting = error_reporting(0);
+            $includeResult = include_once $qwenServicePath;
+            error_reporting($oldErrorReporting);
+            
+            if ($includeResult && class_exists('QwenService')) {
+                $qwenService = new QwenService();
+                $qwenResponse = $qwenService->chat($message, 'qwen3-235b-a22b');
+                
+                if ($qwenResponse['success']) {
+                    $responses['qwen'] = [
+                        'provider' => 'Qwen',
+                        'model' => 'qwen3-235b-a22b',
+                        'content' => $qwenResponse['content'],
+                        'success' => true
+                    ];
+                } else {
+                    $responses['qwen'] = [
+                        'provider' => 'Qwen',
+                        'model' => 'qwen3-235b-a22b',
+                        'content' => 'Lỗi từ Qwen API',
+                        'success' => false
+                    ];
+                }
+            } else {
+                $responses['qwen'] = [
+                    'provider' => 'Qwen',
+                    'model' => 'qwen3-235b-a22b',
+                    'content' => 'Không thể load QwenService class',
+                    'success' => false
+                ];
+            }
+        } else {
+            $responses['qwen'] = [
+                'provider' => 'Qwen',
+                'model' => 'qwen3-235b-a22b',
+                'content' => 'QwenService.php không tồn tại',
+                'success' => false
+            ];
+        }
+    } catch (Exception $e) {
+        $errors['qwen'] = $e->getMessage();
+        $responses['qwen'] = [
+            'provider' => 'Qwen',
+            'model' => 'qwen3-235b-a22b',
+            'content' => 'Lỗi kết nối: ' . $e->getMessage(),
+            'success' => false
+        ];
+    } catch (Error $e) {
+        $errors['qwen'] = $e->getMessage();
+        $responses['qwen'] = [
+            'provider' => 'Qwen',
+            'model' => 'qwen3-235b-a22b',
+            'content' => 'Lỗi PHP: ' . $e->getMessage(),
+            'success' => false
+        ];
+    }
+    
+    // Store responses for detailed return (return as part of response)
+    
+    // Combine responses
+    $combinedResponse = "🤖 **ENSEMBLE AI RESPONSE**\n\n";
+    
+    foreach ($responses as $provider => $response) {
+        $status = $response['success'] ? '✅' : '❌';
+        $combinedResponse .= "**{$status} {$response['provider']} ({$response['model']}):**\n";
+        $combinedResponse .= $response['content'] . "\n\n";
+    }
+    
+    // Add summary if both failed
+    $successCount = count(array_filter($responses, function($r) { return $r['success']; }));
+    if ($successCount === 0) {
+        $combinedResponse .= "⚠️ **Tất cả AI models đều gặp lỗi. Vui lòng kiểm tra cấu hình API.**";
+    } elseif ($successCount === 1) {
+        $combinedResponse .= "ℹ️ **Chỉ có 1 AI model hoạt động. Vui lòng kiểm tra cấu hình cho model còn lại.**";
+    } else {
+        $combinedResponse .= "✨ **Cả 2 AI models đều hoạt động tốt!**";
+    }
+    
+    return [
+        'content' => $combinedResponse,
+        'responses' => $responses
+    ];
+}
 
 /**
  * Call Key4U API

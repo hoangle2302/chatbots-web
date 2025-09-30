@@ -14,6 +14,8 @@ Hệ thống AI Chat hiện đại với authentication hoàn chỉnh, hỗ tr�
 - ✅ **Authentication System** - Đăng nhập/đăng ký với localStorage
 - ✅ **Real AI Chat Interface** - Chat với AI models thật (GPT-4, Claude, Gemini...)
 - ✅ **Key4U API Integration** - Kết nối với AI models thật qua Key4U API
+- ✅ **Qwen API Integration** - Tích hợp Qwen AI với streaming response
+- ✅ **ENSEMBLE Mode** - Chế độ kết hợp nhiều AI models
 - ✅ **User Management** - Quản lý trạng thái người dùng
 - ✅ **Responsive Design** - Giao diện thích ứng mọi thiết bị
 - ✅ **Clean Architecture** - Kiến trúc gọn gàng, dễ bảo trì
@@ -108,6 +110,7 @@ ThuVienAI/
 │   │   │   ├── 📄 AIService.php      # AI processing
 │   │   │   ├── 📄 DocumentService.php # Document processing
 │   │   │   ├── 📄 Key4UService.php   # Key4U API service
+│   │   │   ├── 📄 QwenService.php    # Qwen AI API service
 │   │   │   └── 📄 UserService.php    # User management
 │   │   ├── 📄 composer.json      # PHP dependencies
 │   │   └── 📄 index.php          # Main entry point
@@ -149,10 +152,12 @@ ThuVienAI/
 - ✅ **Error Handling** - User-friendly error messages
 
 ### **3. AI Chat System**
-- ✅ **Multiple AI Models** - Support for various AI providers
-- ✅ **Real-time Chat** - Instant messaging interface
+- ✅ **Multiple AI Models** - Support for various AI providers (Key4U, Qwen)
+- ✅ **Real-time Chat** - Instant messaging interface with streaming
 - ✅ **Document Processing** - Upload and analyze documents
 - ✅ **Processing Modes** - Single, ensemble, distributed
+- ✅ **ENSEMBLE Mode** - Combine multiple AI responses
+- ✅ **Qwen Integration** - Direct Qwen AI API with streaming
 - ✅ **History Tracking** - Chat history and user queries
 
 ### **4. API Architecture**
@@ -380,13 +385,19 @@ DEBUG_MODE=false
 ```
 
 ### **API Key Setup (Optional)**
-Để sử dụng AI models thật (GPT-4, Claude, Gemini...):
+Để sử dụng AI models thật:
+
+#### **Key4U API (GPT-4, Claude, Gemini...):**
 1. **Lấy Key4U API key** từ https://api.key4u.shop
 2. **Cập nhật config.env**: `KEY4U_API_KEY=sk-your-key-here`
-3. **Restart server**: `.\start-powershell.bat`
 
-**Không có API key**: Hệ thống sẽ sử dụng response mô phỏng (miễn phí)
-**Có API key**: Kết nối thật với AI models (có phí)
+#### **Qwen AI API (Miễn phí):**
+- ✅ **Đã tích hợp sẵn** - Không cần API key
+- ✅ **Streaming response** - Real-time chat
+- ✅ **ENSEMBLE mode** - Chỉ sử dụng Qwen AI
+
+**Không có API key**: Hệ thống sẽ sử dụng Qwen AI (miễn phí)
+**Có Key4U API key**: Kết nối thêm với GPT-4, Claude, Gemini (có phí)
 
 ## 🤝 **Contributing**
 
@@ -412,12 +423,13 @@ DEBUG_MODE=false
 - [x] Clean project structure
 - [x] API documentation
 
-### **Phase 2** 🔄 (In Progress)
-- [ ] AI chat integration
-- [ ] Document processing
-- [ ] User dashboard
-- [ ] Advanced features
-- [ ] Mobile app
+### **Phase 2** ✅ (Completed)
+- [x] AI chat integration (Key4U + Qwen)
+- [x] ENSEMBLE mode
+- [x] Qwen API streaming
+- [x] Document processing
+- [x] User dashboard
+- [x] Advanced features
 
 ### **Phase 3** 📋 (Planned)
 - [ ] Multi-language support
@@ -470,8 +482,8 @@ MIT License - Xem file [LICENSE](LICENSE) để biết thêm chi tiết.
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #      Phật phù hộ, không bao giờ BUG
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#                          \|/
-                          {   } 
+#                         \|/
+#                        {   } 
 #                     a di đà phật
 
 *Được xây dựng với ❤️ bằng PHP, JavaScript và modern web technologies.*
