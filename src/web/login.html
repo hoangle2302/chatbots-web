@@ -5,153 +5,528 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng nhập - Thư Viện AI</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Background decorative elements */
+        body::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: float 20s linear infinite;
+            pointer-events: none;
+        }
+
         .auth-container {
-            max-width: 400px;
-            margin: 100px auto;
-            padding: 40px;
-            background: linear-gradient(135deg, #667eea 0%, #000000 100%);
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 450px;
+            width: 90%;
+            padding: 50px 40px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            box-shadow: 
+                0 25px 50px rgba(31, 38, 135, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.1);
             color: white;
+            position: relative;
+            z-index: 1;
+            animation: slideInUp 0.8s ease-out;
+        }
+        
+        .auth-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .logo-section {
+            margin-bottom: 20px;
+        }
+
+        .logo-icon {
+            font-size: 60px;
+            display: block;
+            margin-bottom: 15px;
+            animation: float 3s ease-in-out infinite;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
         }
         
         .auth-container h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #ffffff 0%, #e0e7ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: none;
+        }
+
+        .auth-subtitle {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+            margin-bottom: 0;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(135deg, rgba(255, 235, 59, 0.2), rgba(255, 193, 7, 0.2));
+            border: 2px solid rgba(255, 235, 59, 0.3);
+            padding: 12px 20px;
+            border-radius: 12px;
             text-align: center;
-            margin-bottom: 30px;
-            font-size: 2.5em;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+            animation: subtitlePulse 4s ease-in-out infinite;
+            transition: all 0.3s ease;
+            margin-top: 12px;
+        }
+
+        .auth-subtitle::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            animation: subtitleShine 6s linear infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .auth-subtitle:hover {
+            box-shadow: 0 8px 25px rgba(255, 235, 59, 0.3);
+            border-color: rgba(255, 235, 59, 0.5);
         }
         
         .auth-form {
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 25px;
         }
         
         .form-group {
-            display: flex;
-            flex-direction: column;
+            position: relative;
         }
-        
+
         .form-group label {
-            margin-bottom: 8px;
-            font-weight: 600;
-            font-size: 1.1em;
+            position: absolute;
+            top: 18px;
+            left: 20px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            pointer-events: none;
+            background: transparent;
         }
-        
+
         .form-group input {
-            padding: 15px;
-            border: none;
-            border-radius: 10px;
-            font-size: 1.1em;
-            background: rgba(255,255,255,0.9);
+            width: 100%;
+            padding: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            font-size: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            color: black;
+            transition: all 0.4s ease;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .form-group input::placeholder {
+            color: transparent;
+        }
+
+        .form-group input:focus,
+        .form-group input:not(:placeholder-shown) {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.4);
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(31, 38, 135, 0.3);
+        }
+
+        .form-group input:focus + label,
+        .form-group input:not(:placeholder-shown) + label {
+            top: -12px;
+            left: 15px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.9);
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.8), rgba(118, 75, 162, 0.8));
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .input-icon {
+            position: absolute;
+            right: 20px !important;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 18px;
             transition: all 0.3s ease;
         }
-        
-        .form-group input:focus {
-            outline: none;
-            background: white;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+
+        .form-group input:focus ~ .input-icon {
+            color: rgba(255, 255, 255, 0.9);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 55px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            padding: 6px;
+            border-radius: 6px;
+            z-index: 3;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .password-toggle:hover {
+            color: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .password-toggle:active {
+            transform: translateY(-50%) scale(0.95);
+        }
+
+        /* Điều chỉnh cho trường password có toggle button */
+        .password-field .input-icon {
+            right: 90px;
+        }
+
+        .password-field input:focus ~ .input-icon {
+            color: rgba(255, 255, 255, 0.9);
+            transform: translateY(-50%) scale(1.1);
         }
         
         .auth-button {
-            padding: 15px;
+            padding: 18px 30px;
             border: none;
-            border-radius: 10px;
-            font-size: 1.2em;
+            border-radius: 15px;
+            font-size: 16px;
             font-weight: 600;
-            background: #ff6b6b;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 10px;
+            transition: all 0.4s ease;
+            margin-top: 15px;
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .auth-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .auth-button:hover::before {
+            left: 100%;
         }
         
         .auth-button:hover {
-            background: #ff5252;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.6);
+        }
+
+        .auth-button:active {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .auth-button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.2);
         }
         
         .auth-links {
             text-align: center;
-            margin-top: 20px;
+            margin-top: 30px;
+            padding-top: 25px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .auth-links p {
+            margin: 12px 0;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
         }
         
         .auth-links a {
-            color: white;
+            color: rgba(255, 255, 255, 0.9);
             text-decoration: none;
             font-weight: 600;
             transition: all 0.3s ease;
+            position: relative;
+            padding: 2px 0;
+        }
+
+        .auth-links a::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.3s ease;
         }
         
         .auth-links a:hover {
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        .auth-links a:hover::after {
+            width: 100%;
         }
         
-        .error-message {
-            background: rgba(255,0,0,0.2);
-            border: 1px solid rgba(255,0,0,0.5);
-            color: white;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 20px;
+        .error-message, .success-message {
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
             display: none;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid;
+            animation: slideInDown 0.3s ease;
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: rgba(239, 68, 68, 0.4);
+            color: #fecaca;
         }
         
         .success-message {
-            background: rgba(0,255,0,0.2);
-            border: 1px solid rgba(0,255,0,0.5);
-            color: white;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            display: none;
+            background: rgba(34, 197, 94, 0.2);
+            border-color: rgba(34, 197, 94, 0.4);
+            color: #bbf7d0;
         }
         
         .loading {
             display: none;
             text-align: center;
-            margin-top: 10px;
+            margin-top: 20px;
+            color: rgba(255, 255, 255, 0.8);
         }
         
         .spinner {
-            border: 3px solid rgba(255,255,255,0.3);
+            border: 3px solid rgba(255, 255, 255, 0.2);
             border-radius: 50%;
-            border-top: 3px solid white;
-            width: 20px;
-            height: 20px;
+            border-top: 3px solid rgba(255, 255, 255, 0.8);
+            width: 30px;
+            height: 30px;
             animation: spin 1s linear infinite;
-            margin: 0 auto;
+            margin: 0 auto 10px;
+        }
+
+        .loading p {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        /* Animations */
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px) rotate(0deg); }
+            33% { transform: translateY(-10px) rotate(120deg); }
+            66% { transform: translateY(5px) rotate(240deg); }
+            100% { transform: translateY(0px) rotate(360deg); }
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        @keyframes subtitlePulse {
+            0%, 100% { 
+                box-shadow: 0 0 0 0 rgba(255, 235, 59, 0.3);
+                transform: scale(1);
+            }
+            50% { 
+                box-shadow: 0 0 0 10px rgba(255, 235, 59, 0);
+                transform: scale(1.005);
+            }
+        }
+
+        @keyframes subtitleShine {
+            0% { 
+                transform: translateX(-100%) translateY(-100%) rotate(45deg);
+                opacity: 0;
+            }
+            50% {
+                opacity: 1;
+            }
+            100% { 
+                transform: translateX(100%) translateY(100%) rotate(45deg);
+                opacity: 0;
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .auth-container {
+                margin: 20px;
+                padding: 30px 25px;
+                width: calc(100% - 40px);
+            }
+
+            .logo-icon {
+                font-size: 48px;
+            }
+
+            .auth-container h1 {
+                font-size: 24px;
+            }
+
+            .auth-subtitle {
+                font-size: 14px;
+            }
+
+            .form-group input {
+                padding: 16px;
+                font-size: 16px;
+            }
+
+            .auth-button {
+                padding: 16px 25px;
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+
+            .auth-container {
+                margin: 10px;
+                padding: 25px 20px;
+                width: calc(100% - 20px);
+                border-radius: 20px;
+            }
+
+            .form-group {
+                gap: 20px;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="auth-container">
-        <h1>🧠 Thư Viện AI</h1>
+        <div class="auth-header">
+            <div class="logo-section">
+                <span class="logo-icon">🧠</span>
+                <h1>Thư Viện AI</h1>
+                <p class="auth-subtitle">Đăng nhập để truy cập 500+ mô hình AI</p>
+            </div>
+        </div>
         
         <div id="error-message" class="error-message"></div>
         <div id="success-message" class="success-message"></div>
         
         <form id="login-form" class="auth-form">
             <div class="form-group">
-                <label for="username">Tên đăng nhập hoặc Email:</label>
-                <input type="text" id="username" name="username" required>
+                <input type="text" id="username" name="username" placeholder=" " required>
+                <label for="username">Tên đăng nhập hoặc Email</label>
+                <span class="input-icon">👤</span>
             </div>
             
-            <div class="form-group">
-                <label for="password">Mật khẩu:</label>
-                <input type="password" id="password" name="password" required>
+            <div class="form-group password-field">
+                <input type="password" id="password" name="password" placeholder=" " required>
+                <label for="password">Mật khẩu</label>
+                <button type="button" class="password-toggle" onclick="togglePassword('password')" title="Ẩn/hiện mật khẩu">
+                    👁️
+                </button>
+                <span class="input-icon">🔒</span>
             </div>
             
-            <button type="submit" class="auth-button">Đăng nhập</button>
+            <button type="submit" class="auth-button">
+                <span>Đăng nhập</span>
+            </button>
             
             <div class="loading" id="loading">
                 <div class="spinner"></div>
@@ -166,58 +541,148 @@
     </div>
 
     <script>
-        document.getElementById('login-form').addEventListener('submit', async function(e) {
-            e.preventDefault();
+        // Function để toggle password visibility
+        function togglePassword(fieldId) {
+            const passwordField = document.getElementById(fieldId);
+            const toggleButton = passwordField.parentNode.querySelector('.password-toggle');
             
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                toggleButton.innerHTML = '🙈';
+                toggleButton.title = 'Ẩn mật khẩu';
+            } else {
+                passwordField.type = 'password';
+                toggleButton.innerHTML = '👁️';
+                toggleButton.title = 'Hiện mật khẩu';
+            }
+        }
+
+        // Enhanced login functionality with animations
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.getElementById('login-form');
+            const usernameInput = document.getElementById('username');
+            const passwordInput = document.getElementById('password');
+            const submitButton = document.querySelector('.auth-button');
             const loading = document.getElementById('loading');
             const errorMessage = document.getElementById('error-message');
             const successMessage = document.getElementById('success-message');
-            
-            // Ẩn thông báo cũ
-            errorMessage.style.display = 'none';
-            successMessage.style.display = 'none';
-            
-            // Hiển thị loading
-            loading.style.display = 'block';
-            
-            try {
-                const response = await fetch('http://127.0.0.1:8000/api/auth-login.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        username: username,
-                        password: password
-                    })
-                });
-                
-                const data = await response.json();
-                
-                if (response.ok) {
-                    successMessage.textContent = data.message;
-                    successMessage.style.display = 'block';
-                    
-                    // Lưu thông tin user vào localStorage
-                    localStorage.setItem('user', JSON.stringify(data.user));
-                    localStorage.setItem('token', data.token || 'simulated_token');
-                    
-                    // Chuyển hướng sau 1 giây
-                    setTimeout(() => {
-                        window.location.href = 'index.html';
-                    }, 1000);
+
+            // Add input validation styles
+            function validateInput(input) {
+                if (input.value.trim() === '') {
+                    input.style.borderColor = 'rgba(239, 68, 68, 0.6)';
+                    input.style.boxShadow = '0 0 0 3px rgba(239, 68, 68, 0.1)';
+                    return false;
                 } else {
-                    errorMessage.textContent = data.error;
-                    errorMessage.style.display = 'block';
+                    input.style.borderColor = 'rgba(34, 197, 94, 0.6)';
+                    input.style.boxShadow = '0 0 0 3px rgba(34, 197, 94, 0.1)';
+                    return true;
                 }
-            } catch (error) {
-                errorMessage.textContent = 'Lỗi kết nối. Vui lòng thử lại.';
-                errorMessage.style.display = 'block';
-            } finally {
-                loading.style.display = 'none';
             }
+
+            // Real-time validation
+            usernameInput.addEventListener('blur', () => validateInput(usernameInput));
+            passwordInput.addEventListener('blur', () => validateInput(passwordInput));
+
+            // Enhanced message display
+            function showMessage(element, message, duration = 5000) {
+                element.textContent = message;
+                element.style.display = 'block';
+                element.style.animation = 'slideInDown 0.3s ease';
+                
+                setTimeout(() => {
+                    element.style.animation = 'slideInDown 0.3s ease reverse';
+                    setTimeout(() => {
+                        element.style.display = 'none';
+                    }, 300);
+                }, duration);
+            }
+
+            // Form submission
+            loginForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const username = usernameInput.value.trim();
+                const password = passwordInput.value.trim();
+                
+                // Validate inputs
+                const isUsernameValid = validateInput(usernameInput);
+                const isPasswordValid = validateInput(passwordInput);
+                
+                if (!isUsernameValid || !isPasswordValid) {
+                    showMessage(errorMessage, 'Vui lòng điền đầy đủ thông tin đăng nhập', 3000);
+                    return;
+                }
+                
+                // Hide previous messages
+                errorMessage.style.display = 'none';
+                successMessage.style.display = 'none';
+                
+                // Disable button and show loading
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<span>Đang xử lý...</span>';
+                loading.style.display = 'block';
+                
+                try {
+                    const response = await fetch('http://127.0.0.1:8000/api/auth-login.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            username: username,
+                            password: password
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        showMessage(successMessage, data.message || 'Đăng nhập thành công! Đang chuyển hướng...', 2000);
+                        
+                        // Reset input styles
+                        usernameInput.style.borderColor = 'rgba(34, 197, 94, 0.6)';
+                        passwordInput.style.borderColor = 'rgba(34, 197, 94, 0.6)';
+                        
+                        // Save user info
+                        localStorage.setItem('user', JSON.stringify(data.user));
+                        localStorage.setItem('token', data.token || 'simulated_token');
+                        
+                        // Redirect with animation
+                        setTimeout(() => {
+                            document.body.style.opacity = '0';
+                            document.body.style.transform = 'scale(0.95)';
+                            setTimeout(() => {
+                                window.location.href = 'index.html';
+                            }, 300);
+                        }, 1500);
+                    } else {
+                        showMessage(errorMessage, data.error || 'Thông tin đăng nhập không chính xác');
+                        
+                        // Reset input styles to error
+                        usernameInput.style.borderColor = 'rgba(239, 68, 68, 0.6)';
+                        passwordInput.style.borderColor = 'rgba(239, 68, 68, 0.6)';
+                    }
+                } catch (error) {
+                    console.error('Login error:', error);
+                    showMessage(errorMessage, 'Lỗi kết nối server. Vui lòng thử lại sau.');
+                } finally {
+                    // Re-enable button and hide loading
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = '<span>Đăng nhập</span>';
+                    loading.style.display = 'none';
+                }
+            });
+
+            // Add keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && (usernameInput.value.trim() && passwordInput.value.trim())) {
+                    loginForm.dispatchEvent(new Event('submit'));
+                }
+            });
+
+            // Auto-focus first input
+            usernameInput.focus();
         });
     </script>
 </body>
