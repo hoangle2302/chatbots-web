@@ -459,31 +459,13 @@ MIT License - Xem file [LICENSE](LICENSE) để biết thêm chi tiết.
 ---
 
 **© 2025 Thư Viện AI. All rights reserved.**
-#
-#                      _oo0oo_
-#                     088888880
-#                     88" . "88
-#                     (| -_- |)
-#                     0\  =  /0
-#                   ___/`---'\___
-#                 .' \\|     |// '.
-#                / \\|||  :  |||// \
-#               / _||||| -:- |||||- \
-#              |   | \\\  -  /// |   |
-#              | \_|  ''\---/''  |_/ |
-#              \  .-\__  '-'  ___/-. /
-#            ___'. .'  /--.--\  `. .'___
-#         ."" '<  `.___\_<|>_/___.' >' "".
-#        | | :  `- \`.;`\ _ /`;.`/ - ` : | |
-#        \  \ `_.   \_ __\ /__ _/   .-` /  /
-#    =====`-.____`.___ \_____/___.-`___.-'=====
-#                      `=---='
-#
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#      Phật phù hộ, không bao giờ BUG
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#                         \|/
-#                        {   } 
-#                     a di đà phật
+## Danh sách thành viên đóng góp cho dự án
+| STT | Họ và Tên | MSSV | Vai Trò |
+|--|--|--|--|
+| 01 | <div align="center">Trần Hải Bằng</div> | <div align="center">000</div> | <div align="center">Nhóm Trưởng</div> |
+| 02 | <div align="center">Lê Huy Hoàng</div> | <div align="center">077205003839</div> | <div align="center">Thành Viên</div> |
+| 03 | <div align="center">Lương Thị Bích Hằng</div> | <div align="center">000</div> | <div align="center">Thành Viên</div> |
+| 04 | <div align="center">Phan Minh Hòa</div> | <div align="center">000</div> | <div align="center">Thành Viên</div> |
+| 05 | <div align="center">Hồ Ngọc Quyền</div> | <div align="center">000</div> | <div align="center">Thành Viên</div> |
 
 *Được xây dựng với ❤️ bằng PHP, JavaScript và modern web technologies.*
