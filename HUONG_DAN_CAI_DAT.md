@@ -1,10 +1,11 @@
-# 🚀 Hướng dẫn cài đặt Backend PHP - Thư Viện AI
+# 🚀 Hướng dẫn cài đặt Backend PHP với Qwen AI & ENSEMBLE - Thư Viện AI
 
 ## 📋 Yêu cầu hệ thống
 - Windows 10/11
 - PHP 7.4+ 
 - MySQL hoặc SQLite
 - Composer (quản lý thư viện PHP)
+- Internet connection (cho Qwen AI API)
 
 ## 🎯 Phương án 1: Sử dụng XAMPP (Khuyến nghị - Dễ nhất)
 
@@ -64,7 +65,21 @@ php -S localhost:8001
 
 ### Bước 8: Test API
 ```cmd
+# Test authentication
 php test-api.php
+
+# Test Qwen AI (miễn phí)
+php -r "
+require_once 'services/QwenService.php';
+\$qwen = new QwenService();
+\$response = \$qwen->chat('Hello test');
+echo json_encode(\$response, JSON_PRETTY_PRINT);
+"
+
+# Test ENSEMBLE mode
+curl -X POST http://localhost:8001/api/chat-real.php \
+  -H "Content-Type: application/json" \
+  -d '{"message":"Hello","model":"ensemble","mode":"single"}'
 ```
 
 ---
@@ -118,6 +133,13 @@ curl -X POST http://localhost:8001/api/documents.php?action=upload \
   -F "file=@test.txt"
 ```
 
+### 4. Test Qwen AI:
+```bash
+curl -X POST http://localhost:8001/api/chat-real.php \
+  -H "Content-Type: application/json" \
+  -d '{"message":"Hello Qwen","model":"ensemble","mode":"single"}'
+```
+
 ---
 
 ## 🔧 Troubleshooting
@@ -139,6 +161,17 @@ curl -X POST http://localhost:8001/api/documents.php?action=upload \
 - Kiểm tra `JWT_SECRET` trong `config.env`
 - Đảm bảo thư viện firebase/php-jwt đã cài đặt
 
+### Lỗi Qwen AI:
+- Kiểm tra kết nối internet
+- Kiểm tra cookies trong `QwenService.php` có còn hợp lệ
+- Kiểm tra API endpoint có thay đổi không
+- Cập nhật cookies từ browser nếu cần
+
+### Lỗi ENSEMBLE Mode:
+- Kiểm tra `QwenService.php` có tồn tại không
+- Kiểm tra `chat-real.php` có xử lý ensemble không
+- Kiểm tra frontend có hiển thị đúng không
+
 ---
 
 ## 📞 Hỗ trợ
@@ -148,6 +181,20 @@ Nếu gặp vấn đề, hãy:
 2. Chạy `php test-api.php` để test
 3. Kiểm tra database connection
 4. Đảm bảo tất cả dependencies đã cài đặt
+5. Test Qwen AI với lệnh curl ở trên
+6. Kiểm tra ENSEMBLE mode hoạt động
 
-**Chúc bạn cài đặt thành công! 🎉**
+## 🎯 Tính năng mới
+
+### **Qwen AI Integration:**
+- ✅ **Miễn phí** - Không cần API key
+- ✅ **Streaming** - Real-time chat responses
+- ✅ **High Quality** - AI responses chất lượng cao
+
+### **ENSEMBLE Mode:**
+- ✅ **Multiple AI** - Kết hợp nhiều AI models
+- ✅ **Beautiful UI** - Glass effect và animations
+- ✅ **Error Handling** - Robust error management
+
+**Chúc bạn cài đặt thành công và trải nghiệm Qwen AI! 🎉**
 

@@ -112,12 +112,18 @@ $dsn = "sqlite:" . $this->db_name;
 
 ## 🔑 Cấu hình API
 
-### Key4U API (Hiện tại):
+### Key4U API (GPT-4, Claude, Gemini...):
 ```env
 KEY4U_API_KEY=sk-MLUnOdJqvtoK6tAIIQY6yVoGpsctz0CRzPoQED6vLpIiCzay
 ```
 
-### Yescale API (Cũ):
+### Qwen AI API (Miễn phí - Đã tích hợp sẵn):
+```env
+# Không cần API key - Qwen AI hoạt động miễn phí
+# Cookies và headers đã được cấu hình sẵn trong QwenService.php
+```
+
+### Yescale API (Cũ - Không sử dụng):
 ```env
 YESCALE_API_KEY=your_yescale_api_key_here
 ```
@@ -140,10 +146,28 @@ DEBUG_MODE=true
 
 ## 🧪 Test cấu hình
 
-### Test API:
+### Test Key4U API:
 ```bash
 cd src/php-backend
 php test-key4u.php
+```
+
+### Test Qwen AI API:
+```bash
+cd src/php-backend
+php -r "
+require_once 'services/QwenService.php';
+\$qwen = new QwenService();
+\$response = \$qwen->chat('Hello test');
+echo json_encode(\$response, JSON_PRETTY_PRINT);
+"
+```
+
+### Test ENSEMBLE Mode:
+```bash
+curl -X POST http://127.0.0.1:8000/api/chat-real.php \
+  -H "Content-Type: application/json" \
+  -d '{"message":"Hello","model":"ensemble","mode":"single"}'
 ```
 
 ### Test Database:
@@ -163,10 +187,21 @@ php test-mysql.php
 3. Kiểm tra database đã tồn tại
 4. Chạy `php setup-mysql.php`
 
-### Lỗi API:
+### Lỗi Key4U API:
 1. Kiểm tra API key trong config.env
 2. Kiểm tra kết nối internet
 3. Kiểm tra API endpoint
+
+### Lỗi Qwen AI API:
+1. Kiểm tra cookies có còn hợp lệ không
+2. Kiểm tra kết nối internet
+3. Kiểm tra API endpoint có thay đổi không
+4. Cập nhật cookies từ browser nếu cần
+
+### Lỗi ENSEMBLE Mode:
+1. Kiểm tra QwenService.php có tồn tại không
+2. Kiểm tra chat-real.php có xử lý ensemble không
+3. Kiểm tra frontend có hiển thị đúng không
 
 ### Lỗi file upload:
 1. Kiểm tra quyền ghi thư mục uploads
@@ -175,7 +210,14 @@ php test-mysql.php
 
 ## 💡 Khuyến nghị
 
+### **Database:**
 - **Development**: Sử dụng SQLite
 - **Production**: Sử dụng MySQL
 - **Demo**: Sử dụng SQLite
 - **High Traffic**: Sử dụng MySQL với connection pooling
+
+### **AI Models:**
+- **Miễn phí**: Sử dụng Qwen AI (đã tích hợp sẵn)
+- **Premium**: Thêm Key4U API cho GPT-4, Claude, Gemini
+- **ENSEMBLE**: Kết hợp nhiều AI models
+- **Development**: Chỉ cần Qwen AI là đủ

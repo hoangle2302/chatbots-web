@@ -1,4 +1,4 @@
-# 🎉 Tổ chức lại hệ thống Thư Viện AI - HOÀN THÀNH
+# 🎉 Tổ chức lại hệ thống Thư Viện AI với Qwen AI & ENSEMBLE - HOÀN THÀNH
 
 ## ✅ Đã thực hiện
 
@@ -36,7 +36,13 @@ xuandat-ai/
 - ✅ Cập nhật import config trong HTML
 - ✅ Copy config.js vào thư mục web để dễ truy cập
 
-### 4. Tạo file hỗ trợ mới
+### 4. Tích hợp AI Services mới
+- ✅ `QwenService.php` - Qwen AI API với streaming
+- ✅ `ENSEMBLE Mode` - Kết hợp multiple AI responses
+- ✅ `chat-real.php` - API endpoint cho AI chat
+- ✅ `qwen api.py` - Reference file cho Qwen API
+
+### 5. Tạo file hỗ trợ mới
 - ✅ `start.bat` - Script khởi động chính
 - ✅ `quick-start.bat` - Khởi động nhanh với giao diện đẹp
 - ✅ `test-system.bat` - Test hệ thống
@@ -47,7 +53,7 @@ xuandat-ai/
 - ✅ `config.env.example` - Mẫu cấu hình
 - ✅ `config.env` - Cấu hình thực tế
 
-### 5. Cập nhật .gitignore
+### 6. Cập nhật .gitignore
 - ✅ Thêm `data/database/` và `data/uploads/`
 - ✅ Bảo vệ file cấu hình nhạy cảm
 
@@ -75,6 +81,12 @@ xuandat-ai/
 - ✅ Tự động mở browser
 - ✅ Đường dẫn file đã được sửa chính xác
 
+### AI Integration Test
+- ✅ Qwen AI API hoạt động với streaming
+- ✅ ENSEMBLE mode kết hợp AI responses
+- ✅ Frontend hiển thị đẹp với glass effect
+- ✅ Error handling robust cho AI services
+
 ## 🚀 Cách sử dụng
 
 ### Khởi động nhanh
@@ -94,6 +106,8 @@ python server.py
 - **Chat AI**: http://localhost:8001/index.html
 - **Test API**: http://localhost:8001/test-simple.html  
 - **Quản lý tài liệu**: http://localhost:8001/document-manager.html
+- **ENSEMBLE Mode**: Chọn "🤖 Tất cả AI (Ensemble)" trong model selection
+- **Qwen AI**: Tự động sử dụng khi chọn ENSEMBLE mode
 
 ### Kiểm tra hệ thống
 ```bash
@@ -108,9 +122,13 @@ python system-check.py
 4. **An toàn**: Database và uploads được tổ chức riêng
 5. **Tiện lợi**: Nhiều script khởi động và kiểm tra
 6. **Tài liệu đầy đủ**: README và hướng dẫn chi tiết
+7. **AI Integration**: Qwen AI miễn phí với streaming
+8. **ENSEMBLE Mode**: Kết hợp multiple AI responses
+9. **Modern UI**: Glass effect và animations đẹp
+10. **Error Handling**: Robust error management cho AI services
 
 ## 🎯 Kết luận
 
-✅ **HOÀN THÀNH**: Hệ thống đã được tổ chức lại thành công với cấu trúc chuyên nghiệp, đường dẫn chính xác và hoạt động bình thường!
+✅ **HOÀN THÀNH**: Hệ thống đã được tổ chức lại thành công với cấu trúc chuyên nghiệp, tích hợp Qwen AI và ENSEMBLE mode!
 
-🚀 **SẴN SÀNG**: Có thể sử dụng ngay bằng cách chạy `quick-start.bat`
+🚀 **SẴN SÀNG**: Có thể sử dụng ngay bằng cách chạy `quick-start.bat` và chọn ENSEMBLE mode để trải nghiệm Qwen AI
