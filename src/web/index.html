@@ -860,57 +860,65 @@
         });
 
         function checkLoginStatus() {
-            const userData = localStorage.getItem('user');
-            const authSection = document.getElementById('auth-section');
-            const userSection = document.getElementById('user-section');
-            
-            if (userData) {
-                // User đã đăng nhập
-                try {
-                    const user = JSON.parse(userData);
-                    
-                    // Ẩn section đăng nhập/đăng ký
-                    if (authSection) {
-                        authSection.style.display = 'none';
-                    }
-                    
-                    // Hiện section user
-                    if (userSection) {
-                        userSection.style.display = 'block';
+            try {
+                const userData = localStorage.getItem('user');
+                const authSection = document.getElementById('auth-section');
+                const userSection = document.getElementById('user-section');
+                
+                if (userData) {
+                    // User đã đăng nhập
+                    try {
+                        const user = JSON.parse(userData);
                         
-                        // Cập nhật thông tin user
-                        const userNameElement = document.getElementById('user-name');
-                        const userCreditsElement = document.getElementById('user-credits');
-                        
-                        if (userNameElement) {
-                            userNameElement.textContent = user.username || 'User';
+                        // Ẩn section đăng nhập/đăng ký
+                        if (authSection) {
+                            authSection.style.display = 'none';
                         }
                         
-                        if (userCreditsElement) {
-                            userCreditsElement.textContent = (user.credits || 0) + ' credits';
+                        // Hiện section user
+                        if (userSection) {
+                            userSection.style.display = 'block';
+                            
+                            // Cập nhật thông tin user
+                            const userNameElement = document.getElementById('user-name');
+                            const userCreditsElement = document.getElementById('user-credits');
+                            
+                            if (userNameElement) {
+                                userNameElement.textContent = user.username || 'User';
+                            }
+                            
+                            if (userCreditsElement) {
+                                userCreditsElement.textContent = (user.credits || 0) + ' credits';
+                            }
                         }
+                    } catch (error) {
+                        console.error('Error parsing user data:', error);
+                        // Nếu có lỗi, hiển thị lại section đăng nhập
+                        showAuthSection();
                     }
-                } catch (error) {
-                    console.error('Error parsing user data:', error);
-                    // Nếu có lỗi, hiển thị lại section đăng nhập
+                } else {
+                    // User chưa đăng nhập
                     showAuthSection();
                 }
-            } else {
-                // User chưa đăng nhập
-                showAuthSection();
+            } catch (error) {
+                console.error('Error in checkLoginStatus:', error);
             }
         }
 
         function showAuthSection() {
-            const authSection = document.getElementById('auth-section');
-            const userSection = document.getElementById('user-section');
-            
-            if (authSection) {
-                authSection.style.display = 'block';
-            }
-            
-            if (userSection) {
-                userSection.style.display = 'none';
+            try {
+                const authSection = document.getElementById('auth-section');
+                const userSection = document.getElementById('user-section');
+                
+                if (authSection) {
+                    authSection.style.display = 'block';
+                }
+                
+                if (userSection) {
+                    userSection.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error in showAuthSection:', error);
             }
         }
 
@@ -938,27 +946,51 @@
 
         // Global function for search suggestions
         function selectSuggestion(suggestion) {
-            const searchInput = document.getElementById('model-search');
-            searchInput.value = suggestion;
-            document.getElementById('search-suggestions').style.display = 'none';
-            // Trigger filter function if available
-            if (typeof filterModels === 'function') {
-                filterModels();
+            try {
+                const searchInput = document.getElementById('model-search');
+                const searchSuggestions = document.getElementById('search-suggestions');
+                
+                if (searchInput) {
+                    searchInput.value = suggestion;
+                }
+                
+                if (searchSuggestions) {
+                    searchSuggestions.style.display = 'none';
+                }
+                
+                // Trigger filter function if available
+                if (typeof filterModels === 'function') {
+                    filterModels();
+                }
+            } catch (error) {
+                console.error('Error in selectSuggestion:', error);
             }
         }
 
         // === TÌM KIẾM VÀ PROVIDER LIST ===
         document.addEventListener('DOMContentLoaded', function() {
-            const searchInput = document.getElementById('model-search');
-            const modelSelect = document.getElementById('model-select');
-            
-            // Provider list elements
-            const providerList = document.getElementById('provider-list');
-            const providerOptions = providerList.querySelectorAll('.provider-option');
+            try {
+                const searchInput = document.getElementById('model-search');
+                const modelSelect = document.getElementById('model-select');
+                
+                // Kiểm tra null cho các elements chính
+                if (!searchInput || !modelSelect) {
+                    console.warn('Missing required elements: model-search or model-select');
+                    return;
+                }
+                
+                // Provider list elements
+                const providerList = document.getElementById('provider-list');
+                if (!providerList) {
+                    console.warn('Missing provider-list element');
+                    return;
+                }
+                
+                const providerOptions = providerList.querySelectorAll('.provider-option');
             
             let selectedCategory = '';
             
-            // Enhanced filters elements
+            // Enhanced filters elements với null checks
             const sortSelect = document.getElementById('sort-select');
             const resetFiltersBtn = document.getElementById('reset-filters-btn');
             const searchSuggestions = document.getElementById('search-suggestions');
@@ -970,6 +1002,11 @@
                 audio: document.getElementById('filter-audio'),
                 video: document.getElementById('filter-video')
             };
+            
+            // Check if essential elements exist
+            if (!filterStatusElement) {
+                console.warn('Missing filter-status element');
+            }
             
             // Lưu tất cả options gốc và thống kê
             const allOptions = Array.from(modelSelect.options);
@@ -1105,21 +1142,36 @@
             });
             
             function showSearchSuggestions() {
-                const currentValue = searchInput.value.toLowerCase();
-                const suggestions = popularSearches.filter(search => 
-                    search.toLowerCase().includes(currentValue) || currentValue === ''
-                );
-                
-                if (suggestions.length > 0) {
-                    searchSuggestions.innerHTML = suggestions.map(suggestion => 
-                        `<div class="suggestion-item" onclick="selectSuggestion('${suggestion}')">${suggestion}</div>`
-                    ).join('');
-                    searchSuggestions.style.display = 'block';
+                try {
+                    if (!searchInput || !searchSuggestions) return;
+                    
+                    const currentValue = searchInput.value.toLowerCase();
+                    // Define popularSearches if not defined
+                    const popularSearches = ['GPT', 'Claude', 'Gemini', 'Flux', 'DALL-E', 'Whisper', 'Doubao', 'DeepSeek'];
+                    
+                    const suggestions = popularSearches.filter(search => 
+                        search.toLowerCase().includes(currentValue) || currentValue === ''
+                    );
+                    
+                    if (suggestions.length > 0) {
+                        searchSuggestions.innerHTML = suggestions.map(suggestion => 
+                            `<div class="suggestion-item" onclick="selectSuggestion('${suggestion}')">${suggestion}</div>`
+                        ).join('');
+                        searchSuggestions.style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('Error in showSearchSuggestions:', error);
                 }
             }
             
             function hideSearchSuggestions() {
-                searchSuggestions.style.display = 'none';
+                try {
+                    if (searchSuggestions) {
+                        searchSuggestions.style.display = 'none';
+                    }
+                } catch (error) {
+                    console.error('Error in hideSearchSuggestions:', error);
+                }
             }
             
             function selectSuggestion(suggestion) {
@@ -1172,44 +1224,67 @@
             });
             
             function updateModelCount() {
-                const totalModels = allOptions.length;
-                const visibleModels = modelSelect.options.length;
-                
-                document.querySelector('.total-models').textContent = `Tổng: ${totalModels} models`;
-                document.querySelector('.filtered-models').textContent = `Hiển thị: ${visibleModels} models`;
+                try {
+                    const totalModels = allOptions.length;
+                    const visibleModels = modelSelect ? modelSelect.options.length : 0;
+                    
+                    const totalModelsEl = document.querySelector('.total-models');
+                    const filteredModelsEl = document.querySelector('.filtered-models');
+                    
+                    if (totalModelsEl) {
+                        totalModelsEl.textContent = `Tổng: ${totalModels} models`;
+                    }
+                    
+                    if (filteredModelsEl) {
+                        filteredModelsEl.textContent = `Hiển thị: ${visibleModels} models`;
+                    }
+                } catch (error) {
+                    console.error('Error in updateModelCount:', error);
+                }
             }
             
             function updateFilterStatus() {
-                const activeProvider = document.querySelector('.provider-option.active');
-                const searchTerm = searchInput.value.trim();
-                const hasTypeFilter = !filterCheckboxes.text.checked || !filterCheckboxes.image.checked || 
-                                     !filterCheckboxes.audio.checked || !filterCheckboxes.video.checked;
-                
-                let statusText = '';
-                
-                if (activeProvider) {
-                    const providerName = activeProvider.querySelector('.provider-name').textContent;
-                    const providerIcon = activeProvider.querySelector('.provider-icon').textContent;
-                    const providerCount = activeProvider.querySelector('.provider-count').textContent;
+                try {
+                    if (!filterStatusElement) return;
                     
-                    if (selectedCategory === '') {
-                        statusText = `📋 Đang hiển thị: Tất cả models`;
+                    const activeProvider = document.querySelector('.provider-option.active');
+                    const searchTerm = searchInput ? searchInput.value.trim() : '';
+                    const hasTypeFilter = filterCheckboxes.text && filterCheckboxes.image && filterCheckboxes.audio && filterCheckboxes.video &&
+                                         (!filterCheckboxes.text.checked || !filterCheckboxes.image.checked || 
+                                          !filterCheckboxes.audio.checked || !filterCheckboxes.video.checked);
+                    
+                    let statusText = '';
+                    
+                    if (activeProvider) {
+                        const providerNameEl = activeProvider.querySelector('.provider-name');
+                        const providerIconEl = activeProvider.querySelector('.provider-icon');
+                        const providerCountEl = activeProvider.querySelector('.provider-count');
+                        
+                        const providerName = providerNameEl ? providerNameEl.textContent : 'Unknown';
+                        const providerIcon = providerIconEl ? providerIconEl.textContent : '🤖';
+                        const providerCount = providerCountEl ? providerCountEl.textContent : '';
+                        
+                        if (selectedCategory === '') {
+                            statusText = `📋 Đang hiển thị: Tất cả models`;
+                        } else {
+                            statusText = `${providerIcon} Đang lọc: ${providerName} ${providerCount}`;
+                        }
+                        
+                        if (searchTerm) {
+                            statusText += ` | 🔍 Tìm: "${searchTerm}"`;
+                        }
+                        
+                        if (hasTypeFilter) {
+                            statusText += ` | 🎛️ Có bộ lọc loại`;
+                        }
                     } else {
-                        statusText = `${providerIcon} Đang lọc: ${providerName} ${providerCount}`;
+                        statusText = '📋 Đang hiển thị: Tất cả models';
                     }
                     
-                    if (searchTerm) {
-                        statusText += ` | 🔍 Tìm: "${searchTerm}"`;
-                    }
-                    
-                    if (hasTypeFilter) {
-                        statusText += ` | 🎛️ Có bộ lọc loại`;
-                    }
-                } else {
-                    statusText = '📋 Đang hiển thị: Tất cả models';
+                    filterStatusElement.innerHTML = `<span>${statusText}</span>`;
+                } catch (error) {
+                    console.error('Error in updateFilterStatus:', error);
                 }
-                
-                filterStatusElement.innerHTML = `<span>${statusText}</span>`;
             }
             
             function sortModels(sortType) {
@@ -1764,7 +1839,14 @@
             });
             
             // Thêm nút vào sau provider container
-            document.querySelector('.provider-container').appendChild(clearButton);
+            const providerContainer = document.querySelector('.provider-container');
+            if (providerContainer) {
+                providerContainer.appendChild(clearButton);
+            }
+            
+            } catch (error) {
+                console.error('Error in DOMContentLoaded:', error);
+            }
         });
     </script>
     
