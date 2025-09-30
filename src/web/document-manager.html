@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Tài liệu - Thư Viện AI</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            min-height: 100vh;
+            color: white;
+        }
+
+        /* Navigation */
+        .navbar {
+            padding: 15px 30px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+        }
+
+        .nav-menu a {
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-menu a:hover, .nav-menu a.active {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        /* Main Container */
+        .document-container {
+            padding: 30px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            margin-bottom: 40px;
+        }
+
+        .page-title {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #ffffff 0%, #e0e7ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .page-subtitle {
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* Upload Section */
+        .upload-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 18px;
+            padding: 40px;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .upload-area {
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            padding: 60px 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .upload-area:hover {
+            border-color: rgba(255, 235, 59, 0.6);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .upload-area.dragover {
+            border-color: rgba(255, 235, 59, 0.8);
+            background: rgba(255, 235, 59, 0.1);
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.8;
+        }
+
+        .upload-text {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .upload-subtitle {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 30px;
+        }
+
+        .upload-button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            padding: 15px 30px;
+            border-radius: 12px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        #file-input {
+            display: none;
+        }
+
+        /* Controls */
+        .controls-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            gap: 20px;
+        }
+
+        .search-box {
+            flex: 1;
+            max-width: 400px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 15px 20px 15px 50px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 16px;
+            backdrop-filter: blur(10px);
+        }
+
+        .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .filter-btn {
+            padding: 12px 20px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .filter-btn:hover, .filter-btn.active {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* Document Grid */
+        .documents-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .document-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 25px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .document-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .document-card:hover::before {
+            left: 100%;
+        }
+
+        .document-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+        }
+
+        .doc-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .doc-icon {
+            font-size: 40px;
+            opacity: 0.8;
+        }
+
+        .doc-menu {
+            position: relative;
+        }
+
+        .doc-menu-btn {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .doc-menu-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .doc-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            line-height: 1.3;
+        }
+
+        .doc-meta {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 15px;
+        }
+
+        .doc-size {
+            font-weight: 600;
+            color: rgba(255, 235, 59, 0.8);
+        }
+
+        .doc-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .doc-action-btn {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .doc-action-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .doc-action-btn.primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+        }
+
+        .stat-item {
+            flex: 1;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .empty-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .empty-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .empty-subtitle {
+            font-size: 16px;
+            margin-bottom: 30px;
+        }
+
+        /* Animations */
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .slide-in {
+            animation: slideInUp 0.6s ease forwards;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .document-container {
+                padding: 20px;
+            }
+
+            .controls-section {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-box {
+                max-width: none;
+            }
+
+            .filter-buttons {
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+
+            .documents-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-bar {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .page-title {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-brand">
+            <span>🧠</span>
+            <span>Thư Viện AI</span>
+        </div>
+        <ul class="nav-menu">
+            <li><a href="dashboard.html">Dashboard</a></li>
+            <li><a href="index.html">Chat</a></li>
+            <li><a href="document-manager.html" class="active">Tài liệu</a></li>
+            <li><a href="pricing.html">Pricing</a></li>
+        </ul>
+        <div class="user-profile">
+            <div class="user-avatar">👤</div>
+            <span>Admin</span>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="document-container">
+        <div class="page-header">
+            <h1 class="page-title">Quản lý Tài liệu</h1>
+            <p class="page-subtitle">Upload, tổ chức và phân tích tài liệu với AI</p>
+        </div>
+
+        <!-- Upload Section -->
+        <div class="upload-section slide-in">
+            <div class="upload-area" id="upload-area">
+                <div class="upload-icon">📁</div>
+                <div class="upload-text">Kéo thả tài liệu vào đây</div>
+                <div class="upload-subtitle">Hỗ trợ PDF, DOC, DOCX, TXT, CSV (Tối đa 10MB)</div>
+                <button class="upload-button" onclick="document.getElementById('file-input').click()">
+                    Chọn tài liệu
+                </button>
+                <input type="file" id="file-input" multiple accept=".pdf,.doc,.docx,.txt,.csv">
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls-section">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="search-input" placeholder="Tìm kiếm tài liệu..." id="search-input">
+            </div>
+            <div class="filter-buttons">
+                <button class="filter-btn active" data-filter="all">Tất cả</button>
+                <button class="filter-btn" data-filter="pdf">PDF</button>
+                <button class="filter-btn" data-filter="doc">Word</button>
+                <button class="filter-btn" data-filter="txt">Text</button>
+                <button class="filter-btn" data-filter="csv">CSV</button>
+            </div>
+        </div>
+
+        <!-- Documents Grid -->
+        <div class="documents-grid" id="documents-grid">
+            <!-- Sample Documents -->
+            <div class="document-card slide-in" data-type="pdf">
+                <div class="doc-header">
+                    <span class="doc-icon">📄</span>
+                    <div class="doc-menu">
+                        <button class="doc-menu-btn">⋮</button>
+                    </div>
+                </div>
+                <h3 class="doc-title">Báo cáo AI Trends 2024.pdf</h3>
+                <div class="doc-meta">
+                    Ngày tải: 15/09/2024 • <span class="doc-size">2.4 MB</span>
+                </div>
+                <div class="doc-actions">
+                    <button class="doc-action-btn">Xem</button>
+                    <button class="doc-action-btn primary">Phân tích AI</button>
+                </div>
+            </div>
+
+            <div class="document-card slide-in" data-type="doc">
+                <div class="doc-header">
+                    <span class="doc-icon">📝</span>
+                    <div class="doc-menu">
+                        <button class="doc-menu-btn">⋮</button>
+                    </div>
+                </div>
+                <h3 class="doc-title">Kế hoạch Marketing Q4.docx</h3>
+                <div class="doc-meta">
+                    Ngày tải: 12/09/2024 • <span class="doc-size">1.8 MB</span>
+                </div>
+                <div class="doc-actions">
+                    <button class="doc-action-btn">Xem</button>
+                    <button class="doc-action-btn primary">Phân tích AI</button>
+                </div>
+            </div>
+
+            <div class="document-card slide-in" data-type="csv">
+                <div class="doc-header">
+                    <span class="doc-icon">📊</span>
+                    <div class="doc-menu">
+                        <button class="doc-menu-btn">⋮</button>
+                    </div>
+                </div>
+                <h3 class="doc-title">Sales Data 2024.csv</h3>
+                <div class="doc-meta">
+                    Ngày tải: 10/09/2024 • <span class="doc-size">892 KB</span>
+                </div>
+                <div class="doc-actions">
+                    <button class="doc-action-btn">Xem</button>
+                    <button class="doc-action-btn primary">Phân tích AI</button>
+                </div>
+            </div>
+
+            <div class="document-card slide-in" data-type="txt">
+                <div class="doc-header">
+                    <span class="doc-icon">📋</span>
+                    <div class="doc-menu">
+                        <button class="doc-menu-btn">⋮</button>
+                    </div>
+                </div>
+                <h3 class="doc-title">Meeting Notes.txt</h3>
+                <div class="doc-meta">
+                    Ngày tải: 08/09/2024 • <span class="doc-size">125 KB</span>
+                </div>
+                <div class="doc-actions">
+                    <button class="doc-action-btn">Xem</button>
+                    <button class="doc-action-btn primary">Phân tích AI</button>
+                </div>
+            </div>
+
+            <div class="document-card slide-in" data-type="pdf">
+                <div class="doc-header">
+                    <span class="doc-icon">📄</span>
+                    <div class="doc-menu">
+                        <button class="doc-menu-btn">⋮</button>
+                    </div>
+                </div>
+                <h3 class="doc-title">User Manual v2.1.pdf</h3>
+                <div class="doc-meta">
+                    Ngày tải: 05/09/2024 • <span class="doc-size">4.2 MB</span>
+                </div>
+                <div class="doc-actions">
+                    <button class="doc-action-btn">Xem</button>
+                    <button class="doc-action-btn primary">Phân tích AI</button>
+                </div>
+            </div>
+
+            <div class="document-card slide-in" data-type="doc">
+                <div class="doc-header">
+                    <span class="doc-icon">📝</span>
+                    <div class="doc-menu">
+                        <button class="doc-menu-btn">⋮</button>
+                    </div>
+                </div>
+                <h3 class="doc-title">Proposal Template.docx</h3>
+                <div class="doc-meta">
+                    Ngày tải: 02/09/2024 • <span class="doc-size">967 KB</span>
+                </div>
+                <div class="doc-actions">
+                    <button class="doc-action-btn">Xem</button>
+                    <button class="doc-action-btn primary">Phân tích AI</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Bar -->
+        <div class="stats-bar slide-in">
+            <div class="stat-item">
+                <div class="stat-number">156</div>
+                <div class="stat-label">Tổng tài liệu</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">47.2 MB</div>
+                <div class="stat-label">Dung lượng sử dụng</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">89</div>
+                <div class="stat-label">Đã phân tích</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">23</div>
+                <div class="stat-label">Tháng này</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Upload functionality
+        const uploadArea = document.getElementById('upload-area');
+        const fileInput = document.getElementById('file-input');
+
+        // Drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            handleFiles(files);
+        });
+
+        // File input change
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+
+        // Handle file upload
+        function handleFiles(files) {
+            Array.from(files).forEach(file => {
+                if (file.size > 10 * 1024 * 1024) {
+                    alert(`File ${file.name} quá lớn. Vui lòng chọn file nhỏ hơn 10MB.`);
+                    return;
+                }
+                
+                // Simulate upload
+                console.log('Uploading:', file.name);
+                // Here you would implement actual file upload
+            });
+        }
+
+        // Search functionality
+        const searchInput = document.getElementById('search-input');
+        const documentsGrid = document.getElementById('documents-grid');
+
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const documentCards = documentsGrid.querySelectorAll('.document-card');
+            
+            documentCards.forEach(card => {
+                const title = card.querySelector('.doc-title').textContent.toLowerCase();
+                if (title.includes(searchTerm)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+
+        // Filter functionality
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        
+        filterButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                // Update active button
+                filterButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                
+                const filter = button.dataset.filter;
+                const documentCards = documentsGrid.querySelectorAll('.document-card');
+                
+                documentCards.forEach(card => {
+                    if (filter === 'all' || card.dataset.type === filter) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            });
+        });
+
+        // Slide in animation on scroll
+        document.addEventListener('DOMContentLoaded', function() {
+            const slideInElements = document.querySelectorAll('.slide-in');
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            });
+
+            slideInElements.forEach(el => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(30px)';
+                el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                observer.observe(el);
+            });
+        });
+
+        // Document actions
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('doc-action-btn')) {
+                const action = e.target.textContent;
+                const documentTitle = e.target.closest('.document-card').querySelector('.doc-title').textContent;
+                
+                if (action === 'Phân tích AI') {
+                    alert(`Đang phân tích tài liệu: ${documentTitle}`);
+                    // Here you would implement AI analysis
+                } else if (action === 'Xem') {
+                    alert(`Đang mở tài liệu: ${documentTitle}`);
+                    // Here you would implement document viewer
+                }
+            }
+        });
+    </script>
+</body>
+</html>
