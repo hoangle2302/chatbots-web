@@ -438,8 +438,13 @@ async function sendMessage() {
         
         // Lấy cài đặt
         const modelSelect = document.getElementById('model-select');
+        if (!modelSelect) {
+            throw new Error('Model select element not found');
+        }
         const selectedModel = modelSelect.value;
-        const processingMode = document.querySelector('input[name="processing-mode"]:checked').value;
+        
+        const processingModeElement = document.querySelector('input[name="processing-mode"]:checked');
+        const processingMode = processingModeElement ? processingModeElement.value : 'single';
         
         let result;
         
@@ -1169,6 +1174,28 @@ function getCurrentModel() {
 
 // Khởi tạo
 document.addEventListener('DOMContentLoaded', function() {
+    // Debug: Kiểm tra model-select element
+    const modelSelect = document.getElementById('model-select');
+    console.log('🔍 Model select element on DOMContentLoaded:', modelSelect);
+    if (!modelSelect) {
+        console.error('❌ Model select element not found on page load!');
+    } else {
+        console.log('✅ Model select element found, options count:', modelSelect.options.length);
+        
+        // Đảm bảo model-select hiển thị
+        modelSelect.style.display = 'block';
+        modelSelect.style.visibility = 'visible';
+        modelSelect.style.opacity = '1';
+        
+        // Đảm bảo container cũng hiển thị
+        const container = modelSelect.closest('.model-select-container');
+        if (container) {
+            container.style.display = 'block';
+            container.style.visibility = 'visible';
+            container.style.opacity = '1';
+        }
+    }
+    
     // Khởi tạo chat history
     loadChatHistory();
     renderConversationsList();
@@ -1420,3 +1447,72 @@ function testModal() {
         console.error('❌ Missing elements!');
     }
 }
+
+// Function để kiểm tra và sửa model-select
+function fixModelSelect() {
+    console.log('🔧 Fixing model-select...');
+    const modelSelect = document.getElementById('model-select');
+    const container = document.querySelector('.model-select-container');
+    
+    if (!modelSelect) {
+        console.error('❌ Model select element not found!');
+        return false;
+    }
+    
+    if (!container) {
+        console.error('❌ Model select container not found!');
+        return false;
+    }
+    
+    // Đảm bảo hiển thị
+    modelSelect.style.display = 'block';
+    modelSelect.style.visibility = 'visible';
+    modelSelect.style.opacity = '1';
+    modelSelect.style.height = '200px';
+    
+    container.style.display = 'block';
+    container.style.visibility = 'visible';
+    container.style.opacity = '1';
+    
+    // Force hiển thị tất cả options
+    Array.from(modelSelect.options).forEach(option => {
+        option.style.display = 'block';
+        option.style.visibility = 'visible';
+        option.style.opacity = '1';
+    });
+    
+    console.log('✅ Model select fixed!');
+    console.log('Model select:', modelSelect);
+    console.log('Container:', container);
+    console.log('Options count:', modelSelect.options.length);
+    
+    return true;
+}
+
+// Function để reset all filters và hiển thị tất cả models
+function resetAllFilters() {
+    console.log('🔄 Resetting all filters...');
+    const modelSelect = document.getElementById('model-select');
+    if (!modelSelect) return;
+    
+    // Clear tất cả filters
+    const searchInput = document.querySelector('#model-search');
+    if (searchInput) {
+        searchInput.value = '';
+    }
+    
+    // Force hiển thị tất cả options
+    Array.from(modelSelect.options).forEach(option => {
+        option.style.display = 'block';
+        option.style.visibility = 'visible';
+        option.style.opacity = '1';
+    });
+    
+    console.log('✅ All filters reset, all options visible');
+}
+
+// Gọi fixModelSelect và resetAllFilters sau 1 giây
+setTimeout(() => {
+    fixModelSelect();
+    resetAllFilters();
+}, 1000);
