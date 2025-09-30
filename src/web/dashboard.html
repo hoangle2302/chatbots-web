@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Thư Viện AI</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
+            background-size: 400% 400%;
+            background-attachment: fixed;
+            animation: gradientShift 15s ease infinite;
+            min-height: 100vh;
+            color: white;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Floating Particles Background */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .particle:nth-child(odd) {
+            animation-delay: -2s;
+            animation-duration: 8s;
+        }
+
+        .particle:nth-child(even) {
+            animation-delay: -4s;
+            animation-duration: 10s;
+        }
+
+        /* Header */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(25px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .navbar {
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 24px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-brand:hover {
+            transform: scale(1.05);
+        }
+
+        .nav-brand span:first-child {
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 20px;
+            list-style: none;
+        }
+
+        .nav-menu a {
+            color: rgba(255, 255, 255, 0.85);
+            text-decoration: none;
+            padding: 12px 20px;
+            border-radius: 12px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            font-weight: 500;
+        }
+
+        .nav-menu a::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .nav-menu a:hover::before {
+            left: 100%;
+        }
+
+        .nav-menu a:hover, .nav-menu a.active {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            color: #ffffff;
+        }
+
+        .nav-menu a.active {
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            padding: 8px 15px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .user-profile:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .user-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .user-profile:hover .user-avatar {
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        /* Main Screen */
+        main {
+            position: relative;
+            z-index: 10;
+            padding-top: 90px;
+            width: 100%;
+            overflow-y: auto;
+            min-height: 100vh;
+        }
+
+        .dashboard-container {
+            padding: 20px 30px 60px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .dashboard-header {
+            margin-bottom: 20px;
+            padding-top: 10px;
+            text-align: center;
+            position: relative;
+        }
+
+        .dashboard-title {
+            font-size: 42px;
+            font-weight: 800;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #ffffff 0%, #e0e7ff 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            position: relative;
+            z-index: 1;
+            letter-spacing: -0.5px;
+        }
+
+        .dashboard-subtitle {
+            font-size: 20px;
+            color: rgba(255, 255, 255, 0.85);
+            font-weight: 400;
+            line-height: 1.5;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+            margin-top: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 24px;
+            padding: 30px;
+            min-height: 160px;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            transform-style: preserve-3d;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .stat-card:hover::before {
+            left: 100%;
+        }
+
+        .stat-card:hover::after {
+            opacity: 1;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-8px) rotateX(5deg) rotateY(5deg);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25), 0 0 30px rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .stat-card:nth-child(1):hover {
+            box-shadow: 0 25px 50px rgba(102, 126, 234, 0.3), 0 0 30px rgba(102, 126, 234, 0.2);
+        }
+
+        .stat-card:nth-child(2):hover {
+            box-shadow: 0 25px 50px rgba(240, 147, 251, 0.3), 0 0 30px rgba(240, 147, 251, 0.2);
+        }
+
+        .stat-card:nth-child(3):hover {
+            box-shadow: 0 25px 50px rgba(79, 172, 254, 0.3), 0 0 30px rgba(79, 172, 254, 0.2);
+        }
+
+        .stat-card:nth-child(4):hover {
+            box-shadow: 0 25px 50px rgba(245, 87, 108, 0.3), 0 0 30px rgba(245, 87, 108, 0.2);
+        }
+
+        .stat-icon {
+            font-size: 56px;
+            margin-bottom: 20px;
+            display: block;
+            transition: all 0.4s ease;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+        }
+
+        .stat-card:hover .stat-icon {
+            transform: scale(1.2) rotateY(360deg);
+            filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.3));
+        }
+
+        .stat-number {
+            font-size: 42px;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 10px;
+            transition: all 0.4s ease;
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .stat-card:hover .stat-number {
+            transform: scale(1.05);
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .stat-label {
+            font-size: 17px;
+            color: rgba(255, 255, 255, 0.85);
+            margin-bottom: 15px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-change {
+            font-size: 14px;
+            padding: 6px 16px;
+            border-radius: 25px;
+            background: rgba(34, 197, 94, 0.15);
+            color: #86efac;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            font-weight: 600;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-card:hover .stat-change {
+            background: rgba(34, 197, 94, 0.25);
+            border-color: rgba(34, 197, 94, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
+        }
+
+        /* Content Grid */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 35px;
+            margin-bottom: 50px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Recent Activity */
+        .activity-card {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 24px;
+            padding: 35px;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .activity-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            border-color: rgba(255, 255, 255, 0.25);
+        }
+
+        .card-title {
+            font-size: 26px;
+            font-weight: 700;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #ffffff;
+            position: relative;
+        }
+
+        .card-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 2px;
+        }
+
+        .activity-list {
+            list-style: none;
+            position: relative;
+        }
+
+        .activity-list::before {
+            content: '';
+            position: absolute;
+            left: 20px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.2), rgba(255,255,255,0.05));
+            border-radius: 1px;
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 20px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .activity-item:hover {
+            transform: translateX(8px);
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding-left: 15px;
+            padding-right: 15px;
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            position: relative;
+            z-index: 2;
+            transition: all 0.4s ease;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .activity-item:hover .activity-icon {
+            transform: scale(1.1) rotate(10deg);
+            background: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .activity-icon::before {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #ffffff;
+            border-radius: 50%;
+            left: -24px;
+            top: 50%;
+            transform: translateY(-50%);
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-content h4 {
+            font-size: 17px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #ffffff;
+        }
+
+        .activity-content p {
+            font-size: 15px;
+            color: rgba(255, 255, 255, 0.75);
+            line-height: 1.4;
+        }
+
+        .activity-time {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-left: auto;
+            font-weight: 500;
+            background: rgba(255, 255, 255, 0.08);
+            padding: 4px 12px;
+            border-radius: 20px;
+            backdrop-filter: blur(5px);
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: grid;
+            gap: 18px;
+        }
+
+        .action-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            padding: 24px;
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .action-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .action-btn:hover::before {
+            left: 100%;
+        }
+
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateX(8px) translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            border-color: rgba(255, 255, 255, 0.25);
+        }
+
+        .action-icon {
+            font-size: 28px;
+            transition: all 0.3s ease;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+        }
+
+        .action-btn:hover .action-icon {
+            transform: scale(1.2) rotate(5deg);
+        }
+
+        .action-text h4 {
+            font-size: 17px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #ffffff;
+        }
+
+        .action-text p {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.75);
+            line-height: 1.3;
+        }
+
+        /* Model Usage Chart */
+        .chart-container {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 24px;
+            padding: 35px;
+            margin-bottom: 40px;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chart-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            border-color: rgba(255, 255, 255, 0.25);
+        }
+
+        .usage-bars {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-top: 25px;
+        }
+
+        .usage-item {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 15px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .usage-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateX(5px);
+        }
+
+        .model-name {
+            min-width: 130px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #ffffff;
+            transition: color 0.3s ease;
+        }
+
+        .usage-item:hover .model-name {
+            color: #f0f0f0;
+        }
+
+        .usage-bar {
+            flex: 1;
+            height: 12px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .usage-fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: all 1s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .usage-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        .usage-percentage {
+            min-width: 50px;
+            text-align: right;
+            font-size: 15px;
+            color: rgba(255, 255, 255, 0.85);
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .usage-item:hover .usage-percentage {
+            color: #ffffff;
+            transform: scale(1.05);
+        }
+
+        /* Animations */
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px) rotate(0deg);
+                opacity: 0.1;
+            }
+            50% {
+                transform: translateY(-20px) rotate(180deg);
+                opacity: 0.3;
+            }
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .slide-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+
+        .slide-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            main {
+                padding-top: 85px;
+            }
+
+            .dashboard-container {
+                max-width: 1200px;
+                padding: 15px 25px 50px;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                gap: 25px;
+                margin-top: 15px;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            main {
+                padding-top: 90px;
+            }
+
+            .dashboard-container {
+                padding: 15px 20px 40px;
+            }
+
+            .content-grid {
+                grid-template-columns: 1fr;
+                gap: 25px;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 20px;
+                margin-top: 15px;
+            }
+
+            .dashboard-title {
+                font-size: 36px;
+            }
+
+            .dashboard-subtitle {
+                font-size: 18px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            header {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+            }
+
+            .navbar {
+                padding: 15px 20px;
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .nav-menu {
+                gap: 10px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .nav-menu a {
+                padding: 10px 16px;
+                font-size: 14px;
+            }
+
+            main {
+                padding-top: 150px;
+            }
+
+            .dashboard-container {
+                padding: 10px 20px 40px;
+            }
+
+            .dashboard-header {
+                margin-bottom: 15px;
+            }
+
+            .content-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .stat-card {
+                padding: 25px;
+                text-align: center;
+            }
+
+            .dashboard-title {
+                font-size: 32px;
+            }
+
+            .dashboard-subtitle {
+                font-size: 16px;
+            }
+
+            .card-title {
+                font-size: 22px;
+            }
+
+            .activity-card, .chart-container {
+                padding: 25px;
+            }
+
+            .usage-item {
+                gap: 15px;
+                padding: 12px;
+            }
+
+            .model-name {
+                min-width: 100px;
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            main {
+                padding-top: 170px;
+            }
+
+            .dashboard-container {
+                padding: 10px 15px 30px;
+            }
+
+            .stats-grid {
+                gap: 15px;
+            }
+
+            .stat-card {
+                padding: 20px;
+            }
+
+            .stat-number {
+                font-size: 32px;
+            }
+
+            .stat-icon {
+                font-size: 48px;
+            }
+
+            .activity-card, .chart-container {
+                padding: 20px;
+            }
+
+            .activity-item {
+                padding: 15px 10px;
+            }
+
+            .user-profile span {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <nav class="navbar">
+            <div class="nav-brand">
+                <span>🧠</span>
+                <span>Thư Viện AI</span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="dashboard.html" class="active">Dashboard</a></li>
+                <li><a href="index.html">Chat</a></li>
+                <li><a href="document-manager.html">Tài liệu</a></li>
+                <li><a href="pricing.html">Pricing</a></li>
+            </ul>
+            <div class="user-profile">
+                <div class="user-avatar">👤</div>
+                <span>Admin</span>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Floating Particles Background -->
+    <div class="particles" id="particles"></div>
+
+    <!-- Main Screen -->
+    <main>
+        <div class="dashboard-container">
+        <div class="dashboard-header">
+            <h1 class="dashboard-title">Dashboard</h1>
+            <p class="dashboard-subtitle">Chào mừng quay trở lại! Theo dõi hoạt động AI của bạn</p>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card slide-in">
+                <span class="stat-icon">💬</span>
+                <div class="stat-number">1,247</div>
+                <div class="stat-label">Cuộc trò chuyện</div>
+                <span class="stat-change">+12% tháng này</span>
+            </div>
+            <div class="stat-card slide-in">
+                <span class="stat-icon">🤖</span>
+                <div class="stat-number">43</div>
+                <div class="stat-label">AI Models đã sử dụng</div>
+                <span class="stat-change">+5 models mới</span>
+            </div>
+            <div class="stat-card slide-in">
+                <span class="stat-icon">⚡</span>
+                <div class="stat-number">847</div>
+                <div class="stat-label">Credits còn lại</div>
+                <span class="stat-change">Premium Active</span>
+            </div>
+            <div class="stat-card slide-in">
+                <span class="stat-icon">📄</span>
+                <div class="stat-number">156</div>
+                <div class="stat-label">Tài liệu đã xử lý</div>
+                <span class="stat-change">+23 docs tháng này</span>
+            </div>
+        </div>
+
+        <!-- Content Grid -->
+        <div class="content-grid">
+            <!-- Recent Activity -->
+            <div class="activity-card slide-in">
+                <h2 class="card-title">
+                    <span>📈</span>
+                    Hoạt động gần đây
+                </h2>
+                <ul class="activity-list">
+                    <li class="activity-item">
+                        <div class="activity-icon">💬</div>
+                        <div class="activity-content">
+                            <h4>Chat với GPT-4</h4>
+                            <p>Thảo luận về machine learning algorithms</p>
+                        </div>
+                        <span class="activity-time">2 phút trước</span>
+                    </li>
+                    <li class="activity-item">
+                        <div class="activity-icon">📝</div>
+                        <div class="activity-content">
+                            <h4>Tạo nội dung với Claude</h4>
+                            <p>Viết blog về AI trends 2024</p>
+                        </div>
+                        <span class="activity-time">15 phút trước</span>
+                    </li>
+                    <li class="activity-item">
+                        <div class="activity-icon">🎨</div>
+                        <div class="activity-content">
+                            <h4>Tạo ảnh với DALL-E</h4>
+                            <p>Generate 5 marketing images</p>
+                        </div>
+                        <span class="activity-time">1 giờ trước</span>
+                    </li>
+                    <li class="activity-item">
+                        <div class="activity-icon">📊</div>
+                        <div class="activity-content">
+                            <h4>Phân tích dữ liệu</h4>
+                            <p>Upload và xử lý dataset mới</p>
+                        </div>
+                        <span class="activity-time">3 giờ trước</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="activity-card slide-in">
+                <h2 class="card-title">
+                    <span>⚡</span>
+                    Thao tác nhanh
+                </h2>
+                <div class="quick-actions">
+                    <a href="index.html" class="action-btn">
+                        <span class="action-icon">💬</span>
+                        <div class="action-text">
+                            <h4>Chat mới</h4>
+                            <p>Bắt đầu cuộc trò chuyện</p>
+                        </div>
+                    </a>
+                    <a href="document-manager.html" class="action-btn">
+                        <span class="action-icon">📄</span>
+                        <div class="action-text">
+                            <h4>Upload tài liệu</h4>
+                            <p>Thêm file để phân tích</p>
+                        </div>
+                    </a>
+                    <a href="pricing.html" class="action-btn">
+                        <span class="action-icon">⭐</span>
+                        <div class="action-text">
+                            <h4>Nâng cấp Plan</h4>
+                            <p>Unlock thêm tính năng</p>
+                        </div>
+                    </a>
+                    <a href="#" class="action-btn">
+                        <span class="action-icon">📊</span>
+                        <div class="action-text">
+                            <h4>Báo cáo chi tiết</h4>
+                            <p>Xem thống kê đầy đủ</p>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Model Usage Chart -->
+        <div class="chart-container slide-in">
+            <h2 class="card-title">
+                <span>🤖</span>
+                Mô hình AI được sử dụng nhiều nhất
+            </h2>
+            <div class="usage-bars">
+                <div class="usage-item">
+                    <span class="model-name">GPT-4</span>
+                    <div class="usage-bar">
+                        <div class="usage-fill" style="width: 85%; background: linear-gradient(90deg, #667eea, #764ba2);"></div>
+                    </div>
+                    <span class="usage-percentage">85%</span>
+                </div>
+                <div class="usage-item">
+                    <span class="model-name">Claude-3</span>
+                    <div class="usage-bar">
+                        <div class="usage-fill" style="width: 72%; background: linear-gradient(90deg, #f093fb, #f5576c);"></div>
+                    </div>
+                    <span class="usage-percentage">72%</span>
+                </div>
+                <div class="usage-item">
+                    <span class="model-name">Gemini Pro</span>
+                    <div class="usage-bar">
+                        <div class="usage-fill" style="width: 68%; background: linear-gradient(90deg, #4facfe, #00f2fe);"></div>
+                    </div>
+                    <span class="usage-percentage">68%</span>
+                </div>
+                <div class="usage-item">
+                    <span class="model-name">DALL-E 3</span>
+                    <div class="usage-bar">
+                        <div class="usage-fill" style="width: 45%; background: linear-gradient(90deg, #a8edea, #fed6e3);"></div>
+                    </div>
+                    <span class="usage-percentage">45%</span>
+                </div>
+                <div class="usage-item">
+                    <span class="model-name">Llama 2</span>
+                    <div class="usage-bar">
+                        <div class="usage-fill" style="width: 32%; background: linear-gradient(90deg, #ffecd2, #fcb69f);"></div>
+                    </div>
+                    <span class="usage-percentage">32%</span>
+                </div>
+            </div>
+        </div>
+        </div>
+    </main>
+
+    <script>
+        // Create floating particles with performance optimization
+        function createParticles() {
+            const particleContainer = document.getElementById('particles');
+            if (!particleContainer) return;
+            
+            // Reduce particles on mobile for performance
+            const isMobile = window.innerWidth <= 768;
+            const particleCount = isMobile ? 25 : 50;
+
+            // Clear existing particles
+            particleContainer.innerHTML = '';
+
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                
+                // Random position
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                
+                // Random size
+                const size = Math.random() * 6 + 2;
+                particle.style.width = size + 'px';
+                particle.style.height = size + 'px';
+                
+                // Random animation delay and duration
+                particle.style.animationDelay = Math.random() * 6 + 's';
+                particle.style.animationDuration = (Math.random() * 10 + 8) + 's';
+                
+                particleContainer.appendChild(particle);
+            }
+        }
+
+        // Counter animation for stat numbers with error handling
+        function animateCounters() {
+            const counters = document.querySelectorAll('.stat-number');
+            counters.forEach(counter => {
+                try {
+                    const text = counter.textContent.replace(/,/g, '');
+                    const target = parseInt(text);
+                    
+                    if (isNaN(target)) return;
+                    
+                    const increment = target / 100;
+                    let current = 0;
+                    
+                    const timer = setInterval(() => {
+                        current += increment;
+                        if (current >= target) {
+                            counter.textContent = target.toLocaleString();
+                            clearInterval(timer);
+                        } else {
+                            counter.textContent = Math.floor(current).toLocaleString();
+                        }
+                    }, 20);
+                } catch (error) {
+                    console.warn('Error animating counter:', error);
+                }
+            });
+        }
+
+        // Add slide-in animation on scroll with performance optimization
+        document.addEventListener('DOMContentLoaded', function() {
+            // Create particles
+            createParticles();
+            
+            // Recreate particles on resize for responsive adjustment
+            let resizeTimeout;
+            window.addEventListener('resize', function() {
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(() => {
+                    createParticles();
+                }, 250);
+            });
+            
+            const slideInElements = document.querySelectorAll('.slide-in');
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, {
+                threshold: 0.1,
+                rootMargin: '0px 0px 0px 0px'
+            });
+
+            slideInElements.forEach(el => {
+                observer.observe(el);
+            });
+
+            // Animate counters after a delay
+            setTimeout(() => {
+                animateCounters();
+            }, 500);
+
+            // Animate usage bars with improved timing
+            setTimeout(() => {
+                const usageFills = document.querySelectorAll('.usage-fill');
+                usageFills.forEach((fill, index) => {
+                    const width = fill.style.width;
+                    fill.style.width = '0%';
+                    setTimeout(() => {
+                        fill.style.width = width;
+                    }, 300 + (index * 200));
+                });
+            }, 1200);
+
+            // Add tooltip functionality for usage bars
+            const usageItems = document.querySelectorAll('.usage-item');
+            usageItems.forEach(item => {
+                try {
+                    const modelName = item.querySelector('.model-name')?.textContent || '';
+                    const percentage = item.querySelector('.usage-percentage')?.textContent || '';
+                    
+                    if (modelName && percentage) {
+                        item.title = `${modelName}: ${percentage} usage this month`;
+                        
+                        item.addEventListener('mouseenter', function() {
+                            this.style.transform = 'translateX(8px) scale(1.02)';
+                        });
+                        
+                        item.addEventListener('mouseleave', function() {
+                            this.style.transform = 'translateX(0) scale(1)';
+                        });
+                    }
+                } catch (error) {
+                    console.warn('Error setting up usage item tooltip:', error);
+                }
+            });
+        });
+
+        // Add keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Tab') {
+                document.body.classList.add('keyboard-navigation');
+            }
+        });
+
+        document.addEventListener('mousedown', function() {
+            document.body.classList.remove('keyboard-navigation');
+        });
+    </script>
+</body>
+</html>
