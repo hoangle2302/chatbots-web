@@ -5,48 +5,257 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng ký - Thư Viện AI</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            padding: 20px 0;
+        }
+
+        /* Background decorative elements */
+        body::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: float 20s linear infinite;
+            pointer-events: none;
+        }
+
         .auth-container {
-            max-width: 450px;
-            margin: 50px auto;
-            padding: 40px;
-            background: linear-gradient(135deg, #686767 0%, #000000 100%);
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 380px;
+            width: 85%;
+            padding: 25px 22px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 18px;
+            box-shadow: 
+                0 15px 35px rgba(31, 38, 135, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.1);
             color: white;
+            position: relative;
+            z-index: 1;
+            animation: slideInUp 0.8s ease-out;
+        }
+        
+        .auth-header {
+            text-align: center;
+            margin-bottom: 18px;
+        }
+
+        .logo-section {
+            margin-bottom: 12px;
+        }
+
+        .logo-icon {
+            font-size: 40px;
+            display: block;
+            margin-bottom: 8px;
+            animation: float 3s ease-in-out infinite;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
         }
         
         .auth-container h1 {
-            text-align: center;
-            margin-bottom: 30px;
-            font-size: 2.5em;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            background: linear-gradient(135deg, #ffffff 0%, #e0e7ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: none;
+        }
+
+        .auth-subtitle {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: 400;
+            margin-bottom: 0;
         }
         
         .auth-form {
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 15px;
         }
         
         .form-group {
-            display: flex;
-            flex-direction: column;
+            position: relative;
         }
-        
+
         .form-group label {
-            margin-bottom: 8px;
+            position: absolute;
+            top: 14px;
+            left: 14px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            pointer-events: none;
+            background: transparent;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.1);
+            color: black;
+            transition: all 0.4s ease;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .form-group input::placeholder {
+            color: transparent;
+        }
+
+        .form-group input:focus,
+        .form-group input:not(:placeholder-shown) {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.4);
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(31, 38, 135, 0.3);
+        }
+
+        .form-group input:focus + label,
+        .form-group input:not(:placeholder-shown) + label {
+            top: -12px;
+            left: 15px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.9);
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.8), rgba(118, 75, 162, 0.8));
+            padding: 4px 8px;
+            border-radius: 8px;
             font-weight: 600;
-            font-size: 1.1em;
+        }
+
+        .input-icon {
+            position: absolute;
+            right: 22px;
+            top: 34%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 18px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus ~ .input-icon {
+            color: rgba(255, 255, 255, 0.9);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 50px;
+            top: 36%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            padding: 4px;
+            border-radius: 4px;
+            z-index: 3;
+        }
+
+        .password-toggle:hover {
+            color: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .password-toggle:active {
+            transform: translateY(-50%) scale(0.95);
+        }
+
+        .welcome-bonus {
+            background: linear-gradient(135deg, rgba(255, 235, 59, 0.2), rgba(255, 193, 7, 0.2));
+            border: 2px solid rgba(255, 235, 59, 0.4);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 18px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+            animation: bonusPulse 4s ease-in-out infinite;
+            transition: all 0.3s ease;
+        }
+
+        .welcome-bonus::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            animation: bonusShine 6s linear infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .welcome-bonus:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 235, 59, 0.3);
+            border-color: rgba(255, 235, 59, 0.6);
         }
         
-        .form-group input {
-            padding: 15px;
-            border: none;
-            border-radius: 10px;
-            font-size: 1.1em;
-            background: rgba(255,255,255,0.9);
-            transition: all 0.3s ease;
+        .welcome-bonus h3 {
+            margin: 0 0 8px 0;
+            color: #fff59d;
+            font-size: 16px;
+            font-weight: 700;
+            position: relative;
+            z-index: 2;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .welcome-bonus p {
+            margin: 0;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 13px;
+            line-height: 1.5;
+            position: relative;
+            z-index: 2;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .welcome-bonus strong {
+            color: #ffeb3b;
+            font-weight: 700;
+            text-shadow: 0 0 8px rgba(255, 235, 59, 0.6), 0 1px 2px rgba(0, 0, 0, 0.3);
+            animation: glowText 3s ease-in-out infinite alternate;
         }
         
         .form-group input:focus {
@@ -63,16 +272,16 @@
         }
         
         .auth-button {
-            padding: 15px;
+            padding: 12px;
             border: none;
             border-radius: 10px;
-            font-size: 1.2em;
+            font-size: 14px;
             font-weight: 600;
             background: #8d0000;
             color: white;
             cursor: pointer;
             transition: all 0.3s ease;
-            margin-top: 10px;
+            margin-top: 8px;
         }
         
         .auth-button:hover {
@@ -83,7 +292,7 @@
         
         .auth-links {
             text-align: center;
-            margin-top: 20px;
+            margin-top: 15px;
         }
         
         .auth-links a {
@@ -97,69 +306,198 @@
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
         
-        .error-message {
-            background: rgba(255,0,0,0.2);
-            border: 1px solid rgba(255,0,0,0.5);
-            color: white;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 20px;
+        .error-message, .success-message {
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
             display: none;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid;
+            animation: slideInDown 0.3s ease;
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: rgba(239, 68, 68, 0.4);
+            color: #fecaca;
         }
         
         .success-message {
-            background: rgba(0,255,0,0.2);
-            border: 1px solid rgba(0,255,0,0.5);
-            color: white;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            display: none;
+            background: rgba(34, 197, 94, 0.2);
+            border-color: rgba(34, 197, 94, 0.4);
+            color: #bbf7d0;
         }
         
         .loading {
             display: none;
             text-align: center;
-            margin-top: 10px;
+            margin-top: 20px;
+            color: rgba(255, 255, 255, 0.8);
         }
         
         .spinner {
-            border: 3px solid rgba(255,255,255,0.3);
+            border: 3px solid rgba(255, 255, 255, 0.2);
             border-radius: 50%;
-            border-top: 3px solid white;
-            width: 20px;
-            height: 20px;
+            border-top: 3px solid rgba(255, 255, 255, 0.8);
+            width: 30px;
+            height: 30px;
             animation: spin 1s linear infinite;
-            margin: 0 auto;
+            margin: 0 auto 10px;
+        }
+
+        .loading p {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        /* Animations */
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px) rotate(0deg); }
+            33% { transform: translateY(-10px) rotate(120deg); }
+            66% { transform: translateY(5px) rotate(240deg); }
+            100% { transform: translateY(0px) rotate(360deg); }
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 235, 59, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 235, 59, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 235, 59, 0); }
         }
         
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        
-        .welcome-bonus {
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.3);
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            text-align: center;
+
+        @keyframes bonusPulse {
+            0%, 100% { 
+                box-shadow: 0 0 0 0 rgba(255, 235, 59, 0.3);
+                transform: scale(1);
+            }
+            50% { 
+                box-shadow: 0 0 0 10px rgba(255, 235, 59, 0);
+                transform: scale(1.005);
+            }
         }
-        
-        .welcome-bonus h3 {
-            margin: 0 0 10px 0;
-            color: #ffeb3b;
+
+        @keyframes bonusShine {
+            0% { 
+                transform: translateX(-100%) translateY(-100%) rotate(45deg);
+                opacity: 0;
+            }
+            50% {
+                opacity: 1;
+            }
+            100% { 
+                transform: translateX(100%) translateY(100%) rotate(45deg);
+                opacity: 0;
+            }
+        }
+
+        @keyframes glowText {
+            0% { 
+                text-shadow: 0 0 8px rgba(255, 235, 59, 0.6), 0 1px 2px rgba(0, 0, 0, 0.3);
+            }
+            50% { 
+                text-shadow: 0 0 12px rgba(255, 235, 59, 0.8), 0 0 20px rgba(255, 235, 59, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+            }
+            100% { 
+                text-shadow: 0 0 8px rgba(255, 235, 59, 0.6), 0 1px 2px rgba(0, 0, 0, 0.3);
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .auth-container {
+                margin: 12px;
+                padding: 20px 16px;
+                width: calc(100% - 24px);
+            }
+
+            .logo-icon {
+                font-size: 36px;
+            }
+
+            .auth-container h1 {
+                font-size: 20px;
+            }
+
+            .auth-subtitle {
+                font-size: 12px;
+            }
+
+            .form-group input {
+                padding: 12px;
+                font-size: 14px;
+            }
+
+            .auth-button {
+                padding: 12px 18px;
+                font-size: 13px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 6px;
+            }
+
+            .auth-container {
+                margin: 6px;
+                padding: 16px 12px;
+                width: calc(100% - 12px);
+                border-radius: 14px;
+            }
+
+            .auth-form {
+                gap: 12px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="auth-container">
-        <h1>🧠 Thư Viện AI</h1>
+        <div class="auth-header">
+            <div class="logo-section">
+                <span class="logo-icon">🧠</span>
+                <h1>Thư Viện AI</h1>
+                <p class="auth-subtitle">Tạo tài khoản để truy cập 500+ mô hình AI</p>
+            </div>
+        </div>
         
         <div class="welcome-bonus">
-            <h3>🎉 Chào mừng!</h3>
-            <p>Đăng ký ngay và nhận <strong>10 credits miễn phí</strong> để trải nghiệm AI!</p>
+            <h3>🎉 Ưu đãi đặc biệt!</h3>
+            <p>Đăng ký ngay và nhận <strong>10 credits miễn phí</strong> để trải nghiệm AI cùng <strong>Premium Access</strong> trong 7 ngày!</p>
         </div>
         
         <div id="error-message" class="error-message"></div>
@@ -167,29 +505,44 @@
         
         <form id="register-form" class="auth-form">
             <div class="form-group">
-                <label for="username">Tên đăng nhập:</label>
-                <input type="text" id="username" name="username" required minlength="3">
+                <input type="text" id="username" name="username" placeholder=" " required minlength="3">
+                <label for="username">Tên đăng nhập</label>
+                <span class="input-icon">👤</span>
             </div>
             
             <div class="form-group">
-                <label for="email">Email:</label>
-                <input type="email" id="email" name="email" required>
+                <input type="email" id="email" name="email" placeholder=" " required>
+                <label for="email">Địa chỉ Email</label>
+                <span class="input-icon">📧</span>
             </div>
             
             <div class="form-group">
-                <label for="password">Mật khẩu:</label>
-                <input type="password" id="password" name="password" required minlength="8">
+                <input type="password" id="password" name="password" placeholder=" " required minlength="8">
+                <label for="password">Mật khẩu</label>
+                <button type="button" class="password-toggle" onclick="togglePassword('password')" title="Ẩn/hiện mật khẩu">
+                    👁️
+                </button>
+                <span class="input-icon">🔒</span>
                 <div class="password-requirements">
                     Ít nhất 8 ký tự, có chữ hoa, chữ thường và số
+                </div>
+                <div class="password-strength">
+                    <div class="password-strength-bar" id="password-strength-bar"></div>
                 </div>
             </div>
             
             <div class="form-group">
-                <label for="confirm-password">Xác nhận mật khẩu:</label>
-                <input type="password" id="confirm-password" name="confirm-password" required>
+                <input type="password" id="confirm-password" name="confirm-password" placeholder=" " required>
+                <label for="confirm-password">Xác nhận mật khẩu</label>
+                <button type="button" class="password-toggle" onclick="togglePassword('confirm-password')" title="Ẩn/hiện mật khẩu">
+                    👁️
+                </button>
+                <span class="input-icon">🔐</span>
             </div>
             
-            <button type="submit" class="auth-button">Đăng ký ngay</button>
+            <button type="submit" class="auth-button">
+                <span>Tạo tài khoản</span>
+            </button>
             
             <div class="loading" id="loading">
                 <div class="spinner"></div>
@@ -198,12 +551,28 @@
         </form>
         
         <div class="auth-links">
-            <p>Đã có tài khoản? <a href="login.html">Đăng nhập</a></p>
+            <p>Đã có tài khoản? <a href="login.html">Đăng nhập ngay</a></p>
             <p><a href="index.html">← Quay lại trang chủ</a></p>
         </div>
     </div>
 
     <script>
+        // Function để toggle password visibility
+        function togglePassword(fieldId) {
+            const passwordField = document.getElementById(fieldId);
+            const toggleButton = passwordField.parentNode.querySelector('.password-toggle');
+            
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                toggleButton.innerHTML = '🙈';
+                toggleButton.title = 'Ẩn mật khẩu';
+            } else {
+                passwordField.type = 'password';
+                toggleButton.innerHTML = '👁️';
+                toggleButton.title = 'Hiện mật khẩu';
+            }
+        }
+
         document.getElementById('register-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             
