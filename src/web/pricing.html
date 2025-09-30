@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pricing - Thư Viện AI</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            min-height: 100vh;
+            color: white;
+        }
+
+        /* Navigation */
+        .navbar {
+            padding: 15px 30px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+        }
+
+        .nav-menu a {
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-menu a:hover, .nav-menu a.active {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 10px 20px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            background: transparent;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-btn.primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+        }
+
+        /* Hero Section */
+        .hero-section {
+            text-align: center;
+            padding: 80px 30px 60px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero-title {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #ffffff 0%, #e0e7ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            font-size: 20px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+
+        .hero-highlight {
+            background: linear-gradient(135deg, rgba(255, 235, 59, 0.2), rgba(255, 193, 7, 0.2));
+            border: 2px solid rgba(255, 235, 59, 0.3);
+            padding: 15px 25px;
+            border-radius: 12px;
+            display: inline-block;
+            margin-bottom: 50px;
+            backdrop-filter: blur(10px);
+        }
+
+        /* Pricing Cards */
+        .pricing-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 30px 80px;
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+
+        .pricing-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+            transition: all 0.4s ease;
+            overflow: hidden;
+        }
+
+        .pricing-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            transition: left 0.6s;
+        }
+
+        .pricing-card:hover::before {
+            left: 100%;
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+            border-color: rgba(255, 235, 59, 0.5);
+        }
+
+        .pricing-card.popular {
+            border: 2px solid rgba(255, 235, 59, 0.6);
+            position: relative;
+        }
+
+        .popular-badge {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #ffeb3b, #ffc107);
+            color: #333;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .plan-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .plan-name {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .plan-price {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .plan-price .currency {
+            font-size: 24px;
+            vertical-align: top;
+        }
+
+        .plan-period {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 30px;
+        }
+
+        .plan-description {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        .plan-features {
+            list-style: none;
+            margin-bottom: 40px;
+            text-align: left;
+        }
+
+        .plan-features li {
+            padding: 12px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 16px;
+        }
+
+        .feature-icon {
+            font-size: 18px;
+            color: #4ade80;
+        }
+
+        .feature-icon.limited {
+            color: #fbbf24;
+        }
+
+        .feature-icon.unavailable {
+            color: #f87171;
+        }
+
+        .plan-button {
+            width: 100%;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .plan-button.primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .plan-button.secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .plan-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        /* FAQ Section */
+        .faq-section {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 30px 60px;
+        }
+
+        .faq-title {
+            font-size: 32px;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .faq-item {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .faq-question {
+            padding: 20px 25px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .faq-question:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .faq-toggle {
+            font-size: 24px;
+            transition: transform 0.3s ease;
+        }
+
+        .faq-answer {
+            padding: 0 25px;
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .faq-answer.active {
+            padding: 0 25px 20px;
+            max-height: 200px;
+        }
+
+        .faq-answer p {
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.6;
+        }
+
+        /* Animations */
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .slide-in {
+            animation: slideInUp 0.6s ease forwards;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .nav-menu {
+                gap: 15px;
+            }
+
+            .hero-title {
+                font-size: 36px;
+            }
+
+            .hero-subtitle {
+                font-size: 18px;
+            }
+
+            .pricing-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .pricing-container {
+                padding: 0 20px 60px;
+            }
+
+            .faq-section {
+                padding: 0 20px 40px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-brand">
+            <span>🧠</span>
+            <span>Thư Viện AI</span>
+        </div>
+        <ul class="nav-menu">
+            <li><a href="dashboard.html">Dashboard</a></li>
+            <li><a href="index.html">Chat</a></li>
+            <li><a href="document-manager.html">Tài liệu</a></li>
+            <li><a href="pricing.html" class="active">Pricing</a></li>
+        </ul>
+        <div class="nav-actions">
+            <a href="login.html" class="nav-btn">Đăng nhập</a>
+            <a href="register.html" class="nav-btn primary">Đăng ký</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <h1 class="hero-title">Chọn gói phù hợp với bạn</h1>
+        <p class="hero-subtitle">
+            Truy cập hơn 500+ mô hình AI hàng đầu với giá cả hợp lý. 
+            Không ràng buộc, hủy bất cứ lúc nào.
+        </p>
+        <div class="hero-highlight">
+            🎉 <strong>Ưu đãi đặc biệt:</strong> Giảm 30% cho 3 tháng đầu!
+        </div>
+    </section>
+
+    <!-- Pricing Cards -->
+    <section class="pricing-container">
+        <div class="pricing-grid">
+            <!-- Free Plan -->
+            <div class="pricing-card slide-in">
+                <span class="plan-icon">🆓</span>
+                <h2 class="plan-name">Free</h2>
+                <div class="plan-price">
+                    <span class="currency">₫</span>0
+                </div>
+                <p class="plan-period">Miễn phí mãi mãi</p>
+                <p class="plan-description">
+                    Hoàn hảo để bắt đầu và khám phá AI
+                </p>
+                <ul class="plan-features">
+                    <li><span class="feature-icon">✅</span> 10 credits/tháng</li>
+                    <li><span class="feature-icon">✅</span> Truy cập 20+ mô hình AI cơ bản</li>
+                    <li><span class="feature-icon">✅</span> Chat không giới hạn</li>
+                    <li><span class="feature-icon">✅</span> Lưu trữ 10MB tài liệu</li>
+                    <li><span class="feature-icon limited">⚠️</span> Hỗ trợ email (48h)</li>
+                    <li><span class="feature-icon unavailable">❌</span> API Access</li>
+                    <li><span class="feature-icon unavailable">❌</span> Custom Models</li>
+                </ul>
+                <a href="register.html" class="plan-button secondary">Bắt đầu miễn phí</a>
+            </div>
+
+            <!-- Pro Plan -->
+            <div class="pricing-card popular slide-in">
+                <div class="popular-badge">Phổ biến nhất</div>
+                <span class="plan-icon">⭐</span>
+                <h2 class="plan-name">Pro</h2>
+                <div class="plan-price">
+                    <span class="currency">₫</span>299,000
+                </div>
+                <p class="plan-period">mỗi tháng</p>
+                <p class="plan-description">
+                    Dành cho người dùng chuyên nghiệp và doanh nghiệp nhỏ
+                </p>
+                <ul class="plan-features">
+                    <li><span class="feature-icon">✅</span> 1,000 credits/tháng</li>
+                    <li><span class="feature-icon">✅</span> Truy cập 500+ mô hình AI</li>
+                    <li><span class="feature-icon">✅</span> GPT-4, Claude, Gemini Pro</li>
+                    <li><span class="feature-icon">✅</span> Lưu trữ 1GB tài liệu</li>
+                    <li><span class="feature-icon">✅</span> API Access (10,000 calls/tháng)</li>
+                    <li><span class="feature-icon">✅</span> Hỗ trợ 24/7</li>
+                    <li><span class="feature-icon">✅</span> Export chat history</li>
+                </ul>
+                <a href="register.html" class="plan-button primary">Chọn gói Pro</a>
+            </div>
+
+            <!-- Enterprise Plan -->
+            <div class="pricing-card slide-in">
+                <span class="plan-icon">🏢</span>
+                <h2 class="plan-name">Enterprise</h2>
+                <div class="plan-price">
+                    <span class="currency">₫</span>999,000
+                </div>
+                <p class="plan-period">mỗi tháng</p>
+                <p class="plan-description">
+                    Giải pháp toàn diện cho doanh nghiệp lớn
+                </p>
+                <ul class="plan-features">
+                    <li><span class="feature-icon">✅</span> Credits không giới hạn</li>
+                    <li><span class="feature-icon">✅</span> Tất cả mô hình AI</li>
+                    <li><span class="feature-icon">✅</span> Custom AI Models</li>
+                    <li><span class="feature-icon">✅</span> Lưu trữ không giới hạn</li>
+                    <li><span class="feature-icon">✅</span> API không giới hạn</li>
+                    <li><span class="feature-icon">✅</span> Dedicated support</li>
+                    <li><span class="feature-icon">✅</span> On-premise deployment</li>
+                </ul>
+                <a href="#" class="plan-button secondary">Liên hệ tư vấn</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="faq-section">
+        <h2 class="faq-title">Câu hỏi thường gặp</h2>
+        
+        <div class="faq-item">
+            <div class="faq-question" onclick="toggleFAQ(this)">
+                <span>Credits hoạt động như thế nào?</span>
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer">
+                <p>Credits được sử dụng khi bạn tương tác với các mô hình AI. Mỗi tin nhắn, tạo hình ảnh, hoặc phân tích tài liệu sẽ tiêu tốn một lượng credits tương ứng. Credits được reset vào đầu mỗi chu kỳ thanh toán.</p>
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question" onclick="toggleFAQ(this)">
+                <span>Tôi có thể thay đổi gói bất cứ lúc nào không?</span>
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer">
+                <p>Có, bạn có thể nâng cấp hoặc hạ cấp gói bất cứ lúc nào. Khi nâng cấp, bạn sẽ được tính phí theo tỷ lệ thời gian còn lại. Khi hạ cấp, thay đổi sẽ có hiệu lực từ chu kỳ thanh toán tiếp theo.</p>
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question" onclick="toggleFAQ(this)">
+                <span>Dữ liệu của tôi có được bảo mật không?</span>
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer">
+                <p>Chúng tôi cam kết bảo vệ dữ liệu của bạn với mã hóa end-to-end, tuân thủ GDPR và không chia sẻ thông tin với bên thứ ba. Tất cả dữ liệu được lưu trữ an toàn trên các server đạt chuẩn bảo mật quốc tế.</p>
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question" onclick="toggleFAQ(this)">
+                <span>Tôi có thể hủy đăng ký bất cứ lúc nào không?</span>
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer">
+                <p>Có, bạn có thể hủy đăng ký bất cứ lúc nào mà không mất phí. Tài khoản của bạn sẽ tiếp tục hoạt động đến hết chu kỳ thanh toán hiện tại, sau đó sẽ chuyển về gói Free.</p>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // FAQ Toggle functionality
+        function toggleFAQ(element) {
+            const answer = element.nextElementSibling;
+            const toggle = element.querySelector('.faq-toggle');
+            
+            if (answer.classList.contains('active')) {
+                answer.classList.remove('active');
+                toggle.textContent = '+';
+                toggle.style.transform = 'rotate(0deg)';
+            } else {
+                // Close all other FAQs
+                document.querySelectorAll('.faq-answer.active').forEach(item => {
+                    item.classList.remove('active');
+                });
+                document.querySelectorAll('.faq-toggle').forEach(toggle => {
+                    toggle.textContent = '+';
+                    toggle.style.transform = 'rotate(0deg)';
+                });
+                
+                // Open current FAQ
+                answer.classList.add('active');
+                toggle.textContent = '−';
+                toggle.style.transform = 'rotate(180deg)';
+            }
+        }
+
+        // Slide in animation on scroll
+        document.addEventListener('DOMContentLoaded', function() {
+            const slideInElements = document.querySelectorAll('.slide-in');
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            });
+
+            slideInElements.forEach(el => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(30px)';
+                el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                observer.observe(el);
+            });
+        });
+    </script>
+</body>
+</html>
