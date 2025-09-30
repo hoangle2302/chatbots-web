@@ -1009,6 +1009,9 @@ label[for="model-select"] {
     overflow-y: auto;
     scrollbar-width: thin;
     scrollbar-color: rgba(102, 126, 234, 0.5) rgba(0, 0, 0, 0.1);
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
 }
 
 #model-select:focus {
@@ -1042,12 +1045,15 @@ label[for="model-select"] {
 
 #model-select option {
     padding: 12px 16px;
-    background: white;
-    color: #333;
+    background: white !important;
+    color: #333 !important;
     font-weight: 500;
     line-height: 1.4;
     border-bottom: 1px solid rgba(0, 0, 0, 0.05);
     transition: all 0.2s ease;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
 }
 
 #model-select option:hover {
