@@ -13,24 +13,74 @@
             box-sizing: border-box;
         }
 
+        html {
+            scroll-behavior: smooth;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
             background-size: 400% 400%;
+            background-attachment: fixed;
             animation: gradientShift 15s ease infinite;
             min-height: 100vh;
             color: white;
+            position: relative;
+            overflow-x: hidden;
         }
 
-        /* Navigation */
+        /* Floating Particles Background */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .particle:nth-child(odd) {
+            animation-delay: -2s;
+            animation-duration: 8s;
+        }
+
+        .particle:nth-child(even) {
+            animation-delay: -4s;
+            animation-duration: 10s;
+        }
+
+        /* Header */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(25px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
         .navbar {
             padding: 15px 30px;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
         }
 
         .nav-brand {
@@ -39,79 +89,182 @@
             gap: 10px;
             font-size: 24px;
             font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-brand:hover {
+            transform: scale(1.05);
+        }
+
+        .nav-brand span:first-child {
+            animation: pulse 2s ease-in-out infinite;
         }
 
         .nav-menu {
             display: flex;
-            gap: 30px;
+            gap: 4px;
             list-style: none;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 6px;
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
 
         .nav-menu a {
-            color: rgba(255, 255, 255, 0.9);
+            color: rgba(255, 255, 255, 0.8);
             text-decoration: none;
-            padding: 8px 15px;
-            border-radius: 8px;
+            padding: 10px 20px;
+            border-radius: 20px;
             transition: all 0.3s ease;
+            position: relative;
+            font-weight: 500;
+            font-size: 14px;
+            white-space: nowrap;
+            display: block;
         }
 
-        .nav-menu a:hover, .nav-menu a.active {
-            background: rgba(255, 255, 255, 0.2);
-            transform: translateY(-2px);
+
+
+        .nav-menu a:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: #ffffff;
+        }
+
+        .nav-menu a.active {
+            background: rgba(255, 255, 255, 0.25);
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .nav-menu a.active::after {
+            content: '';
+            position: absolute;
+            bottom: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 6px;
+            height: 6px;
+            background: #ffffff;
+            border-radius: 50%;
+            box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
         }
 
         .user-profile {
             display: flex;
             align-items: center;
             gap: 15px;
+            cursor: pointer;
+            padding: 8px 15px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .user-profile:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
         }
 
         .user-avatar {
-            width: 40px;
-            height: 40px;
+            width: 45px;
+            height: 45px;
             border-radius: 50%;
             background: linear-gradient(135deg, #667eea, #764ba2);
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 18px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .user-profile:hover .user-avatar {
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .nav-btn.primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            color: #ffffff;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .nav-btn.primary:hover {
+            background: linear-gradient(135deg, #5a6fd8, #6a4190);
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 12px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        /* Main Content */
+        main {
+            position: relative;
+            z-index: 10;
+            padding-top: 90px;
+            width: 100%;
+            overflow-y: auto;
+            min-height: 100vh;
         }
 
         /* Main Container */
         .document-container {
-            padding: 30px;
+            padding: 20px 30px 60px;
             max-width: 1400px;
             margin: 0 auto;
+            position: relative;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .page-header {
             margin-bottom: 40px;
+            text-align: center;
+            position: relative;
         }
 
         .page-title {
-            font-size: 36px;
-            font-weight: 700;
-            margin-bottom: 10px;
+            font-size: 42px;
+            font-weight: 800;
+            margin-bottom: 15px;
             background: linear-gradient(135deg, #ffffff 0%, #e0e7ff 100%);
             -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
             background-clip: text;
+            -webkit-text-fill-color: transparent;
+            position: relative;
+            z-index: 1;
+            letter-spacing: -0.5px;
         }
 
         .page-subtitle {
-            font-size: 18px;
-            color: rgba(255, 255, 255, 0.8);
+            font-size: 20px;
+            color: rgba(255, 255, 255, 0.85);
+            font-weight: 400;
+            line-height: 1.5;
+            max-width: 600px;
+            margin: 0 auto;
         }
 
         /* Upload Section */
         .upload-section {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 24px;
             padding: 40px;
-            margin-bottom: 40px;
+            margin-bottom: 50px;
             text-align: center;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            border-color: rgba(255, 255, 255, 0.25);
         }
 
         .upload-area {
@@ -242,14 +395,16 @@
         }
 
         .document-card {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 15px;
-            padding: 25px;
-            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            padding: 30px;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
+            cursor: pointer;
+            transform-style: preserve-3d;
         }
 
         .document-card::before {
@@ -259,17 +414,34 @@
             left: -100%;
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-            transition: left 0.5s;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .document-card::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
         }
 
         .document-card:hover::before {
             left: 100%;
         }
 
+        .document-card:hover::after {
+            opacity: 1;
+        }
+
         .document-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            transform: translateY(-8px) rotateX(5deg) rotateY(5deg);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25), 0 0 30px rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.3);
         }
 
         .doc-header {
@@ -409,6 +581,43 @@
             100% { background-position: 0% 50%; }
         }
 
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px) rotate(0deg);
+                opacity: 1;
+            }
+            10% {
+                transform: translateY(-10px) rotate(10deg);
+            }
+            20% {
+                transform: translateY(5px) rotate(-10deg);
+            }
+            50% {
+                transform: translateY(-15px) rotate(5deg);
+                opacity: 0.8;
+            }
+            80% {
+                transform: translateY(0px) rotate(-5deg);
+                opacity: 0.9;
+            }
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         @keyframes slideInUp {
             from {
                 opacity: 0;
@@ -425,14 +634,68 @@
         }
 
         /* Responsive */
+        @media (max-width: 1024px) {
+            .navbar {
+                padding: 15px 20px;
+            }
+
+            .document-container {
+                padding: 20px 20px 60px;
+            }
+
+            .nav-menu {
+                gap: 3px;
+                padding: 5px;
+            }
+
+            .nav-menu a {
+                padding: 9px 18px;
+                font-size: 13px;
+            }
+
+            .nav-btn {
+                padding: 10px 18px;
+                font-size: 13px;
+            }
+        }
+
         @media (max-width: 768px) {
             .navbar {
+                padding: 15px 20px;
                 flex-direction: column;
                 gap: 15px;
             }
 
+            .nav-menu {
+                gap: 2px;
+                padding: 4px;
+                flex-wrap: nowrap;
+                justify-content: center;
+            }
+
+            .nav-menu a {
+                padding: 8px 16px;
+                font-size: 13px;
+            }
+
+            .user-profile span {
+                display: none;
+            }
+
             .document-container {
                 padding: 20px;
+            }
+
+            .page-header {
+                padding: 20px 0;
+            }
+
+            .page-title {
+                font-size: 32px;
+            }
+
+            .page-subtitle {
+                font-size: 18px;
             }
 
             .controls-section {
@@ -453,6 +716,14 @@
                 grid-template-columns: 1fr;
             }
 
+            .document-card {
+                padding: 25px 20px;
+            }
+
+            .document-card:hover {
+                transform: translateY(-5px);
+            }
+
             .stats-bar {
                 flex-direction: column;
                 gap: 20px;
@@ -465,30 +736,36 @@
     </style>
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="nav-brand">
-            <span>🧠</span>
-            <span>Thư Viện AI</span>
-        </div>
-        <ul class="nav-menu">
-            <li><a href="dashboard.html">Dashboard</a></li>
-            <li><a href="index.html">Chat</a></li>
-            <li><a href="document-manager.html" class="active">Tài liệu</a></li>
-            <li><a href="pricing.html">Pricing</a></li>
-        </ul>
-        <div class="user-profile">
-            <div class="user-avatar">👤</div>
-            <span>Admin</span>
-        </div>
-    </nav>
+    <!-- Particles Background -->
+    <div class="particles"></div>
 
-    <!-- Main Container -->
-    <div class="document-container">
-        <div class="page-header">
-            <h1 class="page-title">Quản lý Tài liệu</h1>
-            <p class="page-subtitle">Upload, tổ chức và phân tích tài liệu với AI</p>
-        </div>
+    <!-- Header -->
+    <header>
+        <nav class="navbar">
+            <div class="nav-brand">
+                <span>🧠</span>
+                <span>Thư Viện AI</span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="index.html">Chat</a></li>
+                <li><a href="document-manager.html" class="active">Tài liệu</a></li>
+                <li><a href="pricing.html">Pricing</a></li>
+            </ul>
+            <div class="user-profile">
+                <div class="user-avatar">👤</div>
+                <span>Admin</span>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <div class="document-container">
+            <div class="page-header slide-in">
+                <h1 class="page-title">Quản lý Tài liệu</h1>
+                <p class="page-subtitle">Upload, tổ chức và phân tích tài liệu với AI</p>
+            </div>
 
         <!-- Upload Section -->
         <div class="upload-section slide-in">
@@ -503,12 +780,12 @@
             </div>
         </div>
 
-        <!-- Controls -->
-        <div class="controls-section">
-            <div class="search-box">
-                <span class="search-icon">🔍</span>
-                <input type="text" class="search-input" placeholder="Tìm kiếm tài liệu..." id="search-input">
-            </div>
+            <!-- Controls -->
+            <div class="controls-section slide-in">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="search-input" placeholder="Tìm kiếm tài liệu..." id="search-input">
+                </div>
             <div class="filter-buttons">
                 <button class="filter-btn active" data-filter="all">Tất cả</button>
                 <button class="filter-btn" data-filter="pdf">PDF</button>
@@ -518,8 +795,8 @@
             </div>
         </div>
 
-        <!-- Documents Grid -->
-        <div class="documents-grid" id="documents-grid">
+            <!-- Documents Grid -->
+            <div class="documents-grid slide-in" id="documents-grid">
             <!-- Sample Documents -->
             <div class="document-card slide-in" data-type="pdf">
                 <div class="doc-header">
@@ -642,10 +919,29 @@
                 <div class="stat-number">23</div>
                 <div class="stat-label">Tháng này</div>
             </div>
+            </div>
         </div>
-    </div>
+    </main>
 
     <script>
+        // Create floating particles
+        function createParticles() {
+            const particlesContainer = document.querySelector('.particles');
+            const particleCount = 50;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 6 + 's';
+                particle.style.animationDuration = (Math.random() * 4 + 4) + 's';
+                particlesContainer.appendChild(particle);
+            }
+        }
+        
+        // Initialize particles
+        createParticles();
         // Upload functionality
         const uploadArea = document.getElementById('upload-area');
         const fileInput = document.getElementById('file-input');
@@ -737,13 +1033,30 @@
                         entry.target.style.transform = 'translateY(0)';
                     }
                 });
+            }, {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
             });
 
-            slideInElements.forEach(el => {
+            slideInElements.forEach((el, index) => {
                 el.style.opacity = '0';
                 el.style.transform = 'translateY(30px)';
-                el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                el.style.transition = `opacity 0.6s ease ${index * 0.1}s, transform 0.6s ease ${index * 0.1}s`;
                 observer.observe(el);
+            });
+        });
+
+        // Smooth scroll for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
             });
         });
 
