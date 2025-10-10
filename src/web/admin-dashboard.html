@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,sans-serif;background:#0b1220;color:#e2e8f0;margin:0}
+        header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:#0f172a;border-bottom:1px solid #1f2937;position:sticky;top:0}
+        .brand{font-weight:700}
+        .container{padding:16px}
+        .grid{display:grid;grid-template-columns:1fr;gap:16px}
+        @media(min-width:900px){.grid{grid-template-columns:2fr 1fr}}
+        .panel{background:#0f172a;border:1px solid #1f2937;border-radius:12px}
+        .panel h2{margin:0;padding:14px 16px;border-bottom:1px solid #1f2937;font-size:16px}
+        .panel .content{padding:12px 16px}
+        table{width:100%;border-collapse:collapse}
+        th,td{padding:10px;border-bottom:1px solid #1f2937;font-size:14px}
+        th{text-align:left;color:#cbd5e1}
+        .row-actions button{margin-right:6px;padding:6px 10px;border-radius:8px;border:0;cursor:pointer}
+        .btn{background:#334155;color:#e2e8f0}
+        .btn.save{background:#16a34a}
+        .btn.delete{background:#ef4444}
+        .badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px}
+        .badge.on{background:rgba(34,197,94,.2);color:#86efac}
+        .badge.off{background:rgba(239,68,68,.2);color:#fecaca}
+        .toolbar{display:flex;gap:8px;align-items:center}
+        input[type="text"],select{background:#0b1220;border:1px solid #334155;color:#e2e8f0;border-radius:8px;padding:8px}
+        .models li{padding:8px 0;border-bottom:1px dashed #1f2937}
+        .muted{color:#94a3b8}
+        .msg{display:none;margin:10px 0;padding:10px;border-radius:8px;font-size:14px}
+        .msg.err{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.35);color:#fecaca}
+        .msg.ok{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.35);color:#bbf7d0}
+    </style>
+    <script src="config.js"></script>
+    <script>
+        const API = 'http://127.0.0.1:8000/api/admin.php';
+        function getToken(){return localStorage.getItem('admin_token')}
+        function ensureAuth(){if(!getToken()){location.href='admin-login.html'}}
+        function logout(){localStorage.removeItem('admin_token');localStorage.removeItem('admin_user');location.href='admin-login.html'}
+        async function fetchJSON(url,opts={}){
+            const headers=opts.headers||{};headers['Authorization']='Bearer '+getToken();headers['Content-Type']='application/json';
+            const res=await fetch(url,{...opts,headers});
+            const data=await res.json().catch(()=>({}));
+            if(!res.ok||data.success===false){throw new Error(data.message||'Yêu cầu thất bại')}
+            return data;
+        }
+        async function loadUsers(){
+            const tbody=document.getElementById('users-tbody');
+            tbody.innerHTML='<tr><td colspan="7" class="muted">Đang tải...</td></tr>';
+            try{const data=await fetchJSON(API+'?action=users_all');
+                const users=data.data||[];
+                if(users.length===0){tbody.innerHTML='<tr><td colspan="7" class="muted">Chưa có người dùng</td></tr>';} 
+                else {tbody.innerHTML='';}
+                users.forEach(u=>{
+                    const tr=document.createElement('tr');
+                    tr.innerHTML=`
+                        <td>${u.id}</td>
+                        <td><input data-id="${u.id}" data-field="username" type="text" value="${u.username || ''}"></td>
+                        <td>
+                            <select data-id="${u.id}" data-field="role">
+                                <option value="user" ${u.role==='user'?'selected':''}>user</option>
+                                <option value="admin" ${u.role==='admin'?'selected':''}>admin</option>
+                            </select>
+                        </td>
+                        <td>
+                            <select data-id="${u.id}" data-field="is_active">
+                                <option value="1" ${u.is_active? 'selected':''}>Kích hoạt</option>
+                                <option value="0" ${!u.is_active? 'selected':''}>Tắt</option>
+                            </select>
+                        </td>
+                        <td>
+                            <div style="display:flex;align-items:center;gap:8px">
+                                <span class="badge on">${typeof u.credits==='number'?u.credits:0}</span>
+                                <input id="credit-amt-${u.id}" type="text" placeholder="+10" style="width:70px">
+                                <button class="btn" onclick="addCredits(${u.id})">Cộng</button>
+                            </div>
+                        </td>
+                        <td>${u.created_at || ''}</td>
+                        <td class="row-actions">
+                            <button class="btn save" onclick="saveUser(${u.id})">Lưu</button>
+                            <button class="btn delete" onclick="deleteUser(${u.id})">Xoá</button>
+                        </td>`;
+                    tbody.appendChild(tr);
+                })
+                const ul=document.getElementById('usernames-list');
+                if(ul){
+                    ul.innerHTML = users.length ? users.map(u=>`<li>${u.username}</li>`).join('') : '<li class="muted">Chưa có người dùng</li>';
+                }
+            }catch(e){
+                tbody.innerHTML=`<tr><td colspan="7" class="muted">Lỗi tải danh sách: ${e.message}</td></tr>`;
+                const ul=document.getElementById('usernames-list');
+                if(ul){ ul.innerHTML = '<li class="muted">Lỗi tải username</li>'; }
+            }
+        }
+        async function saveUser(id){
+            const ok=document.getElementById('ok');
+            const err=document.getElementById('err');
+            ok.style.display='none';err.style.display='none';
+            const inputs=[...document.querySelectorAll(`[data-id="${id}"]`)];
+            const payload={};
+            inputs.forEach(i=>{const f=i.getAttribute('data-field');let v=i.value; if(f==='is_active'){v=parseInt(v,10)} payload[f]=v});
+            try{await fetchJSON(API+`?action=update_user&id=${id}`,{method:'PUT',body:JSON.stringify(payload)});
+                ok.textContent='Đã lưu người dùng #'+id; ok.style.display='block';
+                loadUsers();
+            }catch(e){err.textContent=e.message||'Lỗi lưu'; err.style.display='block'}
+        }
+        async function deleteUser(id){
+            if(!confirm('Xoá người dùng #'+id+'?')) return;
+            const ok=document.getElementById('ok');
+            const err=document.getElementById('err');
+            ok.style.display='none';err.style.display='none';
+            try{await fetchJSON(API+`?action=delete_user&id=${id}`,{method:'DELETE'});
+                ok.textContent='Đã xoá người dùng #'+id; ok.style.display='block';
+                loadUsers();
+            }catch(e){err.textContent=e.message||'Lỗi xoá'; err.style.display='block'}
+        }
+        async function addCredits(id){
+            const ok=document.getElementById('ok');
+            const err=document.getElementById('err');
+            ok.style.display='none';err.style.display='none';
+            const input=document.getElementById(`credit-amt-${id}`);
+            let val=parseInt((input?.value||'').trim(),10);
+            if(isNaN(val) || val===0){ err.textContent='Nhập số credit (dương hoặc âm)'; err.style.display='block'; return; }
+            try{ await fetchJSON(API+`?action=add_credits&id=${id}`, {method:'PUT', body: JSON.stringify({amount: val})});
+                ok.textContent=`Đã cập nhật credit cho #${id} (${val > 0 ? '+' : ''}${val})`; ok.style.display='block';
+                loadUsers();
+            }catch(e){ err.textContent=e.message||'Lỗi cộng credit'; err.style.display='block'; }
+        }
+        async function loadModels(){
+            const list=document.getElementById('models');
+            list.innerHTML='<li class="muted">Đang tải...</li>';
+            try{const data=await fetchJSON(API+'?action=models');
+                const models=data.data||[]; list.innerHTML='';
+                models.forEach(m=>{const li=document.createElement('li'); li.textContent=m; list.appendChild(li)});
+            }catch(e){list.innerHTML='<li class="muted">Lỗi tải models</li>'}
+        }
+        function init(){
+            ensureAuth();
+            const u=JSON.parse(localStorage.getItem('admin_user')||'{}');
+            document.getElementById('me').textContent=u.username? (u.username+' (admin)') : 'Admin';
+            loadUsers();
+            loadModels();
+        }
+        document.addEventListener('DOMContentLoaded',init);
+    </script>
+</head>
+<body>
+    <header>
+        <div class="brand">Thư Viện AI - Admin</div>
+        <div class="toolbar">
+            <span id="me" class="muted"></span>
+            <button class="btn" onclick="loadUsers()">Tải lại</button>
+            <button class="btn" onclick="logout()">Đăng xuất</button>
+        </div>
+    </header>
+    <div class="container">
+        <div id="err" class="msg err"></div>
+        <div id="ok" class="msg ok"></div>
+        <section class="panel" style="margin-bottom:16px">
+            <h2>Danh sách Username</h2>
+            <div class="content">
+                <ul id="usernames-list" class="models"></ul>
+            </div>
+        </section>
+        <div class="grid">
+            <section class="panel">
+                <h2>Người dùng</h2>
+                <div class="content">
+                    <div style="overflow:auto">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Username</th>
+                                    <th>Role</th>
+                                    <th>Trạng thái</th>
+                                    <th>Credits</th>
+                                    <th>Ngày tạo</th>
+                                    <th>Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+            <aside class="panel">
+                <h2>Danh sách Model</h2>
+                <div class="content">
+                    <ul id="models" class="models"></ul>
+                </div>
+            </aside>
+        </div>
+    </div>
+</body>
+</html>
+
+

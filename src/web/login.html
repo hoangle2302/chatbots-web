@@ -352,6 +352,17 @@
             color: #fecaca;
         }
         
+        .error-message a {
+            color: #3b82f6;
+            text-decoration: underline;
+            font-weight: 600;
+        }
+        
+        .error-message a:hover {
+            color: #1d4ed8;
+            text-decoration: none;
+        }
+        
         .success-message {
             background: rgba(34, 197, 94, 0.2);
             border-color: rgba(34, 197, 94, 0.4);
@@ -624,7 +635,7 @@
                 loading.style.display = 'block';
                 
                 try {
-                    const response = await fetch('http://127.0.0.1:8000/api/auth-login.php', {
+                    const response = await fetch('http://127.0.0.1:8000/api/auth/login', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -635,9 +646,27 @@
                         })
                     });
                     
-                    const data = await response.json();
-                    
-                    if (response.ok) {
+                    // Parse response safely: try JSON when content-type is JSON; otherwise use text
+                    let data = null;
+                    let rawText = '';
+                    const contentType = response.headers.get('content-type') || '';
+                    try {
+                        if (contentType.includes('application/json')) {
+                            data = await response.json();
+                        } else {
+                            rawText = await response.text();
+                        }
+                    } catch (parseErr) {
+                        console.debug('Response parse fallback, non-JSON body.');
+                        try { rawText = rawText || await response.text(); } catch (_) {}
+                    }
+
+                    if (response.ok && data && typeof data === 'object') {
+                        // Hỗ trợ cả 2 dạng schema: {token, user} hoặc {data: {token, user}}
+                        const payload = data.data && typeof data.data === 'object' ? data.data : data;
+                        const userObj = payload.user || null;
+                        const tokenStr = payload.token || null;
+
                         showMessage(successMessage, data.message || 'Đăng nhập thành công! Đang chuyển hướng...', 2000);
                         
                         // Reset input styles
@@ -645,10 +674,14 @@
                         passwordInput.style.borderColor = 'rgba(34, 197, 94, 0.6)';
                         
                         // Save user info
-                        localStorage.setItem('user', JSON.stringify(data.user));
-                        localStorage.setItem('token', data.token || 'simulated_token');
+                        if (userObj) {
+                            localStorage.setItem('user', JSON.stringify(userObj));
+                        }
+                        if (tokenStr) {
+                            localStorage.setItem('token', tokenStr);
+                        }
                         
-                        // Redirect with animation
+                        // Redirect to index (chat) with animation
                         setTimeout(() => {
                             document.body.style.opacity = '0';
                             document.body.style.transform = 'scale(0.95)';
@@ -657,7 +690,34 @@
                             }, 300);
                         }, 1500);
                     } else {
-                        showMessage(errorMessage, data.error || 'Thông tin đăng nhập không chính xác');
+                        // Hiển thị thông báo lỗi chi tiết từ backend
+                        let errorMsg = 'Thông tin đăng nhập không chính xác';
+                        const isJsonObject = data && typeof data === 'object';
+
+                        if (isJsonObject && data.message) {
+                            errorMsg = data.message;
+                        } else if (isJsonObject && data.error) {
+                            errorMsg = data.error;
+                        } else if (!isJsonObject && rawText) {
+                            // Backend trả về HTML hoặc text (ví dụ lỗi 404/router)
+                            const snippet = rawText.replace(/\s+/g, ' ').slice(0, 180);
+                            errorMsg = `Server trả về phản hồi không hợp lệ (status ${response.status}). Vui lòng thử lại sau.`;
+                            console.warn('Non-JSON response snippet:', snippet);
+                        }
+
+                        // Xử lý các loại lỗi khác nhau (nếu có mã lỗi JSON)
+                        if (isJsonObject && data.code === 'USER_NOT_REGISTERED') {
+                            errorMsg = 'Tài khoản chưa được đăng ký. Vui lòng đăng ký trước.';
+                            errorMsg += ' <a href="register.html" style="color: #3b82f6; text-decoration: underline;">Đăng ký ngay</a>';
+                        } else if (isJsonObject && data.code === 'ACCOUNT_DEACTIVATED') {
+                            errorMsg = 'Tài khoản đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên.';
+                        } else if (isJsonObject && data.code === 'ACCOUNT_LOCKED') {
+                            errorMsg = 'Tài khoản tạm thời bị khóa do đăng nhập sai quá nhiều lần. Vui lòng thử lại sau.';
+                        } else if (isJsonObject && data.code === 'INVALID_PASSWORD') {
+                            errorMsg = 'Mật khẩu không đúng. Vui lòng kiểm tra lại.';
+                        }
+
+                        showMessage(errorMessage, errorMsg);
                         
                         // Reset input styles to error
                         usernameInput.style.borderColor = 'rgba(239, 68, 68, 0.6)';

@@ -47,6 +47,9 @@ switch ($method) {
             case 'refresh':
                 handleRefreshToken($auth);
                 break;
+            case 'check_username':
+                handleCheckUsername($user);
+                break;
             default:
                 http_response_code(404);
                 echo json_encode([
@@ -86,6 +89,8 @@ function handleRegister($user, $log) {
         $username = trim($input['username']);
         $password = $input['password'];
         $role = $input['role'] ?? 'user';
+        $email = isset($input['email']) ? trim($input['email']) : null;
+        $display_name = isset($input['display_name']) ? trim($input['display_name']) : null;
         
         // Validate username
         if (strlen($username) < 3 || strlen($username) > 80) {
@@ -123,8 +128,24 @@ function handleRegister($user, $log) {
         
         // Create new user
         $user->username = $username;
+        $user->email = $email;
+        $user->display_name = $display_name;
         $user->password = $password;
-        $user->role = $role;
+        // Enforce single admin
+        if ($role === 'admin') {
+            if ($user->countAdmins() >= 1) {
+                http_response_code(409);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Only one admin account is allowed',
+                    'code' => 'ADMIN_LIMIT_REACHED'
+                ]);
+                return;
+            }
+            $user->role = 'admin';
+        } else {
+            $user->role = $role;
+        }
         $user->is_active = 1;
         
         if ($user->create()) {
@@ -141,6 +162,8 @@ function handleRegister($user, $log) {
                 'data' => [
                     'user_id' => $user->id,
                     'username' => $user->username,
+                    'email' => $user->email,
+                    'display_name' => $user->display_name,
                     'role' => $user->role
                 ]
             ]);
@@ -155,10 +178,11 @@ function handleRegister($user, $log) {
         
     } catch (Exception $e) {
         error_log("Registration error: " . $e->getMessage());
+        error_log("Registration error trace: " . $e->getTraceAsString());
         http_response_code(500);
         echo json_encode([
             'success' => false,
-            'message' => 'Internal server error',
+            'message' => 'Internal server error: ' . $e->getMessage(),
             'code' => 'INTERNAL_ERROR'
         ]);
     }
@@ -185,15 +209,16 @@ function handleLogin($user, $log, $auth) {
         $username = trim($input['username']);
         $password = $input['password'];
         
-        // Get user by username
+        // Get user by username - chỉ user đã đăng ký mới tồn tại
         $user_data = $user->getByUsername($username);
         
         if (!$user_data) {
+            // User chưa đăng ký - không cho phép đăng nhập
             http_response_code(401);
             echo json_encode([
                 'success' => false,
-                'message' => 'Invalid username or password',
-                'code' => 'INVALID_CREDENTIALS'
+                'message' => 'Tài khoản chưa được đăng ký. Vui lòng đăng ký trước.',
+                'code' => 'USER_NOT_REGISTERED'
             ]);
             return;
         }
@@ -220,7 +245,7 @@ function handleLogin($user, $log, $auth) {
             return;
         }
         
-        // Verify password
+        // Verify password - chỉ user đã đăng ký mới có password
         if (!password_verify($password, $user_data['password'])) {
             // Update failed login count
             $user->id = $user_data['id'];
@@ -229,14 +254,14 @@ function handleLogin($user, $log, $auth) {
             // Log failed login
             $log->user_id = $user_data['id'];
             $log->action = 'login_failed';
-            $log->detail = "Failed login attempt for: {$username}";
+            $log->detail = "Failed login attempt for registered user: {$username}";
             $log->create();
             
             http_response_code(401);
             echo json_encode([
                 'success' => false,
-                'message' => 'Invalid username or password',
-                'code' => 'INVALID_CREDENTIALS'
+                'message' => 'Mật khẩu không đúng. Vui lòng kiểm tra lại.',
+                'code' => 'INVALID_PASSWORD'
             ]);
             return;
         }
@@ -244,6 +269,7 @@ function handleLogin($user, $log, $auth) {
         // Reset failed login count
         $user->id = $user_data['id'];
         $user->resetFailedLogin();
+        $user->updateLastLoginAt();
         
         // Generate JWT token
         $token = $auth->generateToken(
@@ -267,7 +293,10 @@ function handleLogin($user, $log, $auth) {
                 'user' => [
                     'id' => $user_data['id'],
                     'username' => $user_data['username'],
-                    'role' => $user_data['role']
+                    'email' => $user_data['email'] ?? null,
+                    'display_name' => $user_data['display_name'] ?? null,
+                            'role' => $user_data['role'],
+                            'credits' => $user_data['credits'] ?? 0
                 ],
                 'expires_in' => 24 * 60 * 60 // 24 hours in seconds
             ]
@@ -275,10 +304,11 @@ function handleLogin($user, $log, $auth) {
         
     } catch (Exception $e) {
         error_log("Login error: " . $e->getMessage());
+        error_log("Login error trace: " . $e->getTraceAsString());
         http_response_code(500);
         echo json_encode([
             'success' => false,
-            'message' => 'Internal server error',
+            'message' => 'Internal server error: ' . $e->getMessage(),
             'code' => 'INTERNAL_ERROR'
         ]);
     }
@@ -388,5 +418,74 @@ function handleRefreshToken($auth) {
         ]);
     }
 }
-?>
 
+/**
+ * Handle username check - kiểm tra username đã đăng ký chưa
+ */
+function handleCheckUsername($user) {
+    try {
+        $input = json_decode(file_get_contents('php://input'), true);
+        
+        // Validate input
+        if (empty($input['username'])) {
+            http_response_code(400);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Username is required',
+                'code' => 'MISSING_USERNAME'
+            ]);
+            return;
+        }
+        
+        $username = trim($input['username']);
+        
+        // Validate username format
+        if (strlen($username) < 3 || strlen($username) > 80) {
+            http_response_code(400);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Username must be between 3 and 80 characters',
+                'code' => 'INVALID_USERNAME_FORMAT'
+            ]);
+            return;
+        }
+        
+        // Check if username exists
+        $user_data = $user->getByUsername($username);
+        
+        if ($user_data) {
+            // Username đã được đăng ký
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'message' => 'Username đã được đăng ký',
+                'data' => [
+                    'username' => $username,
+                    'is_registered' => true,
+                    'is_active' => $user_data['is_active']
+                ]
+            ]);
+        } else {
+            // Username chưa được đăng ký
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'message' => 'Username chưa được đăng ký',
+                'data' => [
+                    'username' => $username,
+                    'is_registered' => false
+                ]
+            ]);
+        }
+        
+    } catch (Exception $e) {
+        error_log("Username check error: " . $e->getMessage());
+        http_response_code(500);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Internal server error',
+            'code' => 'INTERNAL_ERROR'
+        ]);
+    }
+}
+?>

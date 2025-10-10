@@ -2,6 +2,9 @@
 // File này chứa các thông tin cấu hình API
 
 const CONFIG = {
+    // Backend API URL
+    BACKEND_URL: 'http://127.0.0.1:8000',
+    
     // API Key4U
     KEY4U: {
         API_URL: "https://api.key4u.shop/v1/chat/completions",

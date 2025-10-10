@@ -25,17 +25,39 @@ require_once __DIR__ . '/services/UserService.php';
 require_once __DIR__ . '/models/User.php';
 require_once __DIR__ . '/models/Log.php';
 require_once __DIR__ . '/models/AIQueryHistory.php';
+require_once __DIR__ . '/middleware/AuthMiddleware.php';
 
-// Khởi tạo database (tạm thời bỏ qua để tránh lỗi)
-// $database = new Database();
-// $db = $database->getConnection();
-$db = null;
+// Khởi tạo database
+try {
+    $database = new Database();
+    $db = $database->getConnection();
+} catch (Exception $e) {
+    error_log("Database connection error: " . $e->getMessage());
+    $db = null;
+}
 
 // Lấy method và path
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $requestUri = $_SERVER['REQUEST_URI'] ?? '/';
 $path = parse_url($requestUri, PHP_URL_PATH);
+
+// Debug logging
+error_log("Request URI: " . $requestUri);
+error_log("Parsed path: " . $path);
+error_log("Method: " . $method);
+
+// Remove /index.php from path if present
 $path = str_replace('/index.php', '', $path);
+
+// Simple health check for root path
+if ($path === '/' || $path === '') {
+    sendSuccess([
+        'status' => 'ok',
+        'timestamp' => date('Y-m-d H:i:s'),
+        'version' => '1.0.0',
+        'message' => 'Thư Viện AI API is running'
+    ]);
+}
 
 // Router đơn giản
 try {
@@ -278,14 +300,23 @@ function handleLogout() {
  * Lấy thông tin profile
  */
 function handleGetProfile($db) {
-    $userId = getCurrentUserId();
-    if (!$userId) {
-        sendError('Unauthorized', 401);
+    // Sử dụng JWT authentication thay vì session
+    $auth = new AuthMiddleware();
+    
+    $token = $auth->getTokenFromRequest();
+    if (!$token) {
+        sendError('No token provided', 401);
+        return;
+    }
+    
+    $user_data = $auth->getCurrentUser($token);
+    if (!$user_data) {
+        sendError('Invalid token', 401);
         return;
     }
     
     $userService = new UserService($db);
-    $user = $userService->getById($userId);
+    $user = $userService->getById($user_data['user_id']);
     
     if ($user) {
         unset($user['password']); // Không trả về password

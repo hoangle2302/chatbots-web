@@ -31,6 +31,8 @@ class UserService {
         // Reset số lần đăng nhập sai
         $user->id = $userData['id'];
         $user->resetFailedLogin();
+        // Cập nhật thời gian đăng nhập gần nhất
+        $user->updateLastLoginAt();
         
         // Ghi log
         $this->logUserAction($userData['id'], 'login', 'User logged in successfully');
@@ -41,7 +43,7 @@ class UserService {
     /**
      * Đăng ký
      */
-    public function register($username, $password) {
+    public function register($username, $password, $email = null, $displayName = null) {
         // Kiểm tra username đã tồn tại
         $user = new User($this->conn);
         $existingUser = $user->getByUsername($username);
@@ -52,6 +54,8 @@ class UserService {
         
         // Tạo user mới
         $user->username = $username;
+        $user->email = $email;
+        $user->display_name = $displayName;
         $user->password = $password;
         $user->role = 'user';
         $user->is_active = 1;
@@ -91,6 +95,16 @@ class UserService {
         if (isset($data['username'])) {
             $setParts[] = "username = :username";
             $params[':username'] = $data['username'];
+        }
+        
+        if (isset($data['email'])) {
+            $setParts[] = "email = :email";
+            $params[':email'] = $data['email'];
+        }
+        
+        if (isset($data['display_name'])) {
+            $setParts[] = "display_name = :display_name";
+            $params[':display_name'] = $data['display_name'];
         }
         
         if (isset($data['password'])) {
@@ -154,7 +168,7 @@ class UserService {
      * Lấy danh sách tất cả users
      */
     public function getAll($limit = 100) {
-        $query = "SELECT id, username, role, is_active, created_at FROM users ORDER BY created_at DESC LIMIT :limit";
+        $query = "SELECT id, username, email, display_name, role, is_active, created_at FROM users ORDER BY created_at DESC LIMIT :limit";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
         $stmt->execute();
@@ -170,6 +184,9 @@ class UserService {
         $log->user_id = $userId;
         $log->action = $action;
         $log->detail = $detail;
+        // capture best-effort client info if available in server vars
+        $log->ip_address = $_SERVER['REMOTE_ADDR'] ?? null;
+        $log->user_agent = $_SERVER['HTTP_USER_AGENT'] ?? null;
         $log->create();
     }
     

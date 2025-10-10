@@ -599,7 +599,7 @@
             loading.style.display = 'block';
             
             try {
-                const response = await fetch('http://127.0.0.1:8000/api/auth-register.php', {
+                const response = await fetch('http://127.0.0.1:8000/api/auth/register', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -607,7 +607,8 @@
                     body: JSON.stringify({
                         username: username,
                         email: email,
-                        password: password
+                        password: password,
+                        display_name: username // Sử dụng username làm display_name
                     })
                 });
                 
@@ -626,7 +627,27 @@
                         window.location.href = 'index.html';
                     }, 2000);
                 } else {
-                    errorMessage.textContent = data.error;
+                    // Hiển thị thông báo lỗi chi tiết từ backend
+                    let errorMsg = 'Đăng ký thất bại. Vui lòng thử lại.';
+                    
+                    if (data.message) {
+                        errorMsg = data.message;
+                    } else if (data.error) {
+                        errorMsg = data.error;
+                    }
+                    
+                    // Xử lý các loại lỗi khác nhau
+                    if (data.code === 'USERNAME_EXISTS') {
+                        errorMsg = 'Tên đăng nhập đã tồn tại. Vui lòng chọn tên khác.';
+                    } else if (data.code === 'INVALID_USERNAME') {
+                        errorMsg = 'Tên đăng nhập phải có từ 3-80 ký tự.';
+                    } else if (data.code === 'INVALID_PASSWORD') {
+                        errorMsg = 'Mật khẩu phải có ít nhất 6 ký tự.';
+                    } else if (data.code === 'ADMIN_LIMIT_REACHED') {
+                        errorMsg = 'Chỉ được phép có 1 tài khoản admin.';
+                    }
+                    
+                    errorMessage.textContent = errorMsg;
                     errorMessage.style.display = 'block';
                 }
             } catch (error) {

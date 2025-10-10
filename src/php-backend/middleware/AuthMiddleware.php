@@ -1,11 +1,7 @@
 <?php
 /**
- * JWT Authentication Middleware
+ * JWT Authentication Middleware (no external dependencies)
  */
-require_once __DIR__ . '/../vendor/autoload.php';
-
-use Firebase\JWT\JWT;
-use Firebase\JWT\Key;
 
 class AuthMiddleware {
     private $secret_key;
@@ -43,7 +39,15 @@ class AuthMiddleware {
             ]
         ];
         
-        return JWT::encode($payload, $this->secret_key, $this->algorithm);
+        // Build JWT without external libs (HS256)
+        $header = [ 'typ' => 'JWT', 'alg' => 'HS256' ];
+        $segments = [];
+        $segments[] = $this->base64UrlEncode(json_encode($header));
+        $segments[] = $this->base64UrlEncode(json_encode($payload));
+        $signingInput = implode('.', $segments);
+        $signature = hash_hmac('sha256', $signingInput, $this->secret_key, true);
+        $segments[] = $this->base64UrlEncode($signature);
+        return implode('.', $segments);
     }
     
     /**
@@ -51,8 +55,17 @@ class AuthMiddleware {
      */
     public function verifyToken($token) {
         try {
-            $decoded = JWT::decode($token, new Key($this->secret_key, $this->algorithm));
-            return (array) $decoded->data;
+            $parts = explode('.', $token);
+            if (count($parts) !== 3) return false;
+            list($h64, $p64, $s64) = $parts;
+            $signingInput = $h64 . '.' . $p64;
+            $signature = $this->base64UrlDecode($s64);
+            $calc = hash_hmac('sha256', $signingInput, $this->secret_key, true);
+            if (!hash_equals($calc, $signature)) return false;
+            $payload = json_decode($this->base64UrlDecode($p64), true);
+            if (!$payload) return false;
+            if (isset($payload['exp']) && time() >= $payload['exp']) return false;
+            return isset($payload['data']) ? (array)$payload['data'] : false;
         } catch (Exception $e) {
             return false;
         }
@@ -141,6 +154,16 @@ class AuthMiddleware {
         }
         
         return null;
+    }
+
+    private function base64UrlEncode($data) {
+        $b64 = base64_encode($data);
+        return rtrim(strtr($b64, '+/', '-_'), '=');
+    }
+
+    private function base64UrlDecode($data) {
+        $b64 = strtr($data, '-_', '+/');
+        return base64_decode($b64 . str_repeat('=', (4 - strlen($b64) % 4) % 4));
     }
 }
 ?>
