@@ -7,6 +7,12 @@
     <link rel="stylesheet" href="style.css">
     <link rel="icon" href="favicon.ico" type="image/x-icon">
     <style>
+        /* Use ONLY black and white colors */
+        :root {
+            --primary: #000000;   /* Pure Black */
+            --secondary: #ffffff; /* Pure White */
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -18,13 +24,10 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
-            background-size: 400% 400%;
-            background-attachment: fixed;
-            animation: gradientShift 15s ease infinite;
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--secondary); /* Pure white background */
             min-height: 100vh;
-            color: white;
+            color: var(--primary);
             position: relative;
             overflow-x: hidden;
         }
@@ -45,7 +48,8 @@
             position: absolute;
             width: 4px;
             height: 4px;
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--primary);
+            opacity: 0.1;
             border-radius: 50%;
             animation: float 6s ease-in-out infinite;
         }
@@ -67,10 +71,10 @@
             left: 0;
             right: 0;
             z-index: 1000;
-            background: rgba(255, 255, 255, 0.08);
+            background: var(--secondary); /* Pure white background */
             backdrop-filter: blur(25px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border-bottom: 1px solid var(--primary);
+            box-shadow: 0 8px 32px var(--primary);
             transition: all 0.3s ease;
         }
 
@@ -91,6 +95,7 @@
             font-weight: 700;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            color: var(--primary); /* Black text on white background */
         }
 
         .nav-brand:hover {
@@ -106,16 +111,16 @@
             gap: 4px;
             list-style: none;
             align-items: center;
-            background: rgba(255, 255, 255, 0.15);
+            background: var(--secondary); /* White background for menu */
             padding: 6px;
             border-radius: 25px;
             backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--primary);
+            box-shadow: 0 4px 15px var(--primary);
         }
 
         .nav-menu a {
-            color: rgba(255, 255, 255, 0.8);
+            color: var(--primary); /* Black text */
             text-decoration: none;
             padding: 10px 20px;
             border-radius: 20px;
@@ -128,13 +133,13 @@
         }
 
         .nav-menu a:hover {
-            background: rgba(255, 255, 255, 0.12);
-            color: #ffffff;
+            background: var(--primary);
+            color: var(--secondary);
         }
 
         .nav-menu a.active {
-            background: rgba(255, 255, 255, 0.25);
-            color: #ffffff;
+            background: var(--primary);
+            color: var(--secondary);
             font-weight: 600;
         }
 
@@ -146,9 +151,9 @@
             transform: translateX(-50%);
             width: 6px;
             height: 6px;
-            background: #ffffff;
+            background: var(--primary);
             border-radius: 50%;
-            box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+            box-shadow: 0 0 8px var(--primary);
         }
 
         .user-profile {
@@ -159,10 +164,12 @@
             padding: 8px 15px;
             border-radius: 12px;
             transition: all 0.3s ease;
+            color: var(--primary); /* Black text */
         }
 
         .user-profile:hover {
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--primary);
+            color: var(--secondary);
             transform: translateY(-2px);
         }
 
@@ -170,18 +177,21 @@
             width: 45px;
             height: 45px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: var(--primary); /* Black background */
+            color: var(--secondary); /* White text */
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 18px;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 4px 15px var(--primary);
         }
 
         .user-profile:hover .user-avatar {
             transform: scale(1.1) rotate(5deg);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+            background: var(--secondary);
+            color: var(--primary);
+            box-shadow: 0 8px 25px var(--primary);
         }
 
         /* Main Screen */
@@ -214,10 +224,7 @@
             font-size: 42px;
             font-weight: 800;
             margin-bottom: 15px;
-            background: linear-gradient(135deg, #ffffff 0%, #e0e7ff 100%);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: var(--primary);
             position: relative;
             z-index: 1;
             letter-spacing: -0.5px;
@@ -225,7 +232,8 @@
 
         .dashboard-subtitle {
             font-size: 20px;
-            color: rgba(255, 255, 255, 0.85);
+            color: var(--primary);
+            opacity: 0.85;
             font-weight: 400;
             line-height: 1.5;
             max-width: 600px;
@@ -243,10 +251,11 @@
             z-index: 1;
         }
 
+        /* Stats Cards - Enhanced hover effects */
         .stat-card {
-            background: rgba(255, 255, 255, 0.08);
+            background: var(--secondary);
             backdrop-filter: blur(25px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            border: 2px solid var(--primary);
             border-radius: 24px;
             padding: 30px;
             min-height: 160px;
@@ -257,112 +266,72 @@
             transform-style: preserve-3d;
         }
 
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
-            transition: left 0.6s ease;
-        }
-
-        .stat-card::after {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
-            opacity: 0;
-            transition: opacity 0.4s ease;
-        }
-
-        .stat-card:hover::before {
-            left: 100%;
-        }
-
-        .stat-card:hover::after {
-            opacity: 1;
-        }
-
+        /* Enhanced hover effect with complete color inversion */
         .stat-card:hover {
             transform: translateY(-8px) rotateX(5deg) rotateY(5deg);
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25), 0 0 30px rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 255, 255, 0.3);
-        }
-
-        .stat-card:nth-child(1):hover {
-            box-shadow: 0 25px 50px rgba(102, 126, 234, 0.3), 0 0 30px rgba(102, 126, 234, 0.2);
-        }
-
-        .stat-card:nth-child(2):hover {
-            box-shadow: 0 25px 50px rgba(240, 147, 251, 0.3), 0 0 30px rgba(240, 147, 251, 0.2);
-        }
-
-        .stat-card:nth-child(3):hover {
-            box-shadow: 0 25px 50px rgba(79, 172, 254, 0.3), 0 0 30px rgba(79, 172, 254, 0.2);
-        }
-
-        .stat-card:nth-child(4):hover {
-            box-shadow: 0 25px 50px rgba(245, 87, 108, 0.3), 0 0 30px rgba(245, 87, 108, 0.2);
+            box-shadow: 0 25px 50px var(--primary), 0 0 30px var(--primary);
+            border-color: var(--secondary);
+            background: var(--primary);
+            color: var(--secondary);
         }
 
         .stat-icon {
             font-size: 56px;
             margin-bottom: 20px;
             display: block;
-            transition: all 0.4s ease;
-            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+            color: var(--primary);
         }
 
         .stat-card:hover .stat-icon {
             transform: scale(1.2) rotateY(360deg);
-            filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.3));
+            color: var(--secondary);
         }
 
         .stat-number {
             font-size: 42px;
             font-weight: 800;
-            color: #fff;
+            color: var(--primary);
             margin-bottom: 10px;
             transition: all 0.4s ease;
             font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
 
         .stat-card:hover .stat-number {
             transform: scale(1.05);
-            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            color: var(--secondary);
         }
 
         .stat-label {
             font-size: 17px;
-            color: rgba(255, 255, 255, 0.85);
+            color: var(--primary);
+            opacity: 0.85;
             margin-bottom: 15px;
             font-weight: 500;
             letter-spacing: 0.5px;
+            transition: all 0.4s ease;
+        }
+
+        .stat-card:hover .stat-label {
+            color: var(--secondary);
+            opacity: 1;
         }
 
         .stat-change {
             font-size: 14px;
             padding: 6px 16px;
             border-radius: 25px;
-            background: rgba(34, 197, 94, 0.15);
-            color: #86efac;
-            border: 1px solid rgba(34, 197, 94, 0.3);
+            background: var(--primary);
+            color: var(--secondary);
+            border: 1px solid var(--primary);
             font-weight: 600;
             transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
         }
 
         .stat-card:hover .stat-change {
-            background: rgba(34, 197, 94, 0.25);
-            border-color: rgba(34, 197, 94, 0.5);
+            background: var(--secondary);
+            color: var(--primary);
+            border-color: var(--secondary);
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
         }
 
         /* Content Grid */
@@ -377,9 +346,9 @@
 
         /* Recent Activity */
         .activity-card {
-            background: rgba(255, 255, 255, 0.08);
+            background: var(--secondary);
             backdrop-filter: blur(25px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            border: 2px solid var(--primary);
             border-radius: 24px;
             padding: 35px;
             transition: all 0.4s ease;
@@ -389,8 +358,8 @@
 
         .activity-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-            border-color: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 20px 40px var(--primary);
+            border-color: var(--primary);
         }
 
         .card-title {
@@ -400,7 +369,7 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            color: #ffffff;
+            color: var(--primary);
             position: relative;
         }
 
@@ -411,7 +380,7 @@
             left: 0;
             width: 50px;
             height: 3px;
-            background: linear-gradient(90deg, #667eea, #764ba2);
+            background: var(--primary);
             border-radius: 2px;
         }
 
@@ -427,7 +396,8 @@
             top: 0;
             bottom: 0;
             width: 2px;
-            background: linear-gradient(180deg, rgba(255,255,255,0.2), rgba(255,255,255,0.05));
+            background: linear-gradient(180deg, var(--primary), transparent);
+            opacity: 0.2;
             border-radius: 1px;
         }
 
@@ -436,17 +406,21 @@
             align-items: center;
             gap: 20px;
             padding: 20px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            border-bottom: 1px solid var(--primary);
             position: relative;
             transition: all 0.3s ease;
+            background: var(--secondary);
+            border-radius: 12px;
+            margin-bottom: 10px;
+            padding: 20px 15px;
         }
 
         .activity-item:hover {
-            transform: translateX(8px);
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 12px;
-            padding-left: 15px;
-            padding-right: 15px;
+            transform: translateX(8px) scale(1.02);
+            background: var(--primary);
+            color: var(--secondary);
+            border-color: var(--secondary);
+            box-shadow: 0 8px 20px var(--primary);
         }
 
         .activity-item:last-child {
@@ -457,7 +431,8 @@
             width: 45px;
             height: 45px;
             border-radius: 50%;
-            background: rgba(255, 255, 255, 0.15);
+            background: var(--primary);
+            color: var(--secondary);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -465,14 +440,14 @@
             position: relative;
             z-index: 2;
             transition: all 0.4s ease;
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(255, 255, 255, 0.1);
+            border: 2px solid var(--primary);
         }
 
         .activity-item:hover .activity-icon {
             transform: scale(1.1) rotate(10deg);
-            background: rgba(255, 255, 255, 0.25);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            background: var(--secondary);
+            color: var(--primary);
+            border-color: var(--secondary);
         }
 
         .activity-icon::before {
@@ -480,12 +455,18 @@
             position: absolute;
             width: 8px;
             height: 8px;
-            background: #ffffff;
+            background: var(--primary);
             border-radius: 50%;
             left: -24px;
             top: 50%;
             transform: translateY(-50%);
-            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            box-shadow: 0 0 10px var(--primary);
+            transition: all 0.3s ease;
+        }
+
+        .activity-item:hover .activity-icon::before {
+            background: var(--secondary);
+            box-shadow: 0 0 10px var(--secondary);
         }
 
         .activity-content {
@@ -496,24 +477,47 @@
             font-size: 17px;
             font-weight: 600;
             margin-bottom: 6px;
-            color: #ffffff;
+            color: var(--primary);
+            transition: all 0.3s ease;
+        }
+
+        .activity-item:hover .activity-content h4 {
+            color: var(--secondary);
+            font-weight: 700;
         }
 
         .activity-content p {
             font-size: 15px;
-            color: rgba(255, 255, 255, 0.75);
+            color: var(--primary);
+            opacity: 0.75;
             line-height: 1.4;
+            transition: all 0.3s ease;
+        }
+
+        .activity-item:hover .activity-content p {
+            color: var(--secondary);
+            opacity: 1;
         }
 
         .activity-time {
             font-size: 13px;
-            color: rgba(255, 255, 255, 0.6);
+            color: var(--primary);
+            opacity: 0.6;
             margin-left: auto;
             font-weight: 500;
-            background: rgba(255, 255, 255, 0.08);
+            background: var(--primary);
+            color: var(--secondary);
             padding: 4px 12px;
             border-radius: 20px;
-            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+        }
+
+        .activity-item:hover .activity-time {
+            background: var(--secondary);
+            color: var(--primary);
+            opacity: 1;
+            font-weight: 600;
+            transform: scale(1.05);
         }
 
         /* Quick Actions */
@@ -523,11 +527,11 @@
         }
 
         .action-btn {
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: var(--secondary);
+            border: 2px solid var(--primary);
             border-radius: 16px;
             padding: 24px;
-            color: white;
+            color: var(--primary);
             text-decoration: none;
             display: flex;
             align-items: center;
@@ -536,7 +540,6 @@
             cursor: pointer;
             position: relative;
             overflow: hidden;
-            backdrop-filter: blur(10px);
         }
 
         .action-btn::before {
@@ -546,49 +549,59 @@
             left: -100%;
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+            opacity: 0.1;
             transition: left 0.6s ease;
         }
 
-        .action-btn:hover::before {
-            left: 100%;
-        }
-
         .action-btn:hover {
-            background: rgba(255, 255, 255, 0.15);
-            transform: translateX(8px) translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-            border-color: rgba(255, 255, 255, 0.25);
+            background: var(--primary);
+            color: var(--secondary);
+            transform: translateX(8px) translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 25px var(--primary);
+            border-color: var(--secondary);
         }
 
         .action-icon {
             font-size: 28px;
             transition: all 0.3s ease;
-            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+            color: var(--primary);
         }
 
         .action-btn:hover .action-icon {
             transform: scale(1.2) rotate(5deg);
+            color: var(--secondary);
         }
 
         .action-text h4 {
             font-size: 17px;
             font-weight: 600;
             margin-bottom: 6px;
-            color: #ffffff;
+            color: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn:hover .action-text h4 {
+            font-weight: 700;
         }
 
         .action-text p {
             font-size: 14px;
-            color: rgba(255, 255, 255, 0.75);
+            opacity: 0.75;
             line-height: 1.3;
+            color: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn:hover .action-text p {
+            opacity: 1;
         }
 
         /* Model Usage Chart */
         .chart-container {
-            background: rgba(255, 255, 255, 0.08);
+            background: var(--secondary);
             backdrop-filter: blur(25px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            border: 2px solid var(--primary);
             border-radius: 24px;
             padding: 35px;
             margin-bottom: 40px;
@@ -599,8 +612,8 @@
 
         .chart-container:hover {
             transform: translateY(-5px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-            border-color: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 20px 40px var(--primary);
+            border-color: var(--primary);
         }
 
         .usage-bars {
@@ -618,41 +631,76 @@
             border-radius: 12px;
             transition: all 0.3s ease;
             cursor: pointer;
+            background: var(--secondary);
+            border: 1px solid transparent;
         }
 
         .usage-item:hover {
-            background: rgba(255, 255, 255, 0.05);
-            transform: translateX(5px);
+            background: var(--primary);
+            color: var(--secondary);
+            transform: translateX(5px) scale(1.02);
+            border-color: var(--secondary);
+            box-shadow: 0 5px 15px var(--primary);
         }
 
         .model-name {
             min-width: 130px;
             font-size: 15px;
             font-weight: 600;
-            color: #ffffff;
-            transition: color 0.3s ease;
+            color: var(--primary);
+            transition: all 0.3s ease;
         }
 
         .usage-item:hover .model-name {
-            color: #f0f0f0;
+            color: var(--secondary);
+            font-weight: 700;
+        }
+
+        .usage-percentage {
+            min-width: 50px;
+            text-align: right;
+            font-size: 15px;
+            color: var(--primary);
+            opacity: 0.85;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .usage-item:hover .usage-percentage {
+            color: var(--secondary);
+            opacity: 1;
+            transform: scale(1.1);
+            font-weight: 700;
         }
 
         .usage-bar {
             flex: 1;
             height: 12px;
-            background: rgba(255, 255, 255, 0.08);
+            background: rgba(0, 0, 0, 0.1);
             border-radius: 6px;
             overflow: hidden;
             position: relative;
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .usage-item:hover .usage-bar {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
         }
 
         .usage-fill {
             height: 100%;
             border-radius: 6px;
-            transition: all 1s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
+            background-color: #000000 !important;
+        }
+
+        .usage-item:hover .usage-fill {
+            background-color: #ffffff !important;
+            transform: scaleX(1.02);
         }
 
         .usage-fill::after {
@@ -664,20 +712,11 @@
             height: 100%;
             background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
             animation: shimmer 2s infinite;
-        }
-
-        .usage-percentage {
-            min-width: 50px;
-            text-align: right;
-            font-size: 15px;
-            color: rgba(255, 255, 255, 0.85);
-            font-weight: 600;
             transition: all 0.3s ease;
         }
 
-        .usage-item:hover .usage-percentage {
-            color: #ffffff;
-            transform: scale(1.05);
+        .usage-item:hover .usage-fill::after {
+            background: linear-gradient(90deg, transparent, rgba(0,0,0,0.3), transparent);
         }
 
         /* Animations */
@@ -1061,35 +1100,35 @@
                 <div class="usage-item">
                     <span class="model-name">GPT-4</span>
                     <div class="usage-bar">
-                        <div class="usage-fill" style="width: 85%; background: linear-gradient(90deg, #667eea, #764ba2);"></div>
+                        <div class="usage-fill" style="width: 85%;"></div>
                     </div>
                     <span class="usage-percentage">85%</span>
                 </div>
                 <div class="usage-item">
                     <span class="model-name">Claude-3</span>
                     <div class="usage-bar">
-                        <div class="usage-fill" style="width: 72%; background: linear-gradient(90deg, #f093fb, #f5576c);"></div>
+                        <div class="usage-fill" style="width: 72%;"></div>
                     </div>
                     <span class="usage-percentage">72%</span>
                 </div>
                 <div class="usage-item">
                     <span class="model-name">Gemini Pro</span>
                     <div class="usage-bar">
-                        <div class="usage-fill" style="width: 68%; background: linear-gradient(90deg, #4facfe, #00f2fe);"></div>
+                        <div class="usage-fill" style="width: 68%;"></div>
                     </div>
                     <span class="usage-percentage">68%</span>
                 </div>
                 <div class="usage-item">
                     <span class="model-name">DALL-E 3</span>
                     <div class="usage-bar">
-                        <div class="usage-fill" style="width: 45%; background: linear-gradient(90deg, #a8edea, #fed6e3);"></div>
+                        <div class="usage-fill" style="width: 45%;"></div>
                     </div>
                     <span class="usage-percentage">45%</span>
                 </div>
                 <div class="usage-item">
                     <span class="model-name">Llama 2</span>
                     <div class="usage-bar">
-                        <div class="usage-fill" style="width: 32%; background: linear-gradient(90deg, #ffecd2, #fcb69f);"></div>
+                        <div class="usage-fill" style="width: 32%;"></div>
                     </div>
                     <span class="usage-percentage">32%</span>
                 </div>
