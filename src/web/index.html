@@ -352,7 +352,7 @@
             <option value="doubao-1-5-vision-pro-32k">188. Doubao 1.5 Vision Pro 32K</option>
             <option value="doubao-1-5-vision-pro-32k-250115">189. Doubao 1.5 Vision Pro 32K (250115)</option>
             <option value="doubao-1.5-pro-256k">190. Doubao 1.5 Pro 256K</option>
-            <option value="doubao-1.5-pro-32k">191. Doubao 1.5 Pro 32K</option>
+            <option value="doubao-1-5-pro-32k">191. Doubao 1.5 Pro 32K</option>
             <option value="doubao-1.5-vision-pro-32k">192. Doubao 1.5 Vision Pro 32K</option>
             <option value="doubao-pro-32k-241215">193. Doubao Pro 32K (241215)</option>
             <option value="doubao-seed-1-6-250615">194. Doubao Seed 1.6 (250615)</option>
@@ -684,7 +684,7 @@
         <!-- Upload tài liệu -->
         <div class="document-section">
             <h3>📄 Tài liệu</h3>
-            <button id="manage-docs-btn" class="manage-docs-button">📚 Quản lý tài liệu</button>
+            <a href="document-manager.html" class="manage-docs-button">📚 Quản lý tài liệu</a>
             <input type="file" id="document-upload" accept=".pdf,.doc,.docx,.xls,.xlsx,.txt" style="display:none">
             <button id="upload-btn" class="upload-button">📎 Tải nhanh</button>
             <div id="document-info" class="document-info" style="display:none">
@@ -854,41 +854,100 @@
     
     <!-- Script quản lý trạng thái đăng nhập -->
     <script>
+        // Function logout - phải được định nghĩa ở global scope
+        function logout() {
+            // Xóa dữ liệu user khỏi localStorage
+            localStorage.removeItem('user');
+            localStorage.removeItem('token');
+            
+            // Hiển thị lại section đăng nhập/đăng ký
+            showAuthSection();
+            
+            // Thông báo đăng xuất thành công
+            alert('Đăng xuất thành công!');
+            
+            // Reload trang để đảm bảo trạng thái được cập nhật
+            window.location.reload();
+        }
+
         // Kiểm tra trạng thái đăng nhập khi trang load
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 DOM Content Loaded, checking login status...');
             checkLoginStatus();
+            
+            // Force check lại sau 1 giây để đảm bảo
+            setTimeout(() => {
+                console.log('🔄 Force checking login status after 1 second...');
+                checkLoginStatus();
+            }, 1000);
         });
 
-        function checkLoginStatus() {
+        async function checkLoginStatus() {
+            console.log('🔍 Checking login status...');
             const userData = localStorage.getItem('user');
             const authSection = document.getElementById('auth-section');
             const userSection = document.getElementById('user-section');
             
-            if (userData) {
+            console.log('User data from localStorage:', userData);
+            console.log('Auth section element:', authSection);
+            console.log('User section element:', userSection);
+            
+            // Kiểm tra userData hợp lệ (không phải null, undefined, hoặc "undefined")
+            if (userData && userData !== 'null' && userData !== 'undefined' && userData.trim() !== '') {
                 // User đã đăng nhập
                 try {
                     const user = JSON.parse(userData);
+                    console.log('Parsed user data:', user);
                     
                     // Ẩn section đăng nhập/đăng ký
                     if (authSection) {
                         authSection.style.display = 'none';
+                        console.log('✅ Hidden auth section');
                     }
                     
                     // Hiện section user
                     if (userSection) {
                         userSection.style.display = 'block';
+                        console.log('✅ Shown user section');
                         
                         // Cập nhật thông tin user
                         const userNameElement = document.getElementById('user-name');
                         const userCreditsElement = document.getElementById('user-credits');
                         
+                        console.log('User name element:', userNameElement);
+                        console.log('User credits element:', userCreditsElement);
+                        
                         if (userNameElement) {
                             userNameElement.textContent = user.username || 'User';
+                            console.log('✅ Updated user name to:', user.username);
                         }
                         
                         if (userCreditsElement) {
                             userCreditsElement.textContent = (user.credits || 0) + ' credits';
+                            console.log('✅ Updated user credits to:', user.credits || 0);
                         }
+
+                        // Thử làm mới credits từ API profile nếu có token
+                        try {
+                            const token = localStorage.getItem('token');
+                            if (token) {
+                                const res = await fetch((window.APP_CONFIG?.BACKEND_URL || 'http://127.0.0.1:8000') + '/api/user/profile', {
+                                    headers: { 'Authorization': 'Bearer ' + token }
+                                });
+                                const payload = await res.json().catch(()=>null);
+                                if (res.ok && payload && payload.success && payload.data && payload.data.user) {
+                                    const freshUser = payload.data.user;
+                                    localStorage.setItem('user', JSON.stringify(freshUser));
+                                    if (userCreditsElement) {
+                                        userCreditsElement.textContent = (freshUser.credits || 0) + ' credits';
+                                    }
+                                }
+                            }
+                        } catch (e) {
+                            console.debug('Skip refresh profile:', e?.message);
+                        }
+                    } else {
+                        console.error('❌ User section element not found!');
                     }
                 } catch (error) {
                     console.error('Error parsing user data:', error);
@@ -897,6 +956,7 @@
                 }
             } else {
                 // User chưa đăng nhập
+                console.log('❌ No user data found, showing auth section');
                 showAuthSection();
             }
         }
@@ -914,32 +974,84 @@
             }
         }
 
-        function logout() {
-            // Xóa dữ liệu user khỏi localStorage
-            localStorage.removeItem('user');
-            localStorage.removeItem('token');
-            
-            // Hiển thị lại section đăng nhập/đăng ký
-            showAuthSection();
-            
-            // Thông báo đăng xuất thành công
-            alert('Đăng xuất thành công!');
-            
-            // Reload trang để đảm bảo trạng thái được cập nhật
-            window.location.reload();
-        }
-
         // Lắng nghe sự kiện storage để cập nhật khi đăng nhập từ tab khác
         window.addEventListener('storage', function(e) {
             if (e.key === 'user') {
+                console.log('🔄 User data changed, updating login status...');
                 checkLoginStatus();
             }
         });
 
+        // Kiểm tra lại khi trang được focus (trường hợp chuyển từ tab khác)
+        window.addEventListener('focus', function() {
+            console.log('🔄 Page focused, checking login status...');
+            checkLoginStatus();
+        });
+
+        // Làm mới credits định kỳ
+        setInterval(() => {
+            checkLoginStatus();
+        }, 60000);
+
+        // Kiểm tra lại sau khi chuyển trang (trường hợp từ login)
+        window.addEventListener('pageshow', function() {
+            console.log('🔄 Page shown, checking login status...');
+            checkLoginStatus();
+        });
+
+        // Global function for testing login status
+        window.testLoginStatus = function() {
+            console.log('🧪 Manual test login status...');
+            checkLoginStatus();
+        };
+
+        // Global function for testing localStorage
+        window.testLocalStorage = function() {
+            console.log('🧪 Testing localStorage...');
+            console.log('User data:', localStorage.getItem('user'));
+            console.log('Token data:', localStorage.getItem('token'));
+        };
+
+        // Global function for simulating login
+        window.simulateLogin = function() {
+            console.log('🧪 Simulating login...');
+            const testUser = {
+                id: 1,
+                username: 'testuser',
+                email: 'test@example.com',
+                role: 'user',
+                credits: 100
+            };
+            localStorage.setItem('user', JSON.stringify(testUser));
+            localStorage.setItem('token', 'test_token_123');
+            checkLoginStatus();
+        };
+
+        // Global function for clearing localStorage
+        window.clearStorage = function() {
+            console.log('🧹 Clearing localStorage...');
+            localStorage.removeItem('user');
+            localStorage.removeItem('token');
+            checkLoginStatus();
+        };
+
+        // Global function for fixing localStorage
+        window.fixStorage = function() {
+            console.log('🔧 Fixing localStorage...');
+            // Xóa các giá trị không hợp lệ
+            if (localStorage.getItem('user') === 'undefined' || localStorage.getItem('user') === 'null') {
+                localStorage.removeItem('user');
+            }
+            if (localStorage.getItem('token') === 'undefined' || localStorage.getItem('token') === 'null') {
+                localStorage.removeItem('token');
+            }
+            checkLoginStatus();
+        };
+
         // Global function for search suggestions
         function selectSuggestion(suggestion) {
             const searchInput = document.getElementById('model-search');
-            searchInput.value = suggestion;
+            if (searchInput) searchInput.value = suggestion;
             document.getElementById('search-suggestions').style.display = 'none';
             // Trigger filter function if available
             if (typeof filterModels === 'function') {
@@ -1025,7 +1137,7 @@
             
             window.testSearch = (term) => {
                 console.log('� Testing search for:', term);
-                searchInput.value = term;
+                if (searchInput) searchInput.value = term;
                 filterModels();
             };
             
@@ -1093,19 +1205,21 @@
                 });
             }, 500);
             
-            // Search suggestions            
-            searchInput.addEventListener('focus', function() {
-                showSearchSuggestions();
-            });
-            
-            searchInput.addEventListener('blur', function() {
-                setTimeout(() => {
-                    hideSearchSuggestions();
-                }, 200);
-            });
+            // Search suggestions
+            if (searchInput) {
+                searchInput.addEventListener('focus', function() {
+                    showSearchSuggestions();
+                });
+                
+                searchInput.addEventListener('blur', function() {
+                    setTimeout(() => {
+                        hideSearchSuggestions();
+                    }, 200);
+                });
+            }
             
             function showSearchSuggestions() {
-                const currentValue = searchInput.value.toLowerCase();
+                const currentValue = searchInput ? searchInput.value.toLowerCase() : '';
                 const suggestions = popularSearches.filter(search => 
                     search.toLowerCase().includes(currentValue) || currentValue === ''
                 );
@@ -1123,20 +1237,23 @@
             }
             
             function selectSuggestion(suggestion) {
-                searchInput.value = suggestion;
+                if (searchInput) searchInput.value = suggestion;
                 hideSearchSuggestions();
                 filterModels();
             }
             
             // Sort functionality
-            sortSelect.addEventListener('change', function() {
-                sortModels(this.value);
-            });
+            if (sortSelect) {
+                sortSelect.addEventListener('change', function() {
+                    sortModels(this.value);
+                });
+            }
             
             // Reset filters
-            resetFiltersBtn.addEventListener('click', function() {
-                searchInput.value = '';
-                sortSelect.value = 'default';
+            if (resetFiltersBtn) {
+                resetFiltersBtn.addEventListener('click', function() {
+                    if (searchInput) searchInput.value = '';
+                    if (sortSelect) sortSelect.value = 'default';
                 selectedCategory = '';
                 
                 // Reset provider selection
@@ -1145,7 +1262,9 @@
                 
                 // Reset checkboxes
                 Object.values(filterCheckboxes).forEach(checkbox => {
-                    checkbox.checked = true;
+                    if (checkbox) {
+                        checkbox.checked = true;
+                    }
                 });
                 
                 // Reset models
@@ -1161,36 +1280,50 @@
                 
                 // Reset dynamic counts to show all models
                 updateDynamicProviderCounts(originalOptions);
-            });
+                });
+            }
             
             // Checkbox filters
             Object.values(filterCheckboxes).forEach(checkbox => {
-                checkbox.addEventListener('change', function() {
-                    filterModels();
-                    updateFilterStatus();
-                });
+                if (checkbox) {
+                    checkbox.addEventListener('change', function() {
+                        filterModels();
+                        updateFilterStatus();
+                    });
+                }
             });
             
             function updateModelCount() {
                 const totalModels = allOptions.length;
                 const visibleModels = modelSelect.options.length;
                 
-                document.querySelector('.total-models').textContent = `Tổng: ${totalModels} models`;
-                document.querySelector('.filtered-models').textContent = `Hiển thị: ${visibleModels} models`;
+                const totalModelsElement = document.querySelector('.total-models');
+                const filteredModelsElement = document.querySelector('.filtered-models');
+                
+                if (totalModelsElement) {
+                    totalModelsElement.textContent = `Tổng: ${totalModels} models`;
+                }
+                if (filteredModelsElement) {
+                    filteredModelsElement.textContent = `Hiển thị: ${visibleModels} models`;
+                }
             }
             
             function updateFilterStatus() {
                 const activeProvider = document.querySelector('.provider-option.active');
-                const searchTerm = searchInput.value.trim();
-                const hasTypeFilter = !filterCheckboxes.text.checked || !filterCheckboxes.image.checked || 
-                                     !filterCheckboxes.audio.checked || !filterCheckboxes.video.checked;
+                const searchTerm = searchInput ? searchInput.value.trim() : '';
+                const hasTypeFilter = !filterCheckboxes.text?.checked || !filterCheckboxes.image?.checked || 
+                                     !filterCheckboxes.audio?.checked || !filterCheckboxes.video?.checked;
                 
                 let statusText = '';
                 
                 if (activeProvider) {
-                    const providerName = activeProvider.querySelector('.provider-name').textContent;
-                    const providerIcon = activeProvider.querySelector('.provider-icon').textContent;
-                    const providerCount = activeProvider.querySelector('.provider-count').textContent;
+                    const providerNameElement = activeProvider.querySelector('.provider-name');
+                    const providerIconElement = activeProvider.querySelector('.provider-icon');
+                    const providerCountElement = activeProvider.querySelector('.provider-count');
+                    
+                    const providerName = providerNameElement ? providerNameElement.textContent : '';
+                    const providerIcon = providerIconElement ? providerIconElement.textContent : '';
+                    const providerCount = providerCountElement ? providerCountElement.textContent : '';
                     
                     if (selectedCategory === '') {
                         statusText = `📋 Đang hiển thị: Tất cả models`;
@@ -1397,23 +1530,41 @@
                     'other': 86
                 };
                 
-                // Cập nhật UI với số lượng cố định
-                document.getElementById('count-all').textContent = `(${fixedCounts.all})`;
-                document.getElementById('count-openai').textContent = `(${fixedCounts.openai})`;
-                document.getElementById('count-openai-plus').textContent = `(${fixedCounts['openai-plus']})`;
-                document.getElementById('count-claude').textContent = `(${fixedCounts.claude})`;
-                document.getElementById('count-google').textContent = `(${fixedCounts.google})`;
-                document.getElementById('count-image').textContent = `(${fixedCounts.image})`;
-                document.getElementById('count-chinese').textContent = `(${fixedCounts.chinese})`;
-                document.getElementById('count-deepseek').textContent = `(${fixedCounts.deepseek})`;
-                document.getElementById('count-video').textContent = `(${fixedCounts.video})`;
-                document.getElementById('count-siliconflow').textContent = `(${fixedCounts.siliconflow})`;
-                document.getElementById('count-doubao').textContent = `(${fixedCounts.doubao})`;
-                document.getElementById('count-other').textContent = `(${fixedCounts.other})`;
+                // Cập nhật UI với số lượng cố định - với null check
+                const elements = [
+                    { id: 'count-all', value: fixedCounts.all },
+                    { id: 'count-openai', value: fixedCounts.openai },
+                    { id: 'count-openai-plus', value: fixedCounts['openai-plus'] },
+                    { id: 'count-claude', value: fixedCounts.claude },
+                    { id: 'count-google', value: fixedCounts.google },
+                    { id: 'count-image', value: fixedCounts.image },
+                    { id: 'count-chinese', value: fixedCounts.chinese },
+                    { id: 'count-deepseek', value: fixedCounts.deepseek },
+                    { id: 'count-video', value: fixedCounts.video },
+                    { id: 'count-siliconflow', value: fixedCounts.siliconflow },
+                    { id: 'count-doubao', value: fixedCounts.doubao },
+                    { id: 'count-other', value: fixedCounts.other }
+                ];
+                
+                elements.forEach(({ id, value }) => {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        element.textContent = `(${value})`;
+                    } else {
+                        console.warn(`Element with id '${id}' not found`);
+                    }
+                });
                 
                 // Cập nhật thống kê nổi bật
-                document.getElementById('total-models-display').textContent = `${fixedCounts.all} models`;
-                document.getElementById('filtered-models-display').textContent = `${fixedCounts.all} models`;
+                const totalModelsElement = document.getElementById('total-models-display');
+                const filteredModelsElement = document.getElementById('filtered-models-display');
+                
+                if (totalModelsElement) {
+                    totalModelsElement.textContent = `${fixedCounts.all} models`;
+                }
+                if (filteredModelsElement) {
+                    filteredModelsElement.textContent = `${fixedCounts.all} models`;
+                }
                 
                 console.log('🎯 Provider counts (fixed):', fixedCounts);
             }
@@ -1434,7 +1585,8 @@
                     targetProvider.classList.add('active');
                     selectedCategory = providerValue;
                     
-                    console.log('✅ Activated provider:', targetProvider.querySelector('.provider-name').textContent);
+                    const providerNameElement = targetProvider.querySelector('.provider-name');
+                    console.log('✅ Activated provider:', providerNameElement ? providerNameElement.textContent : 'Unknown');
                     
                     // Trigger filtering
                     filterModels();
@@ -1508,14 +1660,17 @@
                 // Cập nhật UI với suffix "filtered" khi có filtering active
                 const isFiltered = selectedCategory !== '' || 
                                  document.getElementById('model-search').value.trim() !== '' ||
-                                 !filterCheckboxes.text.checked || 
-                                 !filterCheckboxes.image.checked || 
-                                 !filterCheckboxes.audio.checked || 
-                                 !filterCheckboxes.video.checked;
+                                 !filterCheckboxes.text?.checked || 
+                                 !filterCheckboxes.image?.checked || 
+                                 !filterCheckboxes.audio?.checked || 
+                                 !filterCheckboxes.video?.checked;
                 
                 const suffix = isFiltered ? ' 🔍' : '';
                 
-                document.getElementById('count-all').textContent = `(${totalCount}${suffix})`;
+                const countAllElement = document.getElementById('count-all');
+                if (countAllElement) {
+                    countAllElement.textContent = `(${totalCount}${suffix})`;
+                }
                 
                 // Chỉ cập nhật những provider có models trong kết quả filter
                 Object.keys(counts).forEach(key => {
@@ -1531,8 +1686,15 @@
                 
                 // Cập nhật thống kê nổi bật khi filtering
                 const totalModels = 833;
-                document.getElementById('total-models-display').textContent = `${totalModels} models`;
-                document.getElementById('filtered-models-display').textContent = `${totalCount} models${suffix}`;
+                const totalModelsElement = document.getElementById('total-models-display');
+                const filteredModelsElement = document.getElementById('filtered-models-display');
+                
+                if (totalModelsElement) {
+                    totalModelsElement.textContent = `${totalModels} models`;
+                }
+                if (filteredModelsElement) {
+                    filteredModelsElement.textContent = `${totalCount} models${suffix}`;
+                }
             }
             
             function getModelType(option) {
@@ -1553,7 +1715,7 @@
             
             // Enhanced filter models function
             function filterModels() {
-                const searchTerm = searchInput.value.toLowerCase().trim();
+                const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
                 
                 console.log('🔍 Filtering with:', {
                     searchTerm,
@@ -1670,7 +1832,8 @@
                     
                     // Kiểm tra loại model (type filter)
                     const modelType = getModelType(option);
-                    const matchesTypeFilter = filterCheckboxes[modelType].checked;
+                    const typeCheckbox = filterCheckboxes[modelType];
+                    const matchesTypeFilter = typeCheckbox ? typeCheckbox.checked : true;
                     
                     return matchesSearch && matchesCategory && matchesTypeFilter;
                 });
@@ -1678,7 +1841,7 @@
                 console.log('Filtered results:', filteredOptions.length);
                 
                 // Apply current sort order
-                const sortType = sortSelect.value;
+                const sortType = sortSelect ? sortSelect.value : 'default';
                 let sortedOptions = [...filteredOptions];
                 
                 switch(sortType) {
@@ -1712,7 +1875,8 @@
                 if (filteredOptions.length === 0) {
                     const noResult = document.createElement('option');
                     const activeProvider = document.querySelector('.provider-option.active');
-                    const providerName = activeProvider ? activeProvider.querySelector('.provider-name').textContent : 'provider này';
+                    const providerNameElement = activeProvider ? activeProvider.querySelector('.provider-name') : null;
+                    const providerName = providerNameElement ? providerNameElement.textContent : 'provider này';
                     
                     noResult.textContent = `❌ Không tìm thấy model cho ${providerName}`;
                     if (searchTerm) {
@@ -1730,29 +1894,28 @@
             }
             
             // Lắng nghe sự kiện tìm kiếm
-            searchInput.addEventListener('input', function() {
-                filterModels();
-                updateFilterStatus();
-            });
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    filterModels();
+                    updateFilterStatus();
+                });
+            }
             
-            // Thêm nút xóa bộ lọc
-            const clearButton = document.createElement('button');
-            clearButton.textContent = '🗑️ Xóa bộ lọc';
-            clearButton.type = 'button';
-            clearButton.style.marginTop = '10px';
-            clearButton.style.padding = '5px 10px';
-            clearButton.style.backgroundColor = '#f44336';
-            clearButton.style.color = 'white';
-            clearButton.style.border = 'none';
-            clearButton.style.borderRadius = '4px';
-            clearButton.style.cursor = 'pointer';
+           
             clearButton.addEventListener('click', function() {
-                searchInput.value = '';
+                if (searchInput) searchInput.value = '';
                 selectedCategory = '';
                 
                 // Reset dropdown to "Tất cả providers"
-                dropdownSelected.querySelector('.provider-icon').textContent = '🧠';
-                dropdownSelected.querySelector('.provider-name').textContent = 'Tất cả providers';
+                const providerIconElement = dropdownSelected.querySelector('.provider-icon');
+                const providerNameElement = dropdownSelected.querySelector('.provider-name');
+                
+                if (providerIconElement) {
+                    providerIconElement.textContent = '🧠';
+                }
+                if (providerNameElement) {
+                    providerNameElement.textContent = 'Tất cả providers';
+                }
                 
                 // Remove selected class from all options
                 dropdownOptionElements.forEach(opt => opt.classList.remove('selected'));
@@ -1765,6 +1928,101 @@
             
             // Thêm nút vào sau provider container
             document.querySelector('.provider-container').appendChild(clearButton);
+        });
+    </script>
+    
+    <!-- Script quản lý intro modal -->
+    <script>
+        // Intro modal functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const introBtn = document.getElementById('intro-btn');
+            const introModal = document.getElementById('intro-modal');
+            const introModalClose = document.querySelector('.intro-modal-close');
+            const introModalOverlay = document.querySelector('.intro-modal-overlay');
+
+            // Show intro modal
+            function showIntroModal() {
+                if (introModal) {
+                    introModal.style.display = 'flex';
+                    document.body.style.overflow = 'hidden'; // Prevent background scrolling
+                    console.log('✅ Intro modal opened');
+                }
+            }
+
+            // Hide intro modal
+            function hideIntroModal() {
+                if (introModal) {
+                    introModal.style.display = 'none';
+                    document.body.style.overflow = ''; // Restore scrolling
+                    console.log('✅ Intro modal closed');
+                }
+            }
+
+            // Event listeners
+            if (introBtn) {
+                introBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    console.log('🎯 Intro button clicked');
+                    showIntroModal();
+                });
+            }
+
+            if (introModalClose) {
+                introModalClose.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    console.log('❌ Close button clicked');
+                    hideIntroModal();
+                });
+            }
+
+            if (introModalOverlay) {
+                introModalOverlay.addEventListener('click', function(e) {
+                    if (e.target === introModalOverlay) {
+                        console.log('🎯 Overlay clicked');
+                        hideIntroModal();
+                    }
+                });
+            }
+
+            // Close modal with Escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && introModal && introModal.style.display === 'flex') {
+                    console.log('⌨️ Escape key pressed');
+                    hideIntroModal();
+                }
+            });
+
+            // Global function to select model and close modal
+            window.selectModelAndClose = function(modelValue) {
+                console.log('🤖 Selecting model and closing modal:', modelValue);
+                
+                // Select the model in the dropdown
+                const modelSelect = document.getElementById('model-select');
+                if (modelSelect) {
+                    // Find the option with matching value
+                    for (let i = 0; i < modelSelect.options.length; i++) {
+                        if (modelSelect.options[i].value === modelValue) {
+                            modelSelect.selectedIndex = i;
+                            console.log('✅ Model selected:', modelSelect.options[i].textContent);
+                            break;
+                        }
+                    }
+                }
+                
+                // Close the modal
+                hideIntroModal();
+                
+                // Focus on chat input to start conversation
+                const chatInput = document.getElementById('chat-input');
+                if (chatInput) {
+                    setTimeout(() => {
+                        chatInput.focus();
+                        chatInput.placeholder = `Bắt đầu trò chuyện với ${modelValue}...`;
+                    }, 300);
+                }
+            };
+
+            console.log('🎯 Intro modal functionality initialized');
         });
     </script>
     
