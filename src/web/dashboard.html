@@ -961,9 +961,9 @@
                 <li><a href="document-manager.html">Tài liệu</a></li>
                 <li><a href="pricing.html">Pricing</a></li>
             </ul>
-            <div class="user-profile">
+            <div class="user-profile" id="userProfile">
                 <div class="user-avatar">👤</div>
-                <span>Admin</span>
+                <span id="userName">Loading...</span>
             </div>
         </nav>
     </header>
@@ -1269,6 +1269,52 @@
                     console.warn('Error setting up usage item tooltip:', error);
                 }
             });
+        });
+
+        // Load user information
+        function loadUserInfo() {
+            try {
+                const user = JSON.parse(localStorage.getItem('user') || '{}');
+                const token = localStorage.getItem('token');
+                
+                if (user && user.username) {
+                    document.getElementById('userName').textContent = user.username;
+                    
+                    // Update page title with user name
+                    document.title = `Dashboard - ${user.username} - Thư Viện AI`;
+                    
+                    // Add user role if available
+                    if (user.role) {
+                        const userProfile = document.getElementById('userProfile');
+                        userProfile.title = `Role: ${user.role}`;
+                    }
+                    
+                    console.log('User loaded:', user);
+                } else {
+                    // No user data, redirect to login
+                    console.warn('No user data found, redirecting to login');
+                    window.location.href = 'login.html';
+                }
+            } catch (error) {
+                console.error('Error loading user info:', error);
+                window.location.href = 'login.html';
+            }
+        }
+
+        // Check authentication on page load
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                console.warn('No token found, redirecting to login');
+                window.location.href = 'login.html';
+                return;
+            }
+            loadUserInfo();
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
         });
 
         // Add keyboard navigation
