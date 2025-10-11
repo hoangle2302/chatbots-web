@@ -107,66 +107,55 @@ Hệ thống AI Chat hiện đại với authentication hoàn chỉnh, tích h�
 ## 📁 **Cấu trúc thư mục**
 
 ```
-ThuVienAI/ (449 AI MODELS)
-├── 📁 src/
-│   ├── 📁 php-backend/           # Backend PHP (8 API + 5 Services)
-│   │   ├── 📁 api/               # API Endpoints (8 files)
-│   │   │   ├── 📄 auth-login.php    # API đăng nhập
-│   │   │   ├── 📄 auth-register.php # API đăng ký
-│   │   │   ├── 📄 auth.php          # API auth chính
-│   │   │   ├── 📄 chat-real.php     # AI Chat API (449 models)
-│   │   │   ├── 📄 documents.php     # API tài liệu
-│   │   │   ├── 📄 health.php        # Health check
-│   │   │   ├── 📄 index.php         # Router chính
-│   │   │   └── 📄 test-simple.php   # Test endpoint
-│   │   ├── 📁 config/            # Cấu hình backend
-│   │   │   ├── 📄 Config.php         # Main config
-│   │   │   └── 📄 Database.php       # Database connection
-│   │   ├── 📁 middleware/        # Middleware
-│   │   │   └── 📄 AuthMiddleware.php # Authentication
-│   │   ├── 📁 models/            # Data Models (4 files)
-│   │   │   ├── 📄 AIQueryHistory.php # Chat history
-│   │   │   ├── 📄 Document.php       # Document model
-│   │   │   ├── 📄 Log.php            # Logging model
-│   │   │   └── 📄 User.php           # User model
-│   │   ├── 📁 services/          # AI Services (5 files)
-│   │   │   ├── 📄 AIService.php      # AI processing core
-│   │   │   ├── 📄 DocumentService.php # Document processing
-│   │   │   ├── 📄 Key4UService.php   # Key4U API (449 models)
-│   │   │   ├── 📄 QwenService.php    # Qwen AI (Free streaming)
-│   │   │   └── 📄 UserService.php    # User management
-│   │   ├── 📄 composer.json      # PHP dependencies
-│   │   └── 📄 index.php          # Main entry point
-│   └── 📁 web/                   # Frontend (8 files)
-│       ├── 📄 index.html         # Trang chủ (AI Chat)
-│       ├── 📄 login.html         # Trang đăng nhập
-│       ├── 📄 register.html      # Trang đăng ký
-│       ├── 📄 dashboard.html     # Dashboard người dùng
-│       ├── 📄 document-manager.html # Quản lý tài liệu
-│       ├── 📄 pricing.html       # Bảng giá
-│       ├── 📄 script-backend.js  # JavaScript chính
-│       ├── 📄 style.css          # CSS styling (Glass effects)
-│       ├── 📄 config.js          # Frontend config
-│       ├── 📄 background.webp    # Background image
-│       └── 📄 favicon.ico        # Site icon
-├── 📁 data/                      # Database & uploads
+chatbots-web/
+├── 📄 start.bat                  # Launcher duy nhất
+├── 📄 config.env                 # Biến môi trường (DB, API keys)
+├── 📄 config.env.example         # Mẫu cấu hình
+├── 📄 README.md                  # Tài liệu chính
+├── 📁 data/                      # Dữ liệu và uploads
 │   ├── 📁 database/
-│   │   └── 📄 thuvien_ai.db      # SQLite database
-│   └── 📁 uploads/               # File uploads
-├── 📁 config/                    # Cấu hình toàn cục
-│   └── 📄 config.js              # Cấu hình frontend
-├── 📄 README.md                  # Tài liệu chính (489 lines)
-├── 📄 AI_MODELS_LIST.md          # Danh sách 449 AI models
-├── 📄 PROJECT_STATUS.md          # Trạng thái dự án
-├── 📄 CONFIGURATION.md           # Hướng dẫn cấu hình
-├── 📄 HUONG_DAN_CAI_DAT.md       # Hướng dẫn cài đặt
-├── 📄 DEPLOYMENT_SUMMARY.md      # Tóm tắt triển khai
-├── 📄 API_KEY_SETUP.md           # Hướng dẫn API keys
-├── 📄 start-powershell.bat       # Script khởi động chính
-├── 📄 start-ai.bat               # Script khởi động AI
-├── 📄 config.env                 # Environment variables
-├── 📄 config.env.example         # Environment template
-└── 📄 qwen api.py                # Qwen API reference
+│   │   └── 📄 thuvien_ai.db      # SQLite backup (tùy chọn)
+│   └── 📁 uploads/               # File upload
+└── 📁 src/
+    ├── 📁 php-backend/           # Backend PHP
+    │   ├── 📄 server.php         # Router cho PHP dev server
+    │   ├── 📄 index.php          # Router JSON (fallback)
+    │   ├── 📁 api/               # API endpoints
+    │   │   ├── 📄 auth.php
+    │   │   ├── 📄 chat-simple.php
+    │   │   ├── 📄 documents.php
+    │   │   ├── 📄 health.php
+    │   │   └── 📄 admin.php
+    │   ├── 📁 config/
+    │   │   ├── 📄 Config.php
+    │   │   └── 📄 Database.php
+    │   ├── 📁 middleware/
+    │   │   └── 📄 AuthMiddleware.php
+    │   ├── 📁 models/
+    │   │   ├── 📄 AIQueryHistory.php
+    │   │   ├── 📄 Document.php
+    │   │   ├── 📄 Log.php
+    │   │   └── 📄 User.php
+    │   ├── 📁 services/
+    │   │   ├── 📄 AIService.php
+    │   │   ├── 📄 DocumentService.php
+    │   │   ├── 📄 Key4UService.php
+    │   │   ├── 📄 QwenService.php
+    │   │   └── 📄 UserService.php
+    │   └── 📁 tools/
+    │       ├── 📄 init-db.php
+    │       ├── 📄 init-mysql.php
+    │       └── 📄 mysql-schema.sql
+    └── 📁 web/                   # Frontend
+        ├── 📄 index.html
+        ├── 📄 login.html
+        ├── 📄 register.html
+        ├── 📄 dashboard.html
+        ├── 📄 document-manager.html
+        ├── 📄 pricing.html
+        ├── 📄 script-backend.js
+        ├── 📄 style.css
+        └── 📄 favicon.ico
 ```
 
 ## 🚀 **Tính năng chính**
@@ -216,27 +205,32 @@ ThuVienAI/ (449 AI MODELS)
 ### **Cách 1: Quick Start (Khuyến nghị)**
 
 ```bash
-# Khởi động nhanh với AI models thật
-.\start-ai.bat
+# Khởi động nhanh toàn bộ hệ thống
+.\start.bat
 ```
 
-### **Cách 2: PowerShell Launcher (Chi tiết)**
+### **Cách 2: PowerShell (thủ công, hai cửa sổ)**
 
 ```bash
-# Khởi động với thông tin chi tiết
-.\start-powershell.bat
+# Backend (cửa sổ 1)
+cd src\php-backend
+php -S 127.0.0.1:8000 server.php
+
+# Frontend (cửa sổ 2)
+cd src\web
+php -S 127.0.0.1:8001 -t .
 ```
 
-### **Cách 3: Khởi động thủ công**
+### **Cách 3: Khởi động thủ công (tùy chọn)**
 
 ```powershell
-# Terminal 1: Backend PHP
+# Backend PHP
 cd src\php-backend
-php -S 127.0.0.1:8000 -t .
+php -S 127.0.0.1:8000 server.php
 
-# Terminal 2: Frontend
+# Frontend
 cd src\web
-python -m http.server 8001
+php -S 127.0.0.1:8001 -t .
 ```
 
 ### **Cách 3: Sử dụng XAMPP**
