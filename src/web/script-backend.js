@@ -196,9 +196,15 @@ function getModelDisplayName(modelId) {
 
 function checkAuthStatus() {
     const userData = localStorage.getItem('user');
-    if (userData) {
-        currentUser = JSON.parse(userData);
-        showUserSection();
+    // Kiểm tra userData hợp lệ (không phải null, undefined, hoặc "undefined")
+    if (userData && userData !== 'null' && userData !== 'undefined' && userData.trim() !== '') {
+        try {
+            currentUser = JSON.parse(userData);
+            showUserSection();
+        } catch (error) {
+            console.error('Error parsing user data in checkAuthStatus:', error);
+            showAuthSection();
+        }
     } else {
         showAuthSection();
     }
@@ -487,7 +493,7 @@ async function sendMessage() {
     
     try {
         // Kiểm tra kết nối backend
-        const healthResponse = await fetch('http://127.0.0.1:8000/api/health.php');
+        const healthResponse = await fetch('http://127.0.0.1:8000/api/health');
         if (!healthResponse.ok) {
             throw new Error('Backend không khả dụng');
         }
