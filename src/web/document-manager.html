@@ -7,6 +7,12 @@
     <link rel="stylesheet" href="style.css">
     <link rel="icon" href="favicon.ico" type="image/x-icon">
     <style>
+        /* Use ONLY black and white colors */
+        :root {
+            --primary: #000000;   /* Pure Black */
+            --secondary: #ffffff; /* Pure White */
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -18,13 +24,10 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
-            background-size: 400% 400%;
-            background-attachment: fixed;
-            animation: gradientShift 15s ease infinite;
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--secondary); /* Pure white background */
             min-height: 100vh;
-            color: white;
+            color: var(--primary);
             position: relative;
             overflow-x: hidden;
         }
@@ -45,7 +48,8 @@
             position: absolute;
             width: 4px;
             height: 4px;
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--primary);
+            opacity: 0.1;
             border-radius: 50%;
             animation: float 6s ease-in-out infinite;
         }
@@ -67,10 +71,10 @@
             left: 0;
             right: 0;
             z-index: 1000;
-            background: rgba(255, 255, 255, 0.08);
+            background: var(--secondary);
             backdrop-filter: blur(25px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border-bottom: 1px solid var(--primary);
+            box-shadow: 0 8px 32px var(--primary);
             transition: all 0.3s ease;
         }
 
@@ -91,6 +95,7 @@
             font-weight: 700;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            color: var(--primary);
         }
 
         .nav-brand:hover {
@@ -106,16 +111,16 @@
             gap: 4px;
             list-style: none;
             align-items: center;
-            background: rgba(255, 255, 255, 0.15);
+            background: var(--secondary);
             padding: 6px;
             border-radius: 25px;
             backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--primary);
+            box-shadow: 0 4px 15px var(--primary);
         }
 
         .nav-menu a {
-            color: rgba(255, 255, 255, 0.8);
+            color: var(--primary);
             text-decoration: none;
             padding: 10px 20px;
             border-radius: 20px;
@@ -127,16 +132,14 @@
             display: block;
         }
 
-
-
         .nav-menu a:hover {
-            background: rgba(255, 255, 255, 0.12);
-            color: #ffffff;
+            background: var(--primary);
+            color: var(--secondary);
         }
 
         .nav-menu a.active {
-            background: rgba(255, 255, 255, 0.25);
-            color: #ffffff;
+            background: var(--primary);
+            color: var(--secondary);
             font-weight: 600;
         }
 
@@ -148,9 +151,9 @@
             transform: translateX(-50%);
             width: 6px;
             height: 6px;
-            background: #ffffff;
+            background: var(--primary);
             border-radius: 50%;
-            box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+            box-shadow: 0 0 8px var(--primary);
         }
 
         .user-profile {
@@ -161,10 +164,12 @@
             padding: 8px 15px;
             border-radius: 12px;
             transition: all 0.3s ease;
+            color: var(--primary);
         }
 
         .user-profile:hover {
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--primary);
+            color: var(--secondary);
             transform: translateY(-2px);
         }
 
@@ -172,31 +177,21 @@
             width: 45px;
             height: 45px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: var(--primary);
+            color: var(--secondary);
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 18px;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 4px 15px var(--primary);
         }
 
         .user-profile:hover .user-avatar {
             transform: scale(1.1) rotate(5deg);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
-        }
-
-        .nav-btn.primary {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            border: none;
-            color: #ffffff;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-        }
-
-        .nav-btn.primary:hover {
-            background: linear-gradient(135deg, #5a6fd8, #6a4190);
-            transform: translateY(-2px) scale(1.05);
-            box-shadow: 0 12px 30px rgba(102, 126, 234, 0.4);
+            background: var(--secondary);
+            color: var(--primary);
+            box-shadow: 0 8px 25px var(--primary);
         }
 
         /* Main Content */
@@ -209,7 +204,6 @@
             min-height: 100vh;
         }
 
-        /* Main Container */
         .document-container {
             padding: 20px 30px 60px;
             max-width: 1400px;
@@ -229,10 +223,7 @@
             font-size: 42px;
             font-weight: 800;
             margin-bottom: 15px;
-            background: linear-gradient(135deg, #ffffff 0%, #e0e7ff 100%);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: var(--primary);
             position: relative;
             z-index: 1;
             letter-spacing: -0.5px;
@@ -240,7 +231,8 @@
 
         .page-subtitle {
             font-size: 20px;
-            color: rgba(255, 255, 255, 0.85);
+            color: var(--primary);
+            opacity: 0.85;
             font-weight: 400;
             line-height: 1.5;
             max-width: 600px;
@@ -249,9 +241,9 @@
 
         /* Upload Section */
         .upload-section {
-            background: rgba(255, 255, 255, 0.08);
+            background: var(--secondary);
             backdrop-filter: blur(25px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            border: 2px solid var(--primary);
             border-radius: 24px;
             padding: 40px;
             margin-bottom: 50px;
@@ -263,12 +255,12 @@
 
         .upload-section:hover {
             transform: translateY(-5px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-            border-color: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 20px 40px var(--primary);
         }
 
         .upload-area {
-            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border: 2px dashed var(--primary);
+            opacity: 0.3;
             border-radius: 12px;
             padding: 60px 20px;
             transition: all 0.3s ease;
@@ -277,13 +269,17 @@
         }
 
         .upload-area:hover {
-            border-color: rgba(255, 235, 59, 0.6);
-            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--primary);
+            opacity: 0.6;
+            background: var(--primary);
+            color: var(--secondary);
         }
 
         .upload-area.dragover {
-            border-color: rgba(255, 235, 59, 0.8);
-            background: rgba(255, 235, 59, 0.1);
+            border-color: var(--primary);
+            background: var(--primary);
+            color: var(--secondary);
+            opacity: 1;
             transform: scale(1.02);
         }
 
@@ -301,16 +297,22 @@
 
         .upload-subtitle {
             font-size: 16px;
-            color: rgba(255, 255, 255, 0.7);
+            color: var(--primary);
+            opacity: 0.7;
             margin-bottom: 30px;
         }
 
+        .upload-area:hover .upload-subtitle,
+        .upload-area.dragover .upload-subtitle {
+            color: var(--secondary);
+        }
+
         .upload-button {
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: var(--primary);
             border: none;
             padding: 15px 30px;
             border-radius: 12px;
-            color: white;
+            color: var(--secondary);
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
@@ -318,8 +320,11 @@
         }
 
         .upload-button:hover {
+            background: var(--secondary);
+            color: var(--primary);
+            border: 2px solid var(--primary);
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 10px 25px var(--primary);
         }
 
         #file-input {
@@ -344,16 +349,22 @@
         .search-input {
             width: 100%;
             padding: 15px 20px 15px 50px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 2px solid var(--primary);
             border-radius: 12px;
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
+            background: var(--secondary);
+            color: var(--primary);
             font-size: 16px;
             backdrop-filter: blur(10px);
         }
 
         .search-input::placeholder {
-            color: rgba(255, 255, 255, 0.6);
+            color: var(--primary);
+            opacity: 0.6;
+        }
+
+        .search-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px var(--primary);
         }
 
         .search-icon {
@@ -362,7 +373,8 @@
             top: 50%;
             transform: translateY(-50%);
             font-size: 18px;
-            color: rgba(255, 255, 255, 0.6);
+            color: var(--primary);
+            opacity: 0.6;
         }
 
         .filter-buttons {
@@ -372,18 +384,21 @@
 
         .filter-btn {
             padding: 12px 20px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            border: 2px solid var(--primary);
             border-radius: 8px;
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
+            background: var(--secondary);
+            color: var(--primary);
             cursor: pointer;
             transition: all 0.3s ease;
             font-size: 14px;
         }
 
         .filter-btn:hover, .filter-btn.active {
-            background: rgba(255, 255, 255, 0.2);
-            border-color: rgba(255, 255, 255, 0.4);
+            background: var(--primary);
+            color: var(--secondary);
+            border-color: var(--secondary);
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 5px 15px var(--primary);
         }
 
         /* Document Grid */
@@ -395,9 +410,9 @@
         }
 
         .document-card {
-            background: rgba(255, 255, 255, 0.08);
+            background: var(--secondary);
             backdrop-filter: blur(25px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            border: 2px solid var(--primary);
             border-radius: 20px;
             padding: 30px;
             transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
@@ -414,7 +429,8 @@
             left: -100%;
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+            opacity: 0.1;
             transition: left 0.6s ease;
         }
 
@@ -425,7 +441,7 @@
             left: -50%;
             width: 200%;
             height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+            background: radial-gradient(circle, var(--primary), transparent);
             opacity: 0;
             transition: opacity 0.4s ease;
         }
@@ -435,98 +451,76 @@
         }
 
         .document-card:hover::after {
-            opacity: 1;
+            opacity: 0.05;
         }
 
         .document-card:hover {
             transform: translateY(-8px) rotateX(5deg) rotateY(5deg);
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25), 0 0 30px rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 25px 50px var(--primary), 0 0 30px var(--primary);
+            background: var(--primary);
+            color: var(--secondary);
+            border-color: var(--secondary);
         }
 
-        .doc-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 15px;
+        /* Enhanced document card hover effects for all child elements */
+        .document-card:hover .doc-title {
+            color: var(--secondary);
         }
 
-        .doc-icon {
-            font-size: 40px;
-            opacity: 0.8;
+        .document-card:hover .doc-meta {
+            color: var(--secondary);
+            opacity: 0.9;
         }
 
-        .doc-menu {
-            position: relative;
+        .document-card:hover .doc-size {
+            color: var(--secondary);
         }
 
-        .doc-menu-btn {
-            background: none;
-            border: none;
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 20px;
-            cursor: pointer;
-            padding: 5px;
-            border-radius: 4px;
-            transition: all 0.3s ease;
+        .document-card:hover .doc-icon {
+            color: var(--secondary);
+            opacity: 1;
+            transform: scale(1.1) rotate(5deg);
         }
 
-        .doc-menu-btn:hover {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
+        .document-card:hover .doc-menu-btn {
+            color: var(--secondary);
+            opacity: 1;
         }
 
-        .doc-title {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 8px;
-            line-height: 1.3;
+        .document-card:hover .doc-menu-btn:hover {
+            background: var(--secondary);
+            color: var(--primary);
         }
 
-        .doc-meta {
-            font-size: 14px;
-            color: rgba(255, 255, 255, 0.7);
-            margin-bottom: 15px;
+        .document-card:hover .doc-action-btn {
+            border-color: var(--secondary);
+            background: var(--primary);
+            color: var(--secondary);
         }
 
-        .doc-size {
-            font-weight: 600;
-            color: rgba(255, 235, 59, 0.8);
+        .document-card:hover .doc-action-btn:hover {
+            background: var(--secondary);
+            color: var(--primary);
+            transform: translateY(-2px) scale(1.05);
         }
 
-        .doc-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
+        .document-card:hover .doc-action-btn.primary {
+            background: var(--secondary);
+            color: var(--primary);
+            border-color: var(--secondary);
         }
 
-        .doc-action-btn {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .doc-action-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: translateY(-1px);
-        }
-
-        .doc-action-btn.primary {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            border: none;
+        .document-card:hover .doc-action-btn.primary:hover {
+            background: var(--primary);
+            color: var(--secondary);
+            transform: translateY(-2px) scale(1.05);
         }
 
         /* Stats Bar */
         .stats-bar {
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--secondary);
             backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 2px solid var(--primary);
             border-radius: 12px;
             padding: 20px;
             display: flex;
@@ -536,25 +530,35 @@
 
         .stat-item {
             flex: 1;
+            padding: 10px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
         }
 
-        .stat-number {
-            font-size: 24px;
-            font-weight: 700;
-            color: #fff;
-            margin-bottom: 5px;
+        .stat-item:hover {
+            background: var(--primary);
+            color: var(--secondary);
+            border-color: var(--secondary);
+            transform: translateY(-2px) scale(1.05);
         }
 
-        .stat-label {
-            font-size: 14px;
-            color: rgba(255, 255, 255, 0.7);
+        .stat-item:hover .stat-number {
+            color: var(--secondary);
+        }
+
+        .stat-item:hover .stat-label {
+            color: var(--secondary);
+            opacity: 1;
         }
 
         /* Empty State */
         .empty-state {
             text-align: center;
             padding: 80px 20px;
-            color: rgba(255, 255, 255, 0.6);
+            color: var(--primary);
+            opacity: 0.6;
         }
 
         .empty-icon {
@@ -575,12 +579,6 @@
         }
 
         /* Animations */
-        @keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
         @keyframes pulse {
             0%, 100% { transform: scale(1); }
             50% { transform: scale(1.1); }
@@ -589,21 +587,11 @@
         @keyframes float {
             0%, 100% {
                 transform: translateY(0px) rotate(0deg);
-                opacity: 1;
-            }
-            10% {
-                transform: translateY(-10px) rotate(10deg);
-            }
-            20% {
-                transform: translateY(5px) rotate(-10deg);
+                opacity: 0.1;
             }
             50% {
-                transform: translateY(-15px) rotate(5deg);
-                opacity: 0.8;
-            }
-            80% {
-                transform: translateY(0px) rotate(-5deg);
-                opacity: 0.9;
+                transform: translateY(-20px) rotate(180deg);
+                opacity: 0.3;
             }
         }
 
@@ -618,19 +606,259 @@
             }
         }
 
-        @keyframes slideInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         .slide-in {
             animation: slideInUp 0.6s ease forwards;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: var(--secondary);
+            border: 2px solid var(--primary);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+            animation: slideInUp 0.4s ease;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--primary);
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 0;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: var(--primary);
+            padding: 5px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: var(--primary);
+            color: var(--secondary);
+            transform: scale(1.1);
+        }
+
+        .modal-body {
+            color: var(--primary);
+            line-height: 1.6;
+        }
+
+        /* Document Viewer Styles */
+        .doc-viewer {
+            background: rgba(0, 0, 0, 0.02);
+            border: 1px solid var(--primary);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            min-height: 400px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .doc-preview {
+            background: var(--secondary);
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            overflow-y: auto;
+            max-height: 300px;
+        }
+
+        .doc-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .info-item {
+            background: rgba(0, 0, 0, 0.03);
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--primary);
+        }
+
+        .info-label {
+            font-weight: 600;
+            font-size: 12px;
+            color: var(--primary);
+            opacity: 0.7;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .info-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        /* AI Analysis Styles */
+        .analysis-section {
+            margin-bottom: 25px;
+        }
+
+        .analysis-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .analysis-content {
+            background: rgba(0, 0, 0, 0.02);
+            border: 1px solid var(--primary);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .analysis-loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .keyword-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .keyword-tag {
+            background: var(--primary);
+            color: var(--secondary);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .progress-bar {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            height: 8px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            background: var(--primary);
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+
+        /* Action Buttons in Modal */
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-btn {
+            padding: 12px 24px;
+            border: 2px solid var(--primary);
+            border-radius: 10px;
+            background: var(--secondary);
+            color: var(--primary);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .modal-btn:hover {
+            background: var(--primary);
+            color: var(--secondary);
+            transform: translateY(-2px);
+        }
+
+        .modal-btn.primary {
+            background: var(--primary);
+            color: var(--secondary);
+        }
+
+        .modal-btn.primary:hover {
+            background: var(--secondary);
+            color: var(--primary);
         }
 
         /* Responsive */
@@ -733,6 +961,290 @@
                 font-size: 28px;
             }
         }
+
+        .doc-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .doc-icon {
+            font-size: 48px;
+            opacity: 0.8;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+        }
+
+        .document-card:hover .doc-icon {
+            opacity: 1;
+            transform: scale(1.15) rotate(8deg);
+            filter: drop-shadow(0 8px 16px rgba(255, 255, 255, 0.3));
+        }
+
+        .doc-menu {
+            position: relative;
+        }
+
+        .doc-menu-btn {
+            background: none;
+            border: none;
+            color: var(--primary);
+            opacity: 0.6;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .doc-menu-btn:hover {
+            background: var(--primary);
+            color: var(--secondary);
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .document-card:hover .doc-menu-btn {
+            color: var(--secondary);
+            opacity: 0.8;
+        }
+
+        .document-card:hover .doc-menu-btn:hover {
+            background: var(--secondary);
+            color: var(--primary);
+            transform: scale(1.2);
+            box-shadow: 0 4px 12px rgba(255, 255, 255, 0.3);
+        }
+
+        .doc-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            line-height: 1.4;
+            transition: all 0.4s ease;
+            letter-spacing: -0.3px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-height: 56px;
+        }
+
+        .document-card:hover .doc-title {
+            color: var(--secondary);
+            transform: translateY(-2px);
+        }
+
+        .doc-meta {
+            font-size: 15px;
+            color: var(--primary);
+            opacity: 0.75;
+            margin-bottom: 20px;
+            transition: all 0.4s ease;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .doc-meta::before {
+            content: '📅';
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .document-card:hover .doc-meta {
+            color: var(--secondary);
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .doc-size {
+            font-weight: 700;
+            color: var(--primary);
+            background: rgba(0, 0, 0, 0.05);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 13px;
+            margin-left: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .document-card:hover .doc-size {
+            color: var(--secondary);
+            background: rgba(255, 255, 255, 0.15);
+            transform: scale(1.05);
+        }
+
+        .doc-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 25px;
+        }
+
+        .doc-action-btn {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid var(--primary);
+            border-radius: 12px;
+            background: var(--secondary);
+            color: var(--primary);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            min-height: 44px;
+        }
+
+        .doc-action-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: var(--primary);
+            transition: left 0.3s ease;
+            z-index: -1;
+        }
+
+        .doc-action-btn:hover::before {
+            left: 0;
+        }
+
+        .doc-action-btn:hover {
+            color: var(--secondary);
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .doc-action-btn.primary {
+            background: var(--primary);
+            color: var(--secondary);
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .doc-action-btn.primary::before {
+            background: var(--secondary);
+        }
+
+        .doc-action-btn.primary:hover {
+            background: var(--secondary);
+            color: var(--primary);
+            border-color: var(--primary);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+        }
+
+        .document-card:hover .doc-action-btn {
+            border-color: var(--secondary);
+            background: var(--primary);
+            color: var(--secondary);
+        }
+
+        .document-card:hover .doc-action-btn::before {
+            background: var(--secondary);
+        }
+
+        .document-card:hover .doc-action-btn:hover {
+            background: var(--secondary);
+            color: var(--primary);
+            transform: translateY(-3px) scale(1.08);
+            box-shadow: 0 12px 30px rgba(255, 255, 255, 0.3);
+        }
+
+        .document-card:hover .doc-action-btn.primary {
+            background: var(--secondary);
+            color: var(--primary);
+            border-color: var(--secondary);
+        }
+
+        .document-card:hover .doc-action-btn.primary::before {
+            background: var(--primary);
+        }
+
+        .document-card:hover .doc-action-btn.primary:hover {
+            background: var(--primary);
+            color: var(--secondary);
+            transform: translateY(-3px) scale(1.08);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Add icons to action buttons */
+        .doc-action-btn:first-child::before {
+            content: '👁️ ';
+            position: static;
+            background: none;
+            left: auto;
+            width: auto;
+            height: auto;
+            z-index: auto;
+            font-size: 14px;
+            margin-right: 4px;
+        }
+
+        .doc-action-btn.primary::before {
+            content: '🤖 ';
+            position: static;
+            background: none;
+            left: auto;
+            width: auto;
+            height: auto;
+            z-index: auto;
+            font-size: 14px;
+            margin-right: 4px;
+        }
+
+        /* Fix the sliding background effect */
+        .doc-action-btn::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: var(--primary);
+            transition: left 0.3s ease;
+            z-index: -1;
+        }
+
+        .doc-action-btn:hover::after {
+            left: 0;
+        }
+
+        .doc-action-btn.primary::after {
+            background: var(--secondary);
+        }
+
+        .document-card:hover .doc-action-btn::after {
+            background: var(--secondary);
+        }
+
+        .document-card:hover .doc-action-btn.primary::after {
+            background: var(--primary);
+        }
+
+        /* Add subtle animation to the entire card content */
+        .document-card .doc-content {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .document-card:hover .doc-content {
+            transform: translateY(-2px);
+        }
     </style>
 </head>
 <body>
@@ -805,13 +1317,15 @@
                         <button class="doc-menu-btn">⋮</button>
                     </div>
                 </div>
-                <h3 class="doc-title">Báo cáo AI Trends 2024.pdf</h3>
-                <div class="doc-meta">
-                    Ngày tải: 15/09/2024 • <span class="doc-size">2.4 MB</span>
-                </div>
-                <div class="doc-actions">
-                    <button class="doc-action-btn">Xem</button>
-                    <button class="doc-action-btn primary">Phân tích AI</button>
+                <div class="doc-content">
+                    <h3 class="doc-title">Báo cáo AI Trends 2024.pdf</h3>
+                    <div class="doc-meta">
+                        Ngày tải: 15/09/2024 • <span class="doc-size">2.4 MB</span>
+                    </div>
+                    <div class="doc-actions">
+                        <button class="doc-action-btn">Xem</button>
+                        <button class="doc-action-btn primary">Phân tích AI</button>
+                    </div>
                 </div>
             </div>
 
@@ -822,13 +1336,15 @@
                         <button class="doc-menu-btn">⋮</button>
                     </div>
                 </div>
-                <h3 class="doc-title">Kế hoạch Marketing Q4.docx</h3>
-                <div class="doc-meta">
-                    Ngày tải: 12/09/2024 • <span class="doc-size">1.8 MB</span>
-                </div>
-                <div class="doc-actions">
-                    <button class="doc-action-btn">Xem</button>
-                    <button class="doc-action-btn primary">Phân tích AI</button>
+                <div class="doc-content">
+                    <h3 class="doc-title">Kế hoạch Marketing Q4.docx</h3>
+                    <div class="doc-meta">
+                        Ngày tải: 12/09/2024 • <span class="doc-size">1.8 MB</span>
+                    </div>
+                    <div class="doc-actions">
+                        <button class="doc-action-btn">Xem</button>
+                        <button class="doc-action-btn primary">Phân tích AI</button>
+                    </div>
                 </div>
             </div>
 
@@ -839,13 +1355,15 @@
                         <button class="doc-menu-btn">⋮</button>
                     </div>
                 </div>
-                <h3 class="doc-title">Sales Data 2024.csv</h3>
-                <div class="doc-meta">
-                    Ngày tải: 10/09/2024 • <span class="doc-size">892 KB</span>
-                </div>
-                <div class="doc-actions">
-                    <button class="doc-action-btn">Xem</button>
-                    <button class="doc-action-btn primary">Phân tích AI</button>
+                <div class="doc-content">
+                    <h3 class="doc-title">Sales Data 2024.csv</h3>
+                    <div class="doc-meta">
+                        Ngày tải: 10/09/2024 • <span class="doc-size">892 KB</span>
+                    </div>
+                    <div class="doc-actions">
+                        <button class="doc-action-btn">Xem</button>
+                        <button class="doc-action-btn primary">Phân tích AI</button>
+                    </div>
                 </div>
             </div>
 
@@ -856,13 +1374,15 @@
                         <button class="doc-menu-btn">⋮</button>
                     </div>
                 </div>
-                <h3 class="doc-title">Meeting Notes.txt</h3>
-                <div class="doc-meta">
-                    Ngày tải: 08/09/2024 • <span class="doc-size">125 KB</span>
-                </div>
-                <div class="doc-actions">
-                    <button class="doc-action-btn">Xem</button>
-                    <button class="doc-action-btn primary">Phân tích AI</button>
+                <div class="doc-content">
+                    <h3 class="doc-title">Meeting Notes.txt</h3>
+                    <div class="doc-meta">
+                        Ngày tải: 08/09/2024 • <span class="doc-size">125 KB</span>
+                    </div>
+                    <div class="doc-actions">
+                        <button class="doc-action-btn">Xem</button>
+                        <button class="doc-action-btn primary">Phân tích AI</button>
+                    </div>
                 </div>
             </div>
 
@@ -873,13 +1393,15 @@
                         <button class="doc-menu-btn">⋮</button>
                     </div>
                 </div>
-                <h3 class="doc-title">User Manual v2.1.pdf</h3>
-                <div class="doc-meta">
-                    Ngày tải: 05/09/2024 • <span class="doc-size">4.2 MB</span>
-                </div>
-                <div class="doc-actions">
-                    <button class="doc-action-btn">Xem</button>
-                    <button class="doc-action-btn primary">Phân tích AI</button>
+                <div class="doc-content">
+                    <h3 class="doc-title">User Manual v2.1.pdf</h3>
+                    <div class="doc-meta">
+                        Ngày tải: 05/09/2024 • <span class="doc-size">4.2 MB</span>
+                    </div>
+                    <div class="doc-actions">
+                        <button class="doc-action-btn">Xem</button>
+                        <button class="doc-action-btn primary">Phân tích AI</button>
+                    </div>
                 </div>
             </div>
 
@@ -890,13 +1412,15 @@
                         <button class="doc-menu-btn">⋮</button>
                     </div>
                 </div>
-                <h3 class="doc-title">Proposal Template.docx</h3>
-                <div class="doc-meta">
-                    Ngày tải: 02/09/2024 • <span class="doc-size">967 KB</span>
-                </div>
-                <div class="doc-actions">
-                    <button class="doc-action-btn">Xem</button>
-                    <button class="doc-action-btn primary">Phân tích AI</button>
+                <div class="doc-content">
+                    <h3 class="doc-title">Proposal Template.docx</h3>
+                    <div class="doc-meta">
+                        Ngày tải: 02/09/2024 • <span class="doc-size">967 KB</span>
+                    </div>
+                    <div class="doc-actions">
+                        <button class="doc-action-btn">Xem</button>
+                        <button class="doc-action-btn primary">Phân tích AI</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -922,6 +1446,49 @@
             </div>
         </div>
     </main>
+
+    <!-- Document Viewer Modal -->
+    <div id="documentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">Xem Tài Liệu</h2>
+                <button class="modal-close" onclick="closeModal('documentModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="doc-info" id="docInfo">
+                    <!-- Document info will be populated here -->
+                </div>
+                <div class="doc-viewer">
+                    <div class="doc-preview" id="docPreview">
+                        <!-- Document content will be displayed here -->
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button class="modal-btn" onclick="downloadDocument()">📥 Tải xuống</button>
+                    <button class="modal-btn primary" onclick="openAIAnalysis()">🤖 Phân tích AI</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Analysis Modal -->
+    <div id="analysisModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">🤖 Phân Tích AI</h2>
+                <button class="modal-close" onclick="closeModal('analysisModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="analysisContent">
+                    <!-- Analysis content will be populated here -->
+                </div>
+                <div class="modal-actions">
+                    <button class="modal-btn" onclick="exportAnalysis()">📊 Xuất báo cáo</button>
+                    <button class="modal-btn primary" onclick="saveAnalysis()">💾 Lưu phân tích</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
         // Create floating particles
@@ -1072,6 +1639,346 @@
                 } else if (action === 'Xem') {
                     alert(`Đang mở tài liệu: ${documentTitle}`);
                     // Here you would implement document viewer
+                }
+            }
+        });
+
+        let currentDocument = null;
+
+        // Document viewing functionality
+        function viewDocument(element) {
+            const card = element.closest('.document-card');
+            const title = card.querySelector('.doc-title').textContent;
+            const meta = card.querySelector('.doc-meta').textContent;
+            const type = card.dataset.type;
+            
+            currentDocument = {
+                title: title,
+                meta: meta,
+                type: type
+            };
+
+            // Populate modal
+            document.getElementById('modalTitle').textContent = title;
+            
+            // Create document info
+            const docInfo = document.getElementById('docInfo');
+            docInfo.innerHTML = `
+                <div class="info-item">
+                    <div class="info-label">Tên tài liệu</div>
+                    <div class="info-value">${title}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Loại file</div>
+                    <div class="info-value">${type.toUpperCase()}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Ngày tải</div>
+                    <div class="info-value">${meta.split('•')[0].replace('Ngày tải:', '').trim()}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Kích thước</div>
+                    <div class="info-value">${meta.split('•')[1].trim()}</div>
+                </div>
+            `;
+
+            // Simulate document content based on type
+            const docPreview = document.getElementById('docPreview');
+            docPreview.innerHTML = generateDocumentPreview(type, title);
+
+            // Show modal
+            showModal('documentModal');
+        }
+
+        // AI Analysis functionality
+        function analyzeDocument(element) {
+            const card = element.closest('.document-card');
+            const title = card.querySelector('.doc-title').textContent;
+            const type = card.dataset.type;
+            
+            currentDocument = {
+                title: title,
+                type: type
+            };
+
+            // Show analysis modal
+            showModal('analysisModal');
+            
+            // Start analysis
+            startAIAnalysis(title, type);
+        }
+
+        function generateDocumentPreview(type, title) {
+            const previews = {
+                pdf: `📄 ${title}
+
+Đây là bản xem trước của tài liệu PDF. Nội dung chính bao gồm:
+
+1. Tổng quan về xu hướng AI 2024
+   - Machine Learning tiếp tục phát triển mạnh mẽ
+   - Natural Language Processing đạt bước tiến vượt bậc
+   - Computer Vision ứng dụng rộng rãi trong thực tế
+
+2. Các công nghệ nổi bật
+   - Large Language Models (LLMs)
+   - Generative AI
+   - Multimodal AI Systems
+
+3. Ứng dụng thực tế
+   - Tự động hóa quy trình kinh doanh
+   - Hỗ trợ ra quyết định thông minh
+   - Cải thiện trải nghiệm khách hàng
+
+[Nội dung đầy đủ chỉ hiển thị khi mở file gốc]`,
+
+                doc: `📝 ${title}
+
+=== KẾ HOẠCH MARKETING Q4 2024 ===
+
+I. MỤC TIÊU CHIẾN LƯỢC
+- Tăng trưởng doanh thu 25% so với Q3
+- Mở rộng thị trường sang 3 tỉnh thành mới
+- Nâng cao nhận diện thương hiệu
+
+II. NGÂN SÁCH MARKETING
+- Tổng ngân sách: 2.5 tỷ VNĐ
+- Digital Marketing: 60%
+- Traditional Marketing: 30%
+- Event & PR: 10%
+
+III. KÊNH MARKETING CHÍNH
+1. Social Media Marketing
+2. Google Ads & SEO
+3. Email Marketing
+4. Influencer Collaboration
+
+[Xem chi tiết trong file gốc]`,
+
+                csv: `📊 ${title}
+
+Tháng,Doanh Thu,Khách Hàng Mới,Tỷ Lệ Chuyển Đổi
+01/2024,145000000,234,12.5%
+02/2024,167000000,287,14.2%
+03/2024,189000000,312,15.8%
+04/2024,201000000,345,16.3%
+05/2024,223000000,389,17.1%
+06/2024,245000000,412,18.4%
+07/2024,267000000,456,19.2%
+08/2024,289000000,501,20.1%
+09/2024,312000000,545,21.3%
+
+Tổng cộng: 9 tháng
+Doanh thu trung bình: 226,444,444 VNĐ/tháng
+Khách hàng mới trung bình: 387 người/tháng
+
+[Dữ liệu đầy đủ trong file CSV]`,
+
+                txt: `📋 ${title}
+
+MEETING NOTES - Product Development Team
+Date: 15/09/2024
+Attendees: 12 members
+
+== AGENDA ==
+1. Q4 Product Roadmap Review
+2. User Feedback Analysis
+3. Technical Challenges Discussion
+4. Resource Allocation
+
+== KEY DECISIONS ==
+- Prioritize mobile app optimization
+- Implement AI-powered search feature
+- Schedule beta testing for December 2024
+- Increase QA team by 2 members
+
+== ACTION ITEMS ==
+□ Update technical specifications (Due: 20/09)
+□ Create user testing plan (Due: 25/09)
+□ Prepare budget proposal (Due: 30/09)
+
+== NEXT MEETING ==
+Date: 22/09/2024
+Time: 2:00 PM
+Location: Conference Room A
+
+[Full notes available in original file]`
+            };
+
+            return previews[type] || `Không thể xem trước loại file ${type.toUpperCase()}`;
+        }
+
+        function startAIAnalysis(title, type) {
+            const analysisContent = document.getElementById('analysisContent');
+            
+            // Show loading state
+            analysisContent.innerHTML = `
+                <div class="analysis-loading">
+                    <div class="loading-spinner"></div>
+                    <p>Đang phân tích tài liệu bằng AI...</p>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 0%"></div>
+                    </div>
+                </div>
+            `;
+
+            // Simulate progress
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress > 100) progress = 100;
+                
+                document.querySelector('.progress-fill').style.width = progress + '%';
+                
+                if (progress >= 100) {
+                    clearInterval(progressInterval);
+                    setTimeout(() => {
+                        showAnalysisResults(title, type);
+                    }, 500);
+                }
+            }, 300);
+        }
+
+        function showAnalysisResults(title, type) {
+            const analysisContent = document.getElementById('analysisContent');
+            
+            const analysisResults = {
+                pdf: {
+                    summary: "Tài liệu này cung cấp cái nhìn tổng quan về xu hướng AI trong năm 2024, tập trung vào các công nghệ mới nổi và ứng dụng thực tế.",
+                    keywords: ["AI", "Machine Learning", "Deep Learning", "Natural Language Processing", "Computer Vision", "Automation"],
+                    sentiment: "Tích cực",
+                    complexity: "Trung bình",
+                    readability: "85%",
+                    topics: ["Công nghệ AI", "Xu hướng 2024", "Ứng dụng thực tế", "Phát triển ML"]
+                },
+                doc: {
+                    summary: "Kế hoạch marketing chi tiết cho quý 4 năm 2024 với mục tiêu tăng trưởng 25% doanh thu và mở rộng thị trường.",
+                    keywords: ["Marketing", "Q4 2024", "Digital Marketing", "Social Media", "SEO", "Doanh thu"],
+                    sentiment: "Tích cực",
+                    complexity: "Đơn giản",
+                    readability: "92%",
+                    topics: ["Chiến lược Marketing", "Ngân sách", "Kênh truyền thông", "KPI"]
+                },
+                csv: {
+                    summary: "Dữ liệu bán hàng 9 tháng đầu năm 2024 cho thấy xu hướng tăng trưởng ổn định với tỷ lệ chuyển đổi cải thiện đáng kể.",
+                    keywords: ["Doanh thu", "Khách hàng", "Chuyển đổi", "Tăng trưởng", "Sales", "Revenue"],
+                    sentiment: "Tích cực",
+                    complexity: "Đơn giản",
+                    readability: "95%",
+                    topics: ["Phân tích doanh số", "Xu hướng khách hàng", "Hiệu suất bán hàng"]
+                },
+                txt: {
+                    summary: "Biên bản họp team phát triển sản phẩm thảo luận về roadmap Q4, phản hồi người dùng và phân bổ tài nguyên.",
+                    keywords: ["Meeting", "Product Development", "Roadmap", "Mobile App", "AI Feature", "Beta Testing"],
+                    sentiment: "Trung tính",
+                    complexity: "Đơn giản",
+                    readability: "88%",
+                    topics: ["Phát triển sản phẩm", "Kế hoạch Q4", "Feedback", "Resource Planning"]
+                }
+            };
+
+            const result = analysisResults[type] || analysisResults.pdf;
+            
+            analysisContent.innerHTML = `
+                <div class="analysis-section">
+                    <div class="analysis-title">📋 Tóm tắt nội dung</div>
+                    <div class="analysis-content">
+                        <p>${result.summary}</p>
+                    </div>
+                </div>
+
+                <div class="analysis-section">
+                    <div class="analysis-title">🔑 Từ khóa chính</div>
+                    <div class="analysis-content">
+                        <div class="keyword-tags">
+                            ${result.keywords.map(keyword => `<span class="keyword-tag">${keyword}</span>`).join('')}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="analysis-section">
+                    <div class="analysis-title">📊 Thống kê phân tích</div>
+                    <div class="analysis-content">
+                        <div class="doc-info">
+                            <div class="info-item">
+                                <div class="info-label">Cảm xúc tổng thể</div>
+                                <div class="info-value">${result.sentiment}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Độ phức tạp</div>
+                                <div class="info-value">${result.complexity}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Khả năng đọc hiểu</div>
+                                <div class="info-value">${result.readability}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Chủ đề chính</div>
+                                <div class="info-value">${result.topics.length} chủ đề</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="analysis-section">
+                    <div class="analysis-title">🎯 Chủ đề được phát hiện</div>
+                    <div class="analysis-content">
+                        <ul style="margin-left: 20px; line-height: 1.8;">
+                            ${result.topics.map(topic => `<li>${topic}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Modal functions
+        function showModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.remove('show');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Additional functions
+        function downloadDocument() {
+            alert('Đang tải xuống tài liệu: ' + currentDocument.title);
+        }
+
+        function openAIAnalysis() {
+            closeModal('documentModal');
+            setTimeout(() => {
+                analyzeDocument({closest: () => ({querySelector: () => ({textContent: currentDocument.title}), dataset: {type: currentDocument.type}})});
+            }, 300);
+        }
+
+        function exportAnalysis() {
+            alert('Đang xuất báo cáo phân tích...');
+        }
+
+        function saveAnalysis() {
+            alert('Đã lưu kết quả phân tích!');
+        }
+
+        // Close modal when clicking outside
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal')) {
+                closeModal(e.target.id);
+            }
+        });
+
+        // Updated document actions
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('doc-action-btn')) {
+                const action = e.target.textContent.trim();
+                
+                if (action === 'Xem' || action === '👁️ Xem') {
+                    viewDocument(e.target);
+                } else if (action === 'Phân tích AI' || action === '🤖 Phân tích AI') {
+                    analyzeDocument(e.target);
                 }
             }
         });
