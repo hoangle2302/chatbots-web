@@ -1,14 +1,21 @@
 <?php
 /**
- * JWT Authentication Middleware (no external dependencies)
+ * 🔐 MIDDLEWARE XÁC THỰC JWT
+ * Xử lý authentication và authorization
  */
-
 class AuthMiddleware {
     private $secret_key;
     private $algorithm = 'HS256';
     
     public function __construct() {
-        // Load JWT secret from environment
+        $this->loadConfig();
+        $this->secret_key = $_ENV['JWT_SECRET'] ?? 'your-secret-key-change-this-in-production';
+    }
+    
+    /**
+     * Load cấu hình từ file config.env
+     */
+    private function loadConfig() {
         $envFile = __DIR__ . '/../../config.env';
         if (file_exists($envFile)) {
             $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
@@ -19,152 +26,157 @@ class AuthMiddleware {
                 }
             }
         }
-        
-        $this->secret_key = $_ENV['JWT_SECRET'] ?? 'your-secret-key-change-this-in-production';
     }
     
     /**
-     * Generate JWT token
+     * Tạo JWT token
      */
     public function generateToken($user_id, $username, $role = 'user') {
         $payload = [
-            'iss' => 'thuvien-ai', // Issuer
-            'aud' => 'thuvien-ai-users', // Audience
-            'iat' => time(), // Issued at
-            'exp' => time() + (24 * 60 * 60), // Expires in 24 hours
-            'data' => [
-                'user_id' => $user_id,
-                'username' => $username,
-                'role' => $role
-            ]
+            'user_id' => $user_id,
+            'username' => $username,
+            'role' => $role,
+            'iat' => time(),
+            'exp' => time() + (24 * 60 * 60) // 24 hours
         ];
         
-        // Build JWT without external libs (HS256)
-        $header = [ 'typ' => 'JWT', 'alg' => 'HS256' ];
-        $segments = [];
-        $segments[] = $this->base64UrlEncode(json_encode($header));
-        $segments[] = $this->base64UrlEncode(json_encode($payload));
-        $signingInput = implode('.', $segments);
-        $signature = hash_hmac('sha256', $signingInput, $this->secret_key, true);
-        $segments[] = $this->base64UrlEncode($signature);
-        return implode('.', $segments);
+        return $this->encodeJWT($payload);
     }
     
     /**
-     * Verify JWT token
+     * Xác thực JWT token
      */
-    public function verifyToken($token) {
+    public function validateToken($token) {
         try {
-            $parts = explode('.', $token);
-            if (count($parts) !== 3) return false;
-            list($h64, $p64, $s64) = $parts;
-            $signingInput = $h64 . '.' . $p64;
-            $signature = $this->base64UrlDecode($s64);
-            $calc = hash_hmac('sha256', $signingInput, $this->secret_key, true);
-            if (!hash_equals($calc, $signature)) return false;
-            $payload = json_decode($this->base64UrlDecode($p64), true);
-            if (!$payload) return false;
-            if (isset($payload['exp']) && time() >= $payload['exp']) return false;
-            return isset($payload['data']) ? (array)$payload['data'] : false;
+            $payload = $this->decodeJWT($token);
+            
+            // Kiểm tra expiration
+            if (isset($payload['exp']) && $payload['exp'] < time()) {
+                return false;
+            }
+            
+            return $payload;
         } catch (Exception $e) {
             return false;
         }
     }
     
     /**
-     * Get current user from token
+     * Lấy thông tin user từ token
      */
     public function getCurrentUser($token) {
-        $user_data = $this->verifyToken($token);
-        if ($user_data) {
-            return [
-                'user_id' => $user_data['user_id'],
-                'username' => $user_data['username'],
-                'role' => $user_data['role']
-            ];
-        }
-        return false;
+        $payload = $this->validateToken($token);
+        return $payload ? $payload : null;
     }
     
     /**
-     * Check if user is authenticated
+     * Kiểm tra user đã đăng nhập
      */
     public function isAuthenticated() {
         $headers = getallheaders();
-        $auth_header = $headers['Authorization'] ?? $headers['authorization'] ?? '';
+        $authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? '';
         
-        if (empty($auth_header)) {
+        if (strpos($authHeader, 'Bearer ') !== 0) {
             return false;
         }
         
-        if (strpos($auth_header, 'Bearer ') !== 0) {
-            return false;
-        }
-        
-        $token = substr($auth_header, 7);
-        return $this->verifyToken($token);
+        $token = substr($authHeader, 7);
+        return $this->validateToken($token) !== false;
     }
     
     /**
-     * Require authentication middleware
+     * Lấy token từ request
+     */
+    public function getTokenFromRequest() {
+        $headers = getallheaders();
+        $authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? '';
+        
+        if (strpos($authHeader, 'Bearer ') !== 0) {
+            return null;
+        }
+        
+        return substr($authHeader, 7);
+    }
+    
+    /**
+     * Kiểm tra quyền admin
+     */
+    public function isAdmin($token) {
+        $payload = $this->validateToken($token);
+        return $payload && $payload['role'] === 'admin';
+    }
+    
+    /**
+     * Yêu cầu authentication cho API
      */
     public function requireAuth() {
         if (!$this->isAuthenticated()) {
             http_response_code(401);
             echo json_encode([
                 'success' => false,
-                'message' => 'Unauthorized. Please login first.',
-                'code' => 'UNAUTHORIZED'
+                'message' => 'Authentication required'
             ]);
             exit;
         }
     }
     
     /**
-     * Require admin role middleware
+     * Encode JWT token
      */
-    public function requireAdmin() {
-        $this->requireAuth();
+    private function encodeJWT($payload) {
+        $header = json_encode(['typ' => 'JWT', 'alg' => $this->algorithm]);
+        $payload = json_encode($payload);
         
-        $headers = getallheaders();
-        $auth_header = $headers['Authorization'] ?? $headers['authorization'] ?? '';
-        $token = substr($auth_header, 7);
-        $user_data = $this->getCurrentUser($token);
+        $base64Header = $this->base64UrlEncode($header);
+        $base64Payload = $this->base64UrlEncode($payload);
         
-        if (!$user_data || $user_data['role'] !== 'admin') {
-            http_response_code(403);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Access denied. Admin role required.',
-                'code' => 'FORBIDDEN'
-            ]);
-            exit;
-        }
+        $signature = hash_hmac('sha256', $base64Header . "." . $base64Payload, $this->secret_key, true);
+        $base64Signature = $this->base64UrlEncode($signature);
+        
+        return $base64Header . "." . $base64Payload . "." . $base64Signature;
     }
     
     /**
-     * Get token from request
+     * Decode JWT token
      */
-    public function getTokenFromRequest() {
-        $headers = getallheaders();
-        $auth_header = $headers['Authorization'] ?? $headers['authorization'] ?? '';
+    private function decodeJWT($token) {
+        $parts = explode('.', $token);
         
-        if (strpos($auth_header, 'Bearer ') === 0) {
-            return substr($auth_header, 7);
+        if (count($parts) !== 3) {
+            throw new Exception('Invalid token format');
         }
         
-        return null;
+        list($base64Header, $base64Payload, $base64Signature) = $parts;
+        
+        // Verify signature
+        $signature = hash_hmac('sha256', $base64Header . "." . $base64Payload, $this->secret_key, true);
+        $expectedSignature = $this->base64UrlEncode($signature);
+        
+        if (!hash_equals($base64Signature, $expectedSignature)) {
+            throw new Exception('Invalid signature');
+        }
+        
+        $payload = json_decode($this->base64UrlDecode($base64Payload), true);
+        
+        if (!$payload) {
+            throw new Exception('Invalid payload');
+        }
+        
+        return $payload;
     }
-
+    
+    /**
+     * Base64 URL encode
+     */
     private function base64UrlEncode($data) {
-        $b64 = base64_encode($data);
-        return rtrim(strtr($b64, '+/', '-_'), '=');
+        return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
     }
-
+    
+    /**
+     * Base64 URL decode
+     */
     private function base64UrlDecode($data) {
-        $b64 = strtr($data, '-_', '+/');
-        return base64_decode($b64 . str_repeat('=', (4 - strlen($b64) % 4) % 4));
+        return base64_decode(str_pad(strtr($data, '-_', '+/'), strlen($data) % 4, '=', STR_PAD_RIGHT));
     }
 }
 ?>
-

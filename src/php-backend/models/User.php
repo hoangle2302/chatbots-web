@@ -1,11 +1,13 @@
 <?php
 /**
- * User model
+ * 👤 MODEL NGƯỜI DÙNG
+ * Quản lý thông tin và hoạt động của người dùng
  */
 class User {
     private $conn;
     private $table_name = "users";
     
+    // Properties
     public $id;
     public $username;
     public $email;
@@ -22,6 +24,9 @@ class User {
         $this->conn = $db;
     }
     
+    /**
+     * Tạo người dùng mới
+     */
     public function create() {
         $query = "INSERT INTO " . $this->table_name . " 
                   (username, email, display_name, password, role, is_active, credits) 
@@ -29,13 +34,10 @@ class User {
         
         $stmt = $this->conn->prepare($query);
         
+        // Sanitize input
         $this->username = htmlspecialchars(strip_tags($this->username));
-        if ($this->email !== null) {
-            $this->email = htmlspecialchars(strip_tags($this->email));
-        }
-        if ($this->display_name !== null) {
-            $this->display_name = htmlspecialchars(strip_tags($this->display_name));
-        }
+        $this->email = $this->email ? htmlspecialchars(strip_tags($this->email)) : null;
+        $this->display_name = $this->display_name ? htmlspecialchars(strip_tags($this->display_name)) : null;
         $this->password = password_hash($this->password, PASSWORD_DEFAULT);
         $this->role = $this->role ?? 'user';
         $this->is_active = $this->is_active ?? 1;
@@ -49,78 +51,205 @@ class User {
         $stmt->bindParam(":is_active", $this->is_active);
         $stmt->bindParam(":credits", $this->credits);
         
-        if($stmt->execute()) {
+        if ($stmt->execute()) {
             $this->id = $this->conn->lastInsertId();
             return true;
         }
-        
         return false;
     }
-
-    public function addCredits($id, $amount) {
-        $query = "UPDATE " . $this->table_name . " SET credits = credits + :amount WHERE id = :id";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(":amount", $amount, PDO::PARAM_INT);
-        $stmt->bindParam(":id", $id, PDO::PARAM_INT);
-        return $stmt->execute();
-    }
     
-    public function getByUsername($username) {
-        $query = "SELECT * FROM " . $this->table_name . " WHERE username = :username";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(":username", $username);
-        $stmt->execute();
-        
-        return $stmt->fetch();
-    }
-    
+    /**
+     * Lấy thông tin user theo ID
+     */
     public function getById($id) {
         $query = "SELECT * FROM " . $this->table_name . " WHERE id = :id";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(":id", $id);
         $stmt->execute();
         
-        return $stmt->fetch();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
     
-    public function verifyPassword($password) {
-        return password_verify($password, $this->password);
+    /**
+     * Lấy thông tin user theo username
+     */
+    public function getByUsername($username) {
+        $query = "SELECT * FROM " . $this->table_name . " WHERE username = :username";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":username", $username);
+        $stmt->execute();
+        
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
     
+    /**
+     * Cập nhật thông tin user
+     */
+    public function update() {
+        $query = "UPDATE " . $this->table_name . " 
+                  SET username = :username, email = :email, display_name = :display_name, 
+                      role = :role, is_active = :is_active, credits = :credits
+                  WHERE id = :id";
+        
+        $stmt = $this->conn->prepare($query);
+        
+        $this->username = htmlspecialchars(strip_tags($this->username));
+        $this->email = $this->email ? htmlspecialchars(strip_tags($this->email)) : null;
+        $this->display_name = $this->display_name ? htmlspecialchars(strip_tags($this->display_name)) : null;
+        
+        $stmt->bindParam(":username", $this->username);
+        $stmt->bindParam(":email", $this->email);
+        $stmt->bindParam(":display_name", $this->display_name);
+        $stmt->bindParam(":role", $this->role);
+        $stmt->bindParam(":is_active", $this->is_active);
+        $stmt->bindParam(":credits", $this->credits);
+        $stmt->bindParam(":id", $this->id);
+        
+        return $stmt->execute();
+    }
+    
+    /**
+     * Cập nhật password
+     */
+    public function updatePassword($newPassword) {
+        $query = "UPDATE " . $this->table_name . " SET password = :password WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        
+        $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
+        $stmt->bindParam(":password", $hashedPassword);
+        $stmt->bindParam(":id", $this->id);
+        
+        return $stmt->execute();
+    }
+    
+    /**
+     * Cập nhật failed login count
+     */
     public function updateFailedLogin() {
         $query = "UPDATE " . $this->table_name . " 
                   SET failed_login_count = failed_login_count + 1 
                   WHERE id = :id";
-        
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(":id", $this->id);
         return $stmt->execute();
     }
     
+    /**
+     * Reset failed login count
+     */
     public function resetFailedLogin() {
         $query = "UPDATE " . $this->table_name . " 
-                  SET failed_login_count = 0 
+                  SET failed_login_count = 0, last_login_at = NOW() 
+                  WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":id", $this->id);
+        return $stmt->execute();
+    }
+    
+    /**
+     * Thêm credits
+     */
+    public function addCredits($userId, $amount) {
+        $query = "UPDATE " . $this->table_name . " 
+                  SET credits = credits + :amount 
+                  WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":amount", $amount);
+        $stmt->bindParam(":id", $userId);
+        return $stmt->execute();
+    }
+    
+    /**
+     * Trừ credits
+     */
+    public function deductCredits($userId, $amount) {
+        $query = "UPDATE " . $this->table_name . " 
+                  SET credits = credits - :amount 
+                  WHERE id = :id AND credits >= :amount";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":amount", $amount);
+        $stmt->bindParam(":id", $userId);
+        return $stmt->execute();
+    }
+    
+    /**
+     * Đếm số lượng users
+     */
+    public function count($conditions = []) {
+        $query = "SELECT COUNT(*) FROM " . $this->table_name;
+        $params = [];
+        
+        if (!empty($conditions)) {
+            $whereClause = [];
+            foreach ($conditions as $key => $value) {
+                $whereClause[] = "$key = :$key";
+                $params[$key] = $value;
+            }
+            $query .= " WHERE " . implode(" AND ", $whereClause);
+        }
+        
+        $stmt = $this->conn->prepare($query);
+        foreach ($params as $key => $value) {
+            $stmt->bindValue(":$key", $value);
+        }
+        $stmt->execute();
+        
+        return $stmt->fetchColumn();
+    }
+    
+    /**
+     * Đếm số admin
+     */
+    public function countAdmins() {
+        return $this->count(['role' => 'admin']);
+    }
+    
+    /**
+     * Xóa user
+     */
+    public function delete($id) {
+        $query = "DELETE FROM " . $this->table_name . " WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":id", $id);
+        return $stmt->execute();
+    }
+    
+    /**
+     * Lấy tất cả users
+     */
+    public function getAll($limit = null, $offset = 0) {
+        $query = "SELECT id, username, email, display_name, role, is_active, credits, created_at 
+                  FROM " . $this->table_name . " 
+                  ORDER BY created_at DESC";
+        
+        if ($limit) {
+            $query .= " LIMIT :limit OFFSET :offset";
+        }
+        
+        $stmt = $this->conn->prepare($query);
+        
+        if ($limit) {
+            $stmt->bindParam(":limit", $limit, PDO::PARAM_INT);
+            $stmt->bindParam(":offset", $offset, PDO::PARAM_INT);
+        }
+        
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    
+    /**
+     * Cập nhật credits của user
+     */
+    public function updateCredits() {
+        $query = "UPDATE " . $this->table_name . " 
+                  SET credits = :credits, updated_at = CURRENT_TIMESTAMP 
                   WHERE id = :id";
         
         $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(":id", $this->id);
+        $stmt->bindParam(":credits", $this->credits, PDO::PARAM_INT);
+        $stmt->bindParam(":id", $this->id, PDO::PARAM_INT);
+        
         return $stmt->execute();
-    }
-
-    public function updateLastLoginAt() {
-        $query = "UPDATE " . $this->table_name . " 
-                  SET last_login_at = CURRENT_TIMESTAMP 
-                  WHERE id = :id";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(":id", $this->id);
-        return $stmt->execute();
-    }
-
-    public function countAdmins() {
-        $query = "SELECT COUNT(*) AS c FROM " . $this->table_name . " WHERE role = 'admin'";
-        $stmt = $this->conn->query($query);
-        $row = $stmt->fetch();
-        return $row ? intval($row['c']) : 0;
     }
 }
 ?>

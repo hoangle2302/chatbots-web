@@ -4,11 +4,6 @@
  */
 
 require_once __DIR__ . '/../config/Config.php';
-require_once __DIR__ . '/../vendor/autoload.php';
-
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\ClientException;
-use GuzzleHttp\Exception\ServerException;
 
 class Key4UService {
     private $config;
@@ -196,19 +191,103 @@ class Key4UService {
         $this->config = new Config();
         $this->apiKey = $this->config->getKey4UApiKey();
         
+        // Không throw exception nếu không có API key, chỉ log warning
         if (!$this->apiKey) {
-            throw new Exception('Key4U API key not configured');
+            error_log('Warning: Key4U API key not configured');
         }
         
-        // Khởi tạo Guzzle Client
-        $this->client = new Client([
-            'base_uri' => $this->baseUrl,
-            'timeout' => 60,
-            'headers' => [
-                'Authorization' => 'Bearer ' . $this->apiKey,
-                'Accept' => 'application/json'
+        // Sử dụng cURL thay vì Guzzle
+        $this->client = null; // Sẽ sử dụng cURL trong các method
+    }
+    
+    /**
+     * Lấy danh sách tất cả models có sẵn
+     */
+    public function getAllModels() {
+        return [
+            'chat' => $this->chatModels,
+            'image' => $this->imageModels,
+            'audio' => $this->audioModels,
+            'video' => $this->videoModels,
+            'embedding' => $this->embeddingModels,
+            'moderation' => $this->moderationModels,
+            'special' => $this->specialModels
+        ];
+    }
+    
+    /**
+     * Lấy danh sách chat models
+     */
+    public function getChatModels() {
+        return $this->chatModels;
+    }
+    
+    /**
+     * Lấy danh sách image models
+     */
+    public function getImageModels() {
+        return $this->imageModels;
+    }
+    
+    /**
+     * Lấy danh sách audio models
+     */
+    public function getAudioModels() {
+        return $this->audioModels;
+    }
+    
+    /**
+     * Lấy danh sách video models
+     */
+    public function getVideoModels() {
+        return $this->videoModels;
+    }
+    
+    /**
+     * Lấy danh sách embedding models
+     */
+    public function getEmbeddingModels() {
+        return $this->embeddingModels;
+    }
+    
+    /**
+     * Lấy danh sách moderation models
+     */
+    public function getModerationModels() {
+        return $this->moderationModels;
+    }
+    
+    /**
+     * Lấy danh sách special models
+     */
+    public function getSpecialModels() {
+        return $this->specialModels;
+    }
+    
+    /**
+     * Lấy top models được khuyến nghị
+     */
+    public function getTopModels() {
+        return [
+            'chat' => [
+                'gpt-4-turbo', 'gpt-4o', 'gpt-4o-mini',
+                'claude-3-5-sonnet-20241022', 'claude-3-5-haiku-20241022',
+                'gemini-2.0-flash', 'gemini-2.5-flash',
+                'qwen3-235b-a22b', 'qwen3-30b-a3b',
+                'deepseek-r1', 'deepseek-reasoner',
+                'o1', 'o1-mini', 'o3', 'o3-mini'
+            ],
+            'image' => [
+                'flux-kontext-max', 'flux-pro', 'dall-e-3',
+                'stable-diffusion-3-2b', 'ideogram-ai/ideogram-v2-turbo'
+            ],
+            'audio' => [
+                'whisper-1', 'tts-1-hd', 'gpt-4o-audio-preview'
+            ],
+            'video' => [
+                'veo2', 'veo3', 'runwayml-gen4_turbo-10', 'kling-video'
             ]
-        ]);
+        ];
     }
     
     /**
@@ -230,18 +309,42 @@ class Key4UService {
         ];
         
         try {
-            $response = $this->client->request('POST', '/chat/completions', [
-                'json' => $requestData,
-                'timeout' => 30
-            ]);
+            if (!$this->apiKey || $this->apiKey === 'your_key4u_api_key_here') {
+                throw new Exception('Key4U API key not configured. Please set KEY4U_API_KEY in config.env');
+            }
             
-            $responseBody = $response->getBody()->getContents();
+            // Sử dụng cURL thay vì Guzzle
+            $url = $this->baseUrl . '/chat/completions';
+            
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($requestData));
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . $this->apiKey
+            ]);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            
+            $responseBody = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $error = curl_error($ch);
+            curl_close($ch);
+            
+            if ($responseBody === false || !empty($error)) {
+                throw new Exception('Failed to connect to Key4U API: ' . $error);
+            }
+            
+            if ($httpCode !== 200) {
+                throw new Exception('Key4U API returned HTTP ' . $httpCode . '. Response: ' . substr($responseBody, 0, 200));
+            }
+            
             return json_decode($responseBody, true);
             
-        } catch (ClientException $e) {
-            throw new Exception('Key4U API Client Error: ' . $e->getMessage());
-        } catch (ServerException $e) {
-            throw new Exception('Key4U API Server Error: ' . $e->getMessage());
+        } catch (Exception $e) {
+            throw new Exception('Key4U API Error: ' . $e->getMessage());
         } catch (Exception $e) {
             throw new Exception('Key4U API Error: ' . $e->getMessage());
         }
@@ -409,20 +512,6 @@ class Key4UService {
         ];
     }
     
-    /**
-     * Lấy tất cả models dưới dạng mảng phẳng
-     */
-    public function getAllModels() {
-        return array_merge(
-            $this->chatModels,
-            $this->imageModels,
-            $this->audioModels,
-            $this->videoModels,
-            $this->embeddingModels,
-            $this->moderationModels,
-            $this->specialModels
-        );
-    }
     
     /**
      * Kiểm tra model có thuộc loại nào
@@ -636,10 +725,8 @@ class Key4UService {
             $responseBody = $response->getBody()->getContents();
             return json_decode($responseBody, true);
             
-        } catch (ClientException $e) {
-            throw new Exception('Key4U API Client Error: ' . $e->getMessage());
-        } catch (ServerException $e) {
-            throw new Exception('Key4U API Server Error: ' . $e->getMessage());
+        } catch (Exception $e) {
+            throw new Exception('Key4U API Error: ' . $e->getMessage());
         } catch (Exception $e) {
             throw new Exception('Key4U API Error: ' . $e->getMessage());
         }
@@ -658,10 +745,8 @@ class Key4UService {
             $responseBody = $response->getBody()->getContents();
             return json_decode($responseBody, true);
             
-        } catch (ClientException $e) {
-            throw new Exception('Key4U API Client Error: ' . $e->getMessage());
-        } catch (ServerException $e) {
-            throw new Exception('Key4U API Server Error: ' . $e->getMessage());
+        } catch (Exception $e) {
+            throw new Exception('Key4U API Error: ' . $e->getMessage());
         } catch (Exception $e) {
             throw new Exception('Key4U API Error: ' . $e->getMessage());
         }

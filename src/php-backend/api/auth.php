@@ -1,38 +1,53 @@
 <?php
 /**
- * Authentication API endpoints
+ * 🔐 API XÁC THỰC NGƯỜI DÙNG
+ * Xử lý đăng ký, đăng nhập, đăng xuất
  */
-header('Content-Type: application/json');
+
+// ===== HEADERS =====
+header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
-// Handle preflight OPTIONS request
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+// Xử lý preflight OPTIONS request
+if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit;
 }
 
+// ===== INCLUDES =====
 require_once __DIR__ . '/../config/Database.php';
 require_once __DIR__ . '/../models/User.php';
 require_once __DIR__ . '/../models/Log.php';
 require_once __DIR__ . '/../middleware/AuthMiddleware.php';
 
-// Initialize database connection
+// ===== INITIALIZATION =====
 $database = new Database();
 $db = $database->getConnection();
-
-// Initialize models
 $user = new User($db);
 $log = new Log($db);
 $auth = new AuthMiddleware();
 
-// Get request method and action
-$method = $_SERVER['REQUEST_METHOD'];
+// ===== ROUTING =====
+$method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $action = $_GET['action'] ?? '';
 
-// Route requests
 switch ($method) {
+    case 'GET':
+        switch ($action) {
+            case 'profile':
+                handleGetProfile($user, $auth);
+                break;
+            case 'me':
+                handleGetMe($user, $auth);
+                break;
+            default:
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'Action không tồn tại']);
+        }
+        break;
+        
     case 'POST':
         switch ($action) {
             case 'register':
@@ -52,440 +67,289 @@ switch ($method) {
                 break;
             default:
                 http_response_code(404);
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Action not found',
-                    'code' => 'NOT_FOUND'
-                ]);
+                echo json_encode(['success' => false, 'message' => 'Action không tồn tại']);
         }
         break;
+    
     default:
         http_response_code(405);
-        echo json_encode([
-            'success' => false,
-            'message' => 'Method not allowed',
-            'code' => 'METHOD_NOT_ALLOWED'
-        ]);
+        echo json_encode(['success' => false, 'message' => 'Method không được phép']);
 }
 
+// ===== HANDLERS =====
+
 /**
- * Handle user registration
+ * Xử lý đăng ký người dùng
  */
 function handleRegister($user, $log) {
-    try {
-        $input = json_decode(file_get_contents('php://input'), true);
+    $input = json_decode(file_get_contents('php://input'), true);
+    
+    // Validation
+    if (empty($input['username']) || empty($input['password'])) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Username và password là bắt buộc']);
+        return;
+    }
+    
+    $username = trim($input['username']);
+    $password = $input['password'];
+    $email = $input['email'] ?? null;
+    $displayName = $input['display_name'] ?? null;
+    
+    // Kiểm tra username đã tồn tại
+    if ($user->getByUsername($username)) {
+        http_response_code(409);
+        echo json_encode(['success' => false, 'message' => 'Username đã tồn tại']);
+        return;
+    }
+    
+    // Tạo user mới
+    $user->username = $username;
+    $user->password = $password;
+    $user->email = $email;
+    $user->display_name = $displayName;
+    $user->role = 'user';
+    $user->is_active = true;
+    $user->credits = 10; // Credits mặc định
+    
+    if ($user->create()) {
+        // Log hoạt động
+        $log->user_id = $user->id;
+        $log->action = 'user_register';
+        $log->detail = "User đăng ký: {$username}";
+        $log->create();
         
-        // Validate input
-        if (empty($input['username']) || empty($input['password'])) {
-            http_response_code(400);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Username and password are required',
-                'code' => 'MISSING_FIELDS'
-            ]);
-            return;
-        }
-        
-        $username = trim($input['username']);
-        $password = $input['password'];
-        $role = $input['role'] ?? 'user';
-        $email = isset($input['email']) ? trim($input['email']) : null;
-        $display_name = isset($input['display_name']) ? trim($input['display_name']) : null;
-        
-        // Validate username
-        if (strlen($username) < 3 || strlen($username) > 80) {
-            http_response_code(400);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Username must be between 3 and 80 characters',
-                'code' => 'INVALID_USERNAME'
-            ]);
-            return;
-        }
-        
-        // Validate password
-        if (strlen($password) < 6) {
-            http_response_code(400);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Password must be at least 6 characters long',
-                'code' => 'INVALID_PASSWORD'
-            ]);
-            return;
-        }
-        
-        // Check if username already exists
-        $existing_user = $user->getByUsername($username);
-        if ($existing_user) {
-            http_response_code(409);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Username already exists',
-                'code' => 'USERNAME_EXISTS'
-            ]);
-            return;
-        }
-        
-        // Create new user
-        $user->username = $username;
-        $user->email = $email;
-        $user->display_name = $display_name;
-        $user->password = $password;
-        // Enforce single admin
-        if ($role === 'admin') {
-            if ($user->countAdmins() >= 1) {
-                http_response_code(409);
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Only one admin account is allowed',
-                    'code' => 'ADMIN_LIMIT_REACHED'
-                ]);
-                return;
-            }
-            $user->role = 'admin';
-        } else {
-            $user->role = $role;
-        }
-        $user->is_active = 1;
-        
-        if ($user->create()) {
-            // Log registration
-            $log->user_id = $user->id;
-            $log->action = 'user_registered';
-            $log->detail = "User registered: {$username}";
-            $log->create();
-            
-            http_response_code(201);
-            echo json_encode([
-                'success' => true,
-                'message' => 'User registered successfully',
-                'data' => [
-                    'user_id' => $user->id,
-                    'username' => $user->username,
-                    'email' => $user->email,
-                    'display_name' => $user->display_name,
-                    'role' => $user->role
-                ]
-            ]);
-        } else {
-            http_response_code(500);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Failed to create user',
-                'code' => 'CREATE_FAILED'
-            ]);
-        }
-        
-    } catch (Exception $e) {
-        error_log("Registration error: " . $e->getMessage());
-        error_log("Registration error trace: " . $e->getTraceAsString());
-        http_response_code(500);
         echo json_encode([
-            'success' => false,
-            'message' => 'Internal server error: ' . $e->getMessage(),
-            'code' => 'INTERNAL_ERROR'
+            'success' => true,
+            'message' => 'Đăng ký thành công',
+            'data' => [
+                'user_id' => $user->id,
+                'username' => $username
+            ]
         ]);
+    } else {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'message' => 'Lỗi tạo tài khoản']);
     }
 }
 
 /**
- * Handle user login
+ * Xử lý đăng nhập
  */
 function handleLogin($user, $log, $auth) {
-    try {
-        $input = json_decode(file_get_contents('php://input'), true);
-        
-        // Validate input
-        if (empty($input['username']) || empty($input['password'])) {
-            http_response_code(400);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Username and password are required',
-                'code' => 'MISSING_FIELDS'
-            ]);
-            return;
-        }
-        
-        $username = trim($input['username']);
-        $password = $input['password'];
-        
-        // Get user by username - chỉ user đã đăng ký mới tồn tại
-        $user_data = $user->getByUsername($username);
-        
-        if (!$user_data) {
-            // User chưa đăng ký - không cho phép đăng nhập
-            http_response_code(401);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Tài khoản chưa được đăng ký. Vui lòng đăng ký trước.',
-                'code' => 'USER_NOT_REGISTERED'
-            ]);
-            return;
-        }
-        
-        // Check if user is active
-        if (!$user_data['is_active']) {
-            http_response_code(401);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Account is deactivated',
-                'code' => 'ACCOUNT_DEACTIVATED'
-            ]);
-            return;
-        }
-        
-        // Check failed login attempts
-        if ($user_data['failed_login_count'] >= 5) {
-            http_response_code(429);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Too many failed login attempts. Account temporarily locked.',
-                'code' => 'ACCOUNT_LOCKED'
-            ]);
-            return;
-        }
-        
-        // Verify password - chỉ user đã đăng ký mới có password
-        if (!password_verify($password, $user_data['password'])) {
-            // Update failed login count
-            $user->id = $user_data['id'];
-            $user->updateFailedLogin();
-            
-            // Log failed login
-            $log->user_id = $user_data['id'];
-            $log->action = 'login_failed';
-            $log->detail = "Failed login attempt for registered user: {$username}";
-            $log->create();
-            
-            http_response_code(401);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Mật khẩu không đúng. Vui lòng kiểm tra lại.',
-                'code' => 'INVALID_PASSWORD'
-            ]);
-            return;
-        }
-        
-        // Reset failed login count
-        $user->id = $user_data['id'];
-        $user->resetFailedLogin();
-        $user->updateLastLoginAt();
-        
-        // Generate JWT token
-        $token = $auth->generateToken(
-            $user_data['id'],
-            $user_data['username'],
-            $user_data['role']
-        );
-        
-        // Log successful login
-        $log->user_id = $user_data['id'];
-        $log->action = 'login_success';
-        $log->detail = "User logged in: {$username}";
-        $log->create();
-        
-        http_response_code(200);
-        echo json_encode([
-            'success' => true,
-            'message' => 'Login successful',
-            'data' => [
-                'token' => $token,
-                'user' => [
-                    'id' => $user_data['id'],
-                    'username' => $user_data['username'],
-                    'email' => $user_data['email'] ?? null,
-                    'display_name' => $user_data['display_name'] ?? null,
-                            'role' => $user_data['role'],
-                            'credits' => $user_data['credits'] ?? 0
-                ],
-                'expires_in' => 24 * 60 * 60 // 24 hours in seconds
-            ]
-        ]);
-        
-    } catch (Exception $e) {
-        error_log("Login error: " . $e->getMessage());
-        error_log("Login error trace: " . $e->getTraceAsString());
-        http_response_code(500);
-        echo json_encode([
-            'success' => false,
-            'message' => 'Internal server error: ' . $e->getMessage(),
-            'code' => 'INTERNAL_ERROR'
-        ]);
+    $input = json_decode(file_get_contents('php://input'), true);
+    
+    // Validation
+    if (empty($input['username']) || empty($input['password'])) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Username và password là bắt buộc']);
+        return;
     }
+    
+    $username = trim($input['username']);
+    $password = $input['password'];
+    
+    // Tìm user
+    $userData = $user->getByUsername($username);
+    if (!$userData || !$userData['is_active']) {
+        http_response_code(401);
+        echo json_encode(['success' => false, 'message' => 'Thông tin đăng nhập không chính xác']);
+        return;
+    }
+    
+    // Kiểm tra password
+    if (!password_verify($password, $userData['password'])) {
+        // Tăng số lần đăng nhập thất bại
+        $user->id = $userData['id'];
+        $user->updateFailedLogin();
+        
+        http_response_code(401);
+        echo json_encode(['success' => false, 'message' => 'Thông tin đăng nhập không chính xác']);
+        return;
+    }
+    
+    // Reset failed login count
+    $user->id = $userData['id'];
+    $user->resetFailedLogin();
+    
+    // Tạo token
+    $token = $auth->generateToken($userData['id'], $userData['username'], $userData['role']);
+    
+    // Log hoạt động
+    $log->user_id = $userData['id'];
+    $log->action = 'user_login';
+    $log->detail = "User đăng nhập: {$username}";
+    $log->create();
+    
+    echo json_encode([
+        'success' => true,
+        'message' => 'Đăng nhập thành công',
+        'data' => [
+            'token' => $token,
+            'user' => [
+                'id' => $userData['id'],
+                'username' => $userData['username'],
+                'email' => $userData['email'],
+                'display_name' => $userData['display_name'],
+                'role' => $userData['role'],
+                'credits' => $userData['credits'] ?? 0
+            ],
+            'expires_in' => 24 * 60 * 60 // 24 hours
+        ]
+    ]);
 }
 
 /**
- * Handle user logout
+ * Xử lý đăng xuất
  */
 function handleLogout($log, $auth) {
-    try {
-        $token = $auth->getTokenFromRequest();
-        if (!$token) {
-            http_response_code(401);
-            echo json_encode([
-                'success' => false,
-                'message' => 'No token provided',
-                'code' => 'NO_TOKEN'
-            ]);
-            return;
+    $headers = getallheaders();
+    $authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? '';
+    
+    if (strpos($authHeader, 'Bearer ') === 0) {
+        $token = substr($authHeader, 7);
+        $user = $auth->getCurrentUser($token);
+        
+        if ($user) {
+            // Log hoạt động
+            $log->user_id = $user['id'];
+            $log->action = 'user_logout';
+            $log->detail = "User đăng xuất: {$user['username']}";
+            $log->create();
         }
-        
-        $user_data = $auth->getCurrentUser($token);
-        if (!$user_data) {
-            http_response_code(401);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Invalid token',
-                'code' => 'INVALID_TOKEN'
-            ]);
-            return;
-        }
-        
-        // Log logout
-        $log->user_id = $user_data['user_id'];
-        $log->action = 'logout';
-        $log->detail = "User logged out: {$user_data['username']}";
-        $log->create();
-        
-        http_response_code(200);
-        echo json_encode([
-            'success' => true,
-            'message' => 'Logout successful'
-        ]);
-        
-    } catch (Exception $e) {
-        error_log("Logout error: " . $e->getMessage());
-        http_response_code(500);
-        echo json_encode([
-            'success' => false,
-            'message' => 'Internal server error',
-            'code' => 'INTERNAL_ERROR'
-        ]);
     }
+    
+    echo json_encode([
+        'success' => true,
+        'message' => 'Đăng xuất thành công'
+    ]);
 }
 
 /**
- * Handle token refresh
+ * Refresh token
  */
 function handleRefreshToken($auth) {
-    try {
-        $token = $auth->getTokenFromRequest();
-        if (!$token) {
-            http_response_code(401);
-            echo json_encode([
-                'success' => false,
-                'message' => 'No token provided',
-                'code' => 'NO_TOKEN'
-            ]);
-            return;
-        }
-        
-        $user_data = $auth->getCurrentUser($token);
-        if (!$user_data) {
-            http_response_code(401);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Invalid token',
-                'code' => 'INVALID_TOKEN'
-            ]);
-            return;
-        }
-        
-        // Generate new token
-        $new_token = $auth->generateToken(
-            $user_data['user_id'],
-            $user_data['username'],
-            $user_data['role']
-        );
-        
-        http_response_code(200);
-        echo json_encode([
-            'success' => true,
-            'message' => 'Token refreshed successfully',
-            'data' => [
-                'token' => $new_token,
-                'expires_in' => 24 * 60 * 60 // 24 hours in seconds
-            ]
-        ]);
-        
-    } catch (Exception $e) {
-        error_log("Token refresh error: " . $e->getMessage());
-        http_response_code(500);
-        echo json_encode([
-            'success' => false,
-            'message' => 'Internal server error',
-            'code' => 'INTERNAL_ERROR'
-        ]);
+    $headers = getallheaders();
+    $authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? '';
+    
+    if (strpos($authHeader, 'Bearer ') !== 0) {
+        http_response_code(401);
+        echo json_encode(['success' => false, 'message' => 'Token không hợp lệ']);
+        return;
     }
+    
+    $token = substr($authHeader, 7);
+    $user = $auth->getCurrentUser($token);
+    
+    if (!$user) {
+        http_response_code(401);
+        echo json_encode(['success' => false, 'message' => 'Token không hợp lệ']);
+        return;
+    }
+    
+    // Tạo token mới
+    $newToken = $auth->generateToken($user['id'], $user['username'], $user['role']);
+    
+    echo json_encode([
+        'success' => true,
+        'message' => 'Token đã được refresh',
+        'data' => [
+            'token' => $newToken,
+            'expires_in' => 24 * 60 * 60
+        ]
+    ]);
 }
 
 /**
- * Handle username check - kiểm tra username đã đăng ký chưa
+ * Kiểm tra username có tồn tại
  */
 function handleCheckUsername($user) {
-    try {
-        $input = json_decode(file_get_contents('php://input'), true);
-        
-        // Validate input
-        if (empty($input['username'])) {
-            http_response_code(400);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Username is required',
-                'code' => 'MISSING_USERNAME'
-            ]);
-            return;
-        }
-        
-        $username = trim($input['username']);
-        
-        // Validate username format
-        if (strlen($username) < 3 || strlen($username) > 80) {
-            http_response_code(400);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Username must be between 3 and 80 characters',
-                'code' => 'INVALID_USERNAME_FORMAT'
-            ]);
-            return;
-        }
-        
-        // Check if username exists
-        $user_data = $user->getByUsername($username);
-        
-        if ($user_data) {
-            // Username đã được đăng ký
-            http_response_code(200);
-            echo json_encode([
-                'success' => true,
-                'message' => 'Username đã được đăng ký',
-                'data' => [
-                    'username' => $username,
-                    'is_registered' => true,
-                    'is_active' => $user_data['is_active']
-                ]
-            ]);
-        } else {
-            // Username chưa được đăng ký
-            http_response_code(200);
-            echo json_encode([
-                'success' => true,
-                'message' => 'Username chưa được đăng ký',
-                'data' => [
-                    'username' => $username,
-                    'is_registered' => false
-                ]
-            ]);
-        }
-        
-    } catch (Exception $e) {
-        error_log("Username check error: " . $e->getMessage());
-        http_response_code(500);
-        echo json_encode([
-            'success' => false,
-            'message' => 'Internal server error',
-            'code' => 'INTERNAL_ERROR'
-        ]);
+    $input = json_decode(file_get_contents('php://input'), true);
+    $username = $input['username'] ?? '';
+    
+    if (empty($username)) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Username là bắt buộc']);
+        return;
     }
+    
+    $exists = $user->getByUsername($username) !== false;
+    
+    echo json_encode([
+        'success' => true,
+        'data' => [
+            'username' => $username,
+            'exists' => $exists,
+            'available' => !$exists
+        ]
+    ]);
+}
+
+/**
+ * Lấy thông tin profile người dùng
+ */
+function handleGetProfile($user, $auth) {
+    $token = $auth->getTokenFromRequest();
+    if (!$token) {
+        http_response_code(401);
+        echo json_encode(['success' => false, 'message' => 'Token không được cung cấp']);
+        return;
+    }
+    
+    $user_data = $auth->getCurrentUser($token);
+    if (!$user_data) {
+        http_response_code(401);
+        echo json_encode(['success' => false, 'message' => 'Token không hợp lệ']);
+        return;
+    }
+    
+    $userInfo = $user->getById($user_data['user_id']);
+    if (!$userInfo) {
+        http_response_code(404);
+        echo json_encode(['success' => false, 'message' => 'Người dùng không tồn tại']);
+        return;
+    }
+    
+    // Xóa password khỏi response
+    unset($userInfo['password']);
+    
+    echo json_encode([
+        'success' => true,
+        'data' => $userInfo
+    ]);
+}
+
+/**
+ * Lấy thông tin người dùng hiện tại (cho admin)
+ */
+function handleGetMe($user, $auth) {
+    $token = $auth->getTokenFromRequest();
+    if (!$token) {
+        http_response_code(401);
+        echo json_encode(['success' => false, 'message' => 'Token không được cung cấp']);
+        return;
+    }
+    
+    $user_data = $auth->getCurrentUser($token);
+    if (!$user_data) {
+        http_response_code(401);
+        echo json_encode(['success' => false, 'message' => 'Token không hợp lệ']);
+        return;
+    }
+    
+    $userInfo = $user->getById($user_data['user_id']);
+    if (!$userInfo) {
+        http_response_code(404);
+        echo json_encode(['success' => false, 'message' => 'Người dùng không tồn tại']);
+        return;
+    }
+    
+    // Xóa password khỏi response
+    unset($userInfo['password']);
+    
+    echo json_encode([
+        'success' => true,
+        'data' => $userInfo
+    ]);
 }
 ?>

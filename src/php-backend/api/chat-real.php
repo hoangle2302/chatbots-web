@@ -10,13 +10,13 @@ header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
 
 // Handle preflight OPTIONS request
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit();
 }
 
 // Only allow POST requests
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+if (!isset($_SERVER['REQUEST_METHOD']) || $_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     echo json_encode([
         'success' => false,
@@ -40,8 +40,15 @@ try {
     }
 
     $message = trim($input['message']);
-    $model = $input['model'] ?? 'gpt-4-turbo';
+    $model = $input['model'] ?? 'qwen3-235b-a22b'; // Mặc định sử dụng Qwen
     $mode = $input['mode'] ?? 'single';
+    $useQwenDefault = $input['use_qwen_default'] ?? false; // Flag để sử dụng QwenService làm mặc định
+    
+    // Nếu không có model hoặc model rỗng, sử dụng QwenService mặc định
+    if (empty($model) || $model === 'loading' || $model === '') {
+        $model = 'qwen3-235b-a22b';
+        $useQwenDefault = true;
+    }
     
     // Check if ensemble mode is requested
     $isEnsemble = ($model === 'ensemble');
@@ -76,24 +83,78 @@ try {
         $source = 'ensemble';
         $tokensUsed = strlen($message) + strlen($response);
         $responseTime = 2; // Ensemble takes longer
-    } elseif (!$apiKey || $apiKey === 'your_key4u_api_key_here') {
-        // Fallback to simulated response if no API key
-        $response = generateSimulatedResponse($message, $model, $mode);
-        $source = 'simulated';
     } else {
-        // Call real Key4U API
-        try {
-            $response = callKey4UAPI($message, $model, $apiKey);
-            $source = 'key4u';
-            $tokensUsed = strlen($message) + strlen($response);
-            $responseTime = 1; // Simulate response time
-        } catch (Exception $e) {
-            error_log("Key4U API Error: " . $e->getMessage());
-            $response = "Xin chào! Tôi là AI assistant của Thư Viện AI. Có lỗi khi kết nối với AI models thật: " . $e->getMessage() . ". Hiện tại tôi đang chạy ở chế độ mô phỏng.";
-            $source = 'simulated_error';
+        // Kiểm tra nếu cần sử dụng QwenService làm mặc định
+        if ($useQwenDefault) {
+            // Sử dụng QwenService làm dịch vụ chat mặc định
+            $qwenResult = handleQwenDefaultChat($message, $model);
+            
+            error_log("Chat API Debug - Qwen Default Result: " . json_encode($qwenResult));
+            
+            if ($qwenResult['success']) {
+                $response = $qwenResult['content'];
+                $source = 'qwen_default';
+                $tokensUsed = strlen($message) + strlen($response);
+                $responseTime = $qwenResult['response_time'] ?? 1;
+                
+                // Kiểm tra nếu response rỗng
+                if (empty($response) || $response === '') {
+                    $response = "Xin chào! Tôi là AI assistant của Thư Viện AI. Hiện tại Qwen service đang được cập nhật, vui lòng thử lại sau.";
+                    $source = 'qwen_default_fallback';
+                }
+            } else {
+                // Fallback to simulated response
+                $response = generateSimulatedResponse($message, $model, $mode);
+                $source = 'simulated_fallback';
+            }
+        } else {
+            // Ưu tiên sử dụng Key4U API khi có API key
+            if ($apiKey && $apiKey !== 'your_key4u_api_key_here') {
+                try {
+                    $response = callKey4UAPI($message, $model, $apiKey);
+                    $source = 'key4u';
+                    $tokensUsed = strlen($message) + strlen($response);
+                    $responseTime = 1; // Simulate response time
+                } catch (Exception $e) {
+                    error_log("Key4U API Error: " . $e->getMessage());
+                    
+                    // Fallback to Qwen service
+                    $qwenResult = tryQwenService($message, $model);
+                    if ($qwenResult['success']) {
+                        $response = $qwenResult['content'];
+                        $source = 'qwen_fallback';
+                        $tokensUsed = strlen($message) + strlen($response);
+                        $responseTime = $qwenResult['response_time'] ?? 1;
+                    } else {
+                        // Final fallback to simulated response
+                        $response = generateSimulatedResponse($message, $model, $mode);
+                        $source = 'simulated_error';
+                    }
+                }
+            } else {
+                // Không có API key - thử Qwen service trước
+                $qwenResult = tryQwenService($message, $model);
+                
+                error_log("Chat API Debug - Qwen Result: " . json_encode($qwenResult));
+                
+                if ($qwenResult['success']) {
+                    $response = $qwenResult['content'];
+                    $source = 'qwen';
+                    $tokensUsed = strlen($message) + strlen($response);
+                    $responseTime = $qwenResult['response_time'] ?? 1;
+                } else {
+                    // Final fallback to simulated response
+                    $response = generateSimulatedResponse($message, $model, $mode);
+                    $source = 'simulated';
+                }
+            }
         }
     }
 
+    // Debug logging
+    error_log("Chat API Debug - Response: " . $response);
+    error_log("Chat API Debug - Source: " . $source);
+    
     // Return success response
     http_response_code(200);
     $responseData = [
@@ -111,12 +172,25 @@ try {
         $responseData['ensemble_responses'] = $ensembleResponses;
     }
     
-    echo json_encode([
+    $finalResponse = [
         'success' => true,
         'data' => $responseData
-    ]);
+    ];
+    
+    error_log("Chat API Debug - Final Response: " . json_encode($finalResponse));
+    
+    // Clear any output buffer
+    if (ob_get_level()) {
+        ob_clean();
+    }
+    
+    echo json_encode($finalResponse);
+    flush();
 
 } catch (Exception $e) {
+    error_log("Chat API Exception: " . $e->getMessage());
+    error_log("Chat API Exception Trace: " . $e->getTraceAsString());
+    
     http_response_code(400);
     echo json_encode([
         'success' => false,
@@ -125,6 +199,47 @@ try {
     ]);
 }
 
+
+/**
+ * Try Qwen Service first
+ */
+function tryQwenService($message, $model) {
+    try {
+        $qwenServicePath = __DIR__ . '/../services/QwenService.php';
+        if (file_exists($qwenServicePath)) {
+            // Suppress errors during include
+            $oldErrorReporting = error_reporting(0);
+            $includeResult = include_once $qwenServicePath;
+            error_reporting($oldErrorReporting);
+            
+            if ($includeResult && class_exists('QwenService')) {
+                $qwenService = new QwenService();
+                
+                // Sử dụng defaultChat method
+                $qwenResponse = $qwenService->defaultChat($message, ['model' => $model]);
+                
+                // Debug logging
+                error_log("Qwen Service Debug - Response: " . json_encode($qwenResponse));
+                
+                if ($qwenResponse && isset($qwenResponse['content'])) {
+                    return [
+                        'success' => true,
+                        'content' => $qwenResponse['content'],
+                        'response_time' => $qwenResponse['response_time'] ?? 1
+                    ];
+                }
+            } else {
+                error_log("Qwen Service Error: Class not found or include failed");
+            }
+        } else {
+            error_log("Qwen Service Error: File not found: " . $qwenServicePath);
+        }
+    } catch (Exception $e) {
+        error_log("Qwen Service Error: " . $e->getMessage());
+    }
+    
+    return ['success' => false];
+}
 
 /**
  * Handle Qwen Only Mode - Only call Qwen API
@@ -418,5 +533,36 @@ function generateSimulatedResponse($message, $model, $mode) {
     
     // Default response
     return "🤖 Tôi đang chạy ở chế độ mô phỏng. Để sử dụng AI models thật (GPT-4, Claude, Gemini...), vui lòng cấu hình KEY4U_API_KEY trong file config.env. Sau đó restart server để kích hoạt kết nối thật đến các AI models.";
+}
+
+/**
+ * Handle Qwen default chat using QwenService
+ */
+function handleQwenDefaultChat($message, $model) {
+    try {
+        // Load QwenService
+        require_once __DIR__ . '/../services/QwenService.php';
+        
+        $qwenService = new QwenService();
+        
+        // Sử dụng defaultChat method của QwenService
+        $result = $qwenService->defaultChat($message, [
+            'model' => $model
+        ]);
+        
+        return $result;
+        
+    } catch (Exception $e) {
+        error_log("Qwen Default Chat Error: " . $e->getMessage());
+        
+        // Fallback response
+        return [
+            'success' => false,
+            'content' => "Xin chào! Tôi là AI assistant của Thư Viện AI. Có lỗi khi kết nối với Qwen service: " . $e->getMessage(),
+            'model' => $model,
+            'provider' => 'qwen',
+            'response_time' => 1
+        ];
+    }
 }
 ?>

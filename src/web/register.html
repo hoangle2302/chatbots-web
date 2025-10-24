@@ -743,33 +743,7 @@
             loading.style.display = 'block';
             
             try {
-<<<<<<< HEAD
-                // Simulate successful registration for demo
-                await new Promise(resolve => setTimeout(resolve, 2000));
-                
-                successMessage.textContent = 'Đăng ký thành công! Đang chuyển hướng...';
-                successMessage.style.display = 'block';
-                
-                // Save user info
-                localStorage.setItem('user', JSON.stringify({
-                    username: username,
-                    email: email,
-                    name: username
-                }));
-                localStorage.setItem('token', 'demo_token');
-                
-                // Mark inputs as valid
-                document.querySelectorAll('input').forEach(input => {
-                    input.classList.add('valid');
-                    input.classList.remove('invalid');
-                });
-                
-                // Redirect after 2 seconds
-                setTimeout(() => {
-                    window.location.href = 'index.html';
-                }, 2000);
-=======
-                const response = await fetch('http://127.0.0.1:8000/api/auth/register', {
+                const response = await fetch('http://127.0.0.1:8000/api/auth.php?action=register', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -820,7 +794,6 @@
                     errorMessage.textContent = errorMsg;
                     errorMessage.style.display = 'block';
                 }
->>>>>>> 0f64c7527e8e77ff81657a0927fd37b909bed6cb
             } catch (error) {
                 errorMessage.textContent = 'Lỗi kết nối. Vui lòng thử lại.';
                 errorMessage.style.display = 'block';

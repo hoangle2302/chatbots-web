@@ -730,32 +730,6 @@
                 loading.style.display = 'block';
                 
                 try {
-<<<<<<< HEAD
-                    // Simulate successful login for demo
-                    await new Promise(resolve => setTimeout(resolve, 1500));
-                    
-                    showMessage(successMessage, 'Đăng nhập thành công! Đang chuyển hướng...', 2000);
-                    
-                    // Reset input styles to valid
-                    usernameInput.classList.add('valid');
-                    passwordInput.classList.add('valid');
-                    
-                    // Save user info
-                    localStorage.setItem('user', JSON.stringify({
-                        username: username,
-                        name: 'Admin User'
-                    }));
-                    localStorage.setItem('token', 'demo_token');
-                    
-                    // Redirect with animation
-                    setTimeout(() => {
-                        document.body.style.opacity = '0';
-                        document.body.style.transform = 'scale(0.95)';
-                        setTimeout(() => {
-                            window.location.href = 'index.html';
-                        }, 300);
-                    }, 1500);
-=======
                     const response = await fetch('http://127.0.0.1:8000/api/auth/login', {
                         method: 'POST',
                         headers: {
@@ -844,7 +818,6 @@
                         usernameInput.style.borderColor = 'rgba(239, 68, 68, 0.6)';
                         passwordInput.style.borderColor = 'rgba(239, 68, 68, 0.6)';
                     }
->>>>>>> 0f64c7527e8e77ff81657a0927fd37b909bed6cb
                 } catch (error) {
                     console.error('Login error:', error);
                     showMessage(errorMessage, 'Thông tin đăng nhập không chính xác');

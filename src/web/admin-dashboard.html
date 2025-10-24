@@ -3,199 +3,1193 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
+    <title>Admin Dashboard - Thư Viện AI</title>
     <link rel="icon" href="favicon.ico" type="image/x-icon">
-    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,sans-serif;background:#0b1220;color:#e2e8f0;margin:0}
-        header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:#0f172a;border-bottom:1px solid #1f2937;position:sticky;top:0}
-        .brand{font-weight:700}
-        .container{padding:16px}
-        .grid{display:grid;grid-template-columns:1fr;gap:16px}
-        @media(min-width:900px){.grid{grid-template-columns:2fr 1fr}}
-        .panel{background:#0f172a;border:1px solid #1f2937;border-radius:12px}
-        .panel h2{margin:0;padding:14px 16px;border-bottom:1px solid #1f2937;font-size:16px}
-        .panel .content{padding:12px 16px}
-        table{width:100%;border-collapse:collapse}
-        th,td{padding:10px;border-bottom:1px solid #1f2937;font-size:14px}
-        th{text-align:left;color:#cbd5e1}
-        .row-actions button{margin-right:6px;padding:6px 10px;border-radius:8px;border:0;cursor:pointer}
-        .btn{background:#334155;color:#e2e8f0}
-        .btn.save{background:#16a34a}
-        .btn.delete{background:#ef4444}
-        .badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px}
-        .badge.on{background:rgba(34,197,94,.2);color:#86efac}
-        .badge.off{background:rgba(239,68,68,.2);color:#fecaca}
-        .toolbar{display:flex;gap:8px;align-items:center}
-        input[type="text"],select{background:#0b1220;border:1px solid #334155;color:#e2e8f0;border-radius:8px;padding:8px}
-        .models li{padding:8px 0;border-bottom:1px dashed #1f2937}
-        .muted{color:#94a3b8}
-        .msg{display:none;margin:10px 0;padding:10px;border-radius:8px;font-size:14px}
-        .msg.err{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.35);color:#fecaca}
-        .msg.ok{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.35);color:#bbf7d0}
-    </style>
-    <script src="config.js"></script>
-    <script>
-        const API = 'http://127.0.0.1:8000/api/admin.php';
-        function getToken(){return localStorage.getItem('admin_token')}
-        function ensureAuth(){if(!getToken()){location.href='admin-login.html'}}
-        function logout(){localStorage.removeItem('admin_token');localStorage.removeItem('admin_user');location.href='admin-login.html'}
-        async function fetchJSON(url,opts={}){
-            const headers=opts.headers||{};headers['Authorization']='Bearer '+getToken();headers['Content-Type']='application/json';
-            const res=await fetch(url,{...opts,headers});
-            const data=await res.json().catch(()=>({}));
-            if(!res.ok||data.success===false){throw new Error(data.message||'Yêu cầu thất bại')}
-            return data;
+        /* ===== CSS VARIABLES ===== */
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --primary-light: #a5b4fc;
+            --secondary: #f1f5f9;
+            --accent: #06b6d4;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #3b82f6;
+            
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-400: #94a3b8;
+            --gray-500: #64748b;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-800: #1e293b;
+            --gray-900: #0f172a;
+            
+            --white: #ffffff;
+            --black: #000000;
+            
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            
+            --radius-sm: 0.375rem;
+            --radius: 0.5rem;
+            --radius-md: 0.75rem;
+            --radius-lg: 1rem;
+            --radius-xl: 1.5rem;
+            
+            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-slow: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        async function loadUsers(){
-            const tbody=document.getElementById('users-tbody');
-            tbody.innerHTML='<tr><td colspan="7" class="muted">Đang tải...</td></tr>';
-            try{const data=await fetchJSON(API+'?action=users_all');
-                const users=data.data||[];
-                if(users.length===0){tbody.innerHTML='<tr><td colspan="7" class="muted">Chưa có người dùng</td></tr>';} 
-                else {tbody.innerHTML='';}
-                users.forEach(u=>{
-                    const tr=document.createElement('tr');
-                    tr.innerHTML=`
-                        <td>${u.id}</td>
-                        <td><input data-id="${u.id}" data-field="username" type="text" value="${u.username || ''}"></td>
-                        <td>
-                            <select data-id="${u.id}" data-field="role">
-                                <option value="user" ${u.role==='user'?'selected':''}>user</option>
-                                <option value="admin" ${u.role==='admin'?'selected':''}>admin</option>
-                            </select>
-                        </td>
-                        <td>
-                            <select data-id="${u.id}" data-field="is_active">
-                                <option value="1" ${u.is_active? 'selected':''}>Kích hoạt</option>
-                                <option value="0" ${!u.is_active? 'selected':''}>Tắt</option>
-                            </select>
-                        </td>
-                        <td>
-                            <div style="display:flex;align-items:center;gap:8px">
-                                <span class="badge on">${typeof u.credits==='number'?u.credits:0}</span>
-                                <input id="credit-amt-${u.id}" type="text" placeholder="+10" style="width:70px">
-                                <button class="btn" onclick="addCredits(${u.id})">Cộng</button>
-                            </div>
-                        </td>
-                        <td>${u.created_at || ''}</td>
-                        <td class="row-actions">
-                            <button class="btn save" onclick="saveUser(${u.id})">Lưu</button>
-                            <button class="btn delete" onclick="deleteUser(${u.id})">Xoá</button>
-                        </td>`;
-                    tbody.appendChild(tr);
-                })
-                const ul=document.getElementById('usernames-list');
-                if(ul){
-                    ul.innerHTML = users.length ? users.map(u=>`<li>${u.username}</li>`).join('') : '<li class="muted">Chưa có người dùng</li>';
-                }
-            }catch(e){
-                tbody.innerHTML=`<tr><td colspan="7" class="muted">Lỗi tải danh sách: ${e.message}</td></tr>`;
-                const ul=document.getElementById('usernames-list');
-                if(ul){ ul.innerHTML = '<li class="muted">Lỗi tải username</li>'; }
+
+        /* ===== RESET & BASE ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%);
+            color: var(--gray-900);
+            line-height: 1.6;
+            min-height: 100vh;
+            font-size: 14px;
+        }
+
+        /* ===== HEADER ===== */
+        .admin-header {
+            background: var(--white);
+            border-bottom: 1px solid var(--gray-200);
+            box-shadow: var(--shadow-sm);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            backdrop-filter: blur(8px);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .brand-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            color: var(--white);
+        }
+
+        .brand-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .brand-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            line-height: 1.2;
+        }
+
+        .brand-subtitle {
+            font-size: 0.75rem;
+            color: var(--gray-500);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 1rem;
+            background: var(--gray-50);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--gray-200);
+        }
+
+        .user-avatar {
+            width: 2rem;
+            height: 2rem;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--info) 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .user-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: var(--gray-900);
+            font-size: 0.875rem;
+        }
+
+        .user-role {
+            font-size: 0.75rem;
+            color: var(--gray-500);
+            font-weight: 500;
+        }
+
+        /* ===== BUTTONS ===== */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: var(--radius);
+            font-weight: 500;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: var(--white);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: var(--white);
+        }
+
+        .btn-success:hover:not(:disabled) {
+            background: #059669;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: var(--white);
+        }
+
+        .btn-warning:hover:not(:disabled) {
+            background: #d97706;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: var(--white);
+        }
+
+        .btn-danger:hover:not(:disabled) {
+            background: #dc2626;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-secondary {
+            background: var(--gray-100);
+            color: var(--gray-700);
+            border: 1px solid var(--gray-200);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: var(--gray-200);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-sm {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.75rem;
+        }
+
+        .btn-lg {
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+        }
+
+        /* ===== MAIN LAYOUT ===== */
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+
+        @media (min-width: 1024px) {
+            .dashboard-grid {
+                grid-template-columns: 2fr 1fr;
             }
         }
-        async function saveUser(id){
-            const ok=document.getElementById('ok');
-            const err=document.getElementById('err');
-            ok.style.display='none';err.style.display='none';
-            const inputs=[...document.querySelectorAll(`[data-id="${id}"]`)];
-            const payload={};
-            inputs.forEach(i=>{const f=i.getAttribute('data-field');let v=i.value; if(f==='is_active'){v=parseInt(v,10)} payload[f]=v});
-            try{await fetchJSON(API+`?action=update_user&id=${id}`,{method:'PUT',body:JSON.stringify(payload)});
-                ok.textContent='Đã lưu người dùng #'+id; ok.style.display='block';
-                loadUsers();
-            }catch(e){err.textContent=e.message||'Lỗi lưu'; err.style.display='block'}
+
+        /* ===== CARDS ===== */
+        .card {
+            background: var(--white);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--gray-200);
+            overflow: hidden;
+            transition: var(--transition-slow);
         }
-        async function deleteUser(id){
-            if(!confirm('Xoá người dùng #'+id+'?')) return;
-            const ok=document.getElementById('ok');
-            const err=document.getElementById('err');
-            ok.style.display='none';err.style.display='none';
-            try{await fetchJSON(API+`?action=delete_user&id=${id}`,{method:'DELETE'});
-                ok.textContent='Đã xoá người dùng #'+id; ok.style.display='block';
-                loadUsers();
-            }catch(e){err.textContent=e.message||'Lỗi xoá'; err.style.display='block'}
+
+        .card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
         }
-        async function addCredits(id){
-            const ok=document.getElementById('ok');
-            const err=document.getElementById('err');
-            ok.style.display='none';err.style.display='none';
-            const input=document.getElementById(`credit-amt-${id}`);
-            let val=parseInt((input?.value||'').trim(),10);
-            if(isNaN(val) || val===0){ err.textContent='Nhập số credit (dương hoặc âm)'; err.style.display='block'; return; }
-            try{ await fetchJSON(API+`?action=add_credits&id=${id}`, {method:'PUT', body: JSON.stringify({amount: val})});
-                ok.textContent=`Đã cập nhật credit cho #${id} (${val > 0 ? '+' : ''}${val})`; ok.style.display='block';
-                loadUsers();
-            }catch(e){ err.textContent=e.message||'Lỗi cộng credit'; err.style.display='block'; }
+
+        .card-header {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--gray-200);
+            background: var(--gray-50);
         }
-        async function loadModels(){
-            const list=document.getElementById('models');
-            list.innerHTML='<li class="muted">Đang tải...</li>';
-            try{const data=await fetchJSON(API+'?action=models');
-                const models=data.data||[]; list.innerHTML='';
-                models.forEach(m=>{const li=document.createElement('li'); li.textContent=m; list.appendChild(li)});
-            }catch(e){list.innerHTML='<li class="muted">Lỗi tải models</li>'}
+
+        .card-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
-        function init(){
-            ensureAuth();
-            const u=JSON.parse(localStorage.getItem('admin_user')||'{}');
-            document.getElementById('me').textContent=u.username? (u.username+' (admin)') : 'Admin';
-            loadUsers();
-            loadModels();
+
+        .card-title h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
-        document.addEventListener('DOMContentLoaded',init);
-    </script>
+
+        .card-icon {
+            width: 2rem;
+            height: 2rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-size: 1rem;
+        }
+
+        .card-stats {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .stat-label {
+            color: var(--gray-500);
+            font-weight: 500;
+        }
+
+        .stat-value {
+            color: var(--warning);
+            font-weight: 700;
+            font-size: 1.125rem;
+        }
+
+        .card-content {
+            padding: 2rem;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .card-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .card-content::-webkit-scrollbar-track {
+            background: var(--gray-100);
+            border-radius: 3px;
+        }
+
+        .card-content::-webkit-scrollbar-thumb {
+            background: var(--gray-300);
+            border-radius: 3px;
+        }
+
+        .card-content::-webkit-scrollbar-thumb:hover {
+            background: var(--gray-400);
+        }
+
+        /* ===== TABLES ===== */
+        .table-container {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--gray-200);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        .table th {
+            background: var(--gray-50);
+            padding: 0.75rem 0.5rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--gray-700);
+            font-size: 0.75rem;
+            border-bottom: 1px solid var(--gray-200);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .table td {
+            padding: 0.75rem 0.5rem;
+            border-bottom: 1px solid var(--gray-100);
+            font-size: 0.75rem;
+            color: var(--gray-600);
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Column widths */
+        .table th:nth-child(1), .table td:nth-child(1) { width: 8%; }  /* ID */
+        .table th:nth-child(2), .table td:nth-child(2) { width: 15%; } /* Username */
+        .table th:nth-child(3), .table td:nth-child(3) { width: 20%; } /* Email */
+        .table th:nth-child(4), .table td:nth-child(4) { width: 10%; } /* Role */
+        .table th:nth-child(5), .table td:nth-child(5) { width: 10%; } /* Status */
+        .table th:nth-child(6), .table td:nth-child(6) { width: 12%; } /* Credits */
+        .table th:nth-child(7), .table td:nth-child(7) { width: 10%; } /* Created */
+        .table th:nth-child(8), .table td:nth-child(8) { width: 15%; } /* Actions */
+
+        .table tbody tr:hover {
+            background: var(--gray-50);
+            transition: var(--transition);
+        }
+
+        .table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* ===== BADGES ===== */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .badge-active {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .badge-inactive {
+            background: #fef2f2;
+            color: #991b1b;
+        }
+
+        .badge-admin {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge-user {
+            background: var(--gray-100);
+            color: var(--gray-700);
+        }
+
+        /* ===== ACTION BUTTONS ===== */
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        /* ===== MODELS GRID ===== */
+        .models-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .model-card {
+            background: var(--gray-50);
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius-lg);
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: var(--transition);
+        }
+
+        .model-card:hover {
+            background: var(--white);
+            border-color: var(--primary);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .model-icon {
+            width: 2rem;
+            height: 2rem;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--info) 100%);
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-size: 1rem;
+        }
+
+        .model-name {
+            font-weight: 600;
+            color: var(--gray-900);
+            font-size: 0.875rem;
+        }
+
+        /* ===== LOADING STATES ===== */
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem;
+            color: var(--gray-500);
+        }
+
+        .spinner {
+            width: 2rem;
+            height: 2rem;
+            border: 2px solid var(--gray-200);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        /* ===== MESSAGES ===== */
+        .message {
+            padding: 1rem;
+            border-radius: var(--radius-lg);
+            margin: 1rem 0;
+            font-weight: 500;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message-error {
+            background: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .message-success {
+            background: #f0fdf4;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+
+        /* ===== MODAL ===== */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            background: var(--white);
+            margin: 2% auto;
+            border-radius: var(--radius-xl);
+            width: 95%;
+            max-width: 450px;
+            box-shadow: var(--shadow-xl);
+            animation: modalSlideIn 0.3s ease-out;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--gray-200);
+            background: var(--gray-50);
+            border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+        }
+
+        .modal-header h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--gray-900);
+        }
+
+        .modal-close {
+            color: var(--gray-400);
+            font-size: 1.25rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: var(--transition);
+            width: 1.75rem;
+            height: 1.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius);
+        }
+
+        .modal-close:hover {
+            color: var(--gray-600);
+            background: var(--gray-100);
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .user-info-card {
+            background: var(--gray-50);
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius-lg);
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .user-info-card p {
+            margin: 0.25rem 0;
+            color: var(--gray-700);
+            font-weight: 500;
+            font-size: 0.875rem;
+        }
+
+        .credit-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .credit-action {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .credit-action label {
+            color: var(--gray-700);
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+
+        .credit-action input {
+            padding: 0.625rem 0.875rem;
+            border: 1px solid var(--gray-300);
+            border-radius: var(--radius);
+            background: var(--white);
+            color: var(--gray-900);
+            font-size: 0.875rem;
+            transition: var(--transition);
+        }
+
+        .credit-action input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .credit-action .btn {
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 1rem;
+            }
+
+            .admin-header {
+                padding: 1rem;
+            }
+
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .header-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .card-content {
+                padding: 1rem;
+                max-height: 400px;
+            }
+
+            .card-header {
+                padding: 1rem;
+            }
+
+            .table th,
+            .table td {
+                padding: 0.5rem 0.25rem;
+                font-size: 0.625rem;
+            }
+
+            /* Mobile column adjustments */
+            .table th:nth-child(1), .table td:nth-child(1) { width: 10%; }
+            .table th:nth-child(2), .table td:nth-child(2) { width: 18%; }
+            .table th:nth-child(3), .table td:nth-child(3) { width: 22%; }
+            .table th:nth-child(4), .table td:nth-child(4) { width: 12%; }
+            .table th:nth-child(5), .table td:nth-child(5) { width: 12%; }
+            .table th:nth-child(6), .table td:nth-child(6) { width: 10%; }
+            .table th:nth-child(7), .table td:nth-child(7) { width: 8%; }
+            .table th:nth-child(8), .table td:nth-child(8) { width: 8%; }
+
+            .action-buttons {
+                flex-direction: column;
+                gap: 0.25rem;
+            }
+
+            .models-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-content {
+                margin: 5% auto;
+                width: 95%;
+                max-width: 400px;
+            }
+
+            .modal-body {
+                padding: 1rem;
+            }
+
+            .modal-header {
+                padding: 0.75rem 1rem;
+            }
+
+            .user-info-card {
+                padding: 0.75rem;
+                margin-bottom: 0.75rem;
+            }
+
+            .credit-actions {
+                gap: 0.75rem;
+            }
+
+            .credit-action {
+                gap: 0.375rem;
+            }
+
+            .credit-action .btn {
+                padding: 0.5rem 0.75rem;
+                font-size: 0.75rem;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .brand-text {
+                display: none;
+            }
+
+            .user-details {
+                display: none;
+            }
+
+            .table-container {
+                font-size: 0.75rem;
+            }
+
+            .btn-sm {
+                padding: 0.25rem 0.5rem;
+                font-size: 0.625rem;
+            }
+        }
+    </style>
 </head>
 <body>
-    <header>
-        <div class="brand">Thư Viện AI - Admin</div>
-        <div class="toolbar">
-            <span id="me" class="muted"></span>
-            <button class="btn" onclick="loadUsers()">Tải lại</button>
-            <button class="btn" onclick="logout()">Đăng xuất</button>
+    <!-- Header -->
+    <header class="admin-header">
+        <div class="header-content">
+            <div class="brand">
+                <div class="brand-icon">🧠</div>
+                <div class="brand-text">
+                    <div class="brand-title">Thư Viện AI</div>
+                    <div class="brand-subtitle">Admin Panel</div>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <div class="user-info">
+                    <div class="user-avatar" id="user-avatar">A</div>
+                    <div class="user-details">
+                        <div class="user-name" id="user-name">Admin</div>
+                        <div class="user-role">Administrator</div>
+                    </div>
+                </div>
+                
+                <button class="btn btn-secondary" onclick="loadUsers()">
+                    <span>🔄</span>
+                    Refresh
+                </button>
+                <button class="btn btn-danger" onclick="logout()">
+                    <span>🚪</span>
+                    Logout
+                </button>
+            </div>
         </div>
     </header>
-    <div class="container">
-        <div id="err" class="msg err"></div>
-        <div id="ok" class="msg ok"></div>
-        <section class="panel" style="margin-bottom:16px">
-            <h2>Danh sách Username</h2>
-            <div class="content">
-                <ul id="usernames-list" class="models"></ul>
+
+    <!-- Main Content -->
+    <main class="main-container">
+        <div class="dashboard-grid">
+            <!-- Users Management Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <div class="card-icon">👥</div>
+                        <h2>User Management</h2>
+                    </div>
+                    <div class="card-stats">
+                        <span class="stat-label">Total Credits:</span>
+                        <span class="stat-value" id="panel-total-credits">Loading...</span>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div id="users-container">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            <div class="loading-text">Loading users...</div>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </section>
-        <div class="grid">
-            <section class="panel">
-                <h2>Người dùng</h2>
-                <div class="content">
-                    <div style="overflow:auto">
-                        <table>
+
+            <!-- AI Models Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <div class="card-icon">🤖</div>
+                        <h2>AI Models</h2>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div id="models-container">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            <div class="loading-text">Loading models...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Edit Credits Modal -->
+    <div id="editCreditsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Credits</h3>
+                <span class="modal-close" onclick="closeEditCreditsModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="user-info-card">
+                    <p><strong>User:</strong> <span id="editUserInfo"></span></p>
+                    <p><strong>Current Credits:</strong> <span id="currentCredits"></span></p>
+                </div>
+                
+                <div class="credit-actions">
+                    <div class="credit-action">
+                        <label for="addCredits">Add Credits:</label>
+                        <input type="number" id="addCredits" placeholder="Enter credits to add" min="0">
+                        <button onclick="modifyCredits('add')" class="btn btn-success">Add</button>
+                    </div>
+                    
+                    <div class="credit-action">
+                        <label for="subtractCredits">Subtract Credits:</label>
+                        <input type="number" id="subtractCredits" placeholder="Enter credits to subtract" min="0">
+                        <button onclick="modifyCredits('subtract')" class="btn btn-warning">Subtract</button>
+                    </div>
+                    
+                    <div class="credit-action">
+                        <label for="setCredits">Set Credits:</label>
+                        <input type="number" id="setCredits" placeholder="Enter new credits amount" min="0">
+                        <button onclick="modifyCredits('set')" class="btn btn-primary">Set</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script>
+        // ===== CONFIGURATION =====
+        const API = 'http://127.0.0.1:8000/api/admin';
+        
+        // ===== AUTHENTICATION =====
+        function getToken() {
+            return localStorage.getItem('admin_token');
+        }
+        
+        async function ensureAuth() {
+            const token = getToken();
+            if (!token) {
+                window.location.href = 'admin-login.html';
+                return false;
+            }
+            return true;
+        }
+        
+        async function fetchJSON(url, options = {}) {
+            const token = getToken();
+            const response = await fetch(url, {
+                ...options,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                    ...options.headers
+                }
+            });
+            
+            if (!response.ok) {
+                if (response.status === 401) {
+                    localStorage.removeItem('admin_token');
+                    window.location.href = 'admin-login.html';
+                    return;
+                }
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            return await response.json();
+        }
+        
+        // ===== DATA LOADING =====
+        async function loadUsers() {
+            const container = document.getElementById('users-container');
+            container.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <div class="loading-text">Loading users...</div>
+                </div>
+            `;
+            
+            try {
+                const data = await fetchJSON(API + '?action=users_all');
+                const users = data.data || [];
+                
+                let html = `
+                    <div class="table-container">
+                        <table class="table">
                             <thead>
                                 <tr>
                                     <th>ID</th>
                                     <th>Username</th>
+                                    <th>Email</th>
                                     <th>Role</th>
-                                    <th>Trạng thái</th>
+                                    <th>Status</th>
                                     <th>Credits</th>
-                                    <th>Ngày tạo</th>
-                                    <th>Hành động</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
-                            <tbody id="users-tbody"></tbody>
-                        </table>
-                    </div>
+                            <tbody>
+                `;
+                
+                let totalCredits = 0;
+                users.forEach(user => {
+                    const statusClass = user.is_active ? 'badge-active' : 'badge-inactive';
+                    const statusText = user.is_active ? 'Active' : 'Inactive';
+                    const roleClass = user.role === 'admin' ? 'badge-admin' : 'badge-user';
+                    const userCredits = user.credits || 0;
+                    totalCredits += userCredits;
+                    const createdDate = new Date(user.created_at).toLocaleDateString('vi-VN');
+                    
+                    html += `
+                        <tr>
+                            <td><strong>${user.id}</strong></td>
+                            <td><strong>${user.username}</strong></td>
+                            <td>${user.email}</td>
+                            <td><span class="badge ${roleClass}">${user.role}</span></td>
+                            <td><span class="badge ${statusClass}">${statusText}</span></td>
+                            <td><strong style="color: var(--warning);">${userCredits.toLocaleString()}</strong></td>
+                            <td>${createdDate}</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn btn-sm btn-success" onclick="openEditCreditsModal(${user.id}, '${user.username}', ${userCredits})" title="Edit Credits">
+                                        💰 Credits
+                                    </button>
+                                    <button class="btn btn-sm btn-primary" onclick="editUser(${user.id})" title="Edit User">
+                                        ✏️ Edit
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteUser(${user.id})" title="Delete User">
+                                        🗑️ Delete
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                html += '</tbody></table></div>';
+                container.innerHTML = html;
+                
+                // Update total credits
+                document.getElementById('panel-total-credits').textContent = totalCredits.toLocaleString();
+                
+            } catch (error) {
+                container.innerHTML = `<div class="message message-error">Error loading users: ${error.message}</div>`;
+            }
+        }
+        
+        async function loadModels() {
+            const container = document.getElementById('models-container');
+            container.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <div class="loading-text">Loading models...</div>
                 </div>
-            </section>
-            <aside class="panel">
-                <h2>Danh sách Model</h2>
-                <div class="content">
-                    <ul id="models" class="models"></ul>
-                </div>
-            </aside>
-        </div>
-    </div>
+            `;
+            
+            try {
+                const data = await fetchJSON(API + '?action=models');
+                const models = data.data || [];
+                
+                let html = '<div class="models-grid">';
+                models.forEach((model, index) => {
+                    html += `
+                        <div class="model-card">
+                            <div class="model-icon">🤖</div>
+                            <div class="model-name">${model}</div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                
+                container.innerHTML = html;
+                
+            } catch (error) {
+                container.innerHTML = `<div class="message message-error">Error loading models: ${error.message}</div>`;
+            }
+        }
+        
+        // ===== USER ACTIONS =====
+        function editUser(userId) {
+            alert(`Edit user ${userId} - Feature coming soon!`);
+        }
+        
+        function deleteUser(userId) {
+            if (confirm(`Are you sure you want to delete user ${userId}?`)) {
+                alert(`Delete user ${userId} - Feature coming soon!`);
+            }
+        }
+        
+        // ===== MODAL FUNCTIONS =====
+        function openEditCreditsModal(userId, username, currentCredits) {
+            document.getElementById('editUserInfo').textContent = username;
+            document.getElementById('currentCredits').textContent = currentCredits.toLocaleString();
+            document.getElementById('editCreditsModal').style.display = 'block';
+            
+            // Store current user ID for modification
+            window.currentEditUserId = userId;
+        }
+        
+        function closeEditCreditsModal() {
+            document.getElementById('editCreditsModal').style.display = 'none';
+            // Clear form
+            document.getElementById('addCredits').value = '';
+            document.getElementById('subtractCredits').value = '';
+            document.getElementById('setCredits').value = '';
+        }
+        
+        async function modifyCredits(action) {
+            const userId = window.currentEditUserId;
+            if (!userId) return;
+            
+            let amount = 0;
+            let operation = '';
+            
+            switch(action) {
+                case 'add':
+                    amount = parseInt(document.getElementById('addCredits').value);
+                    operation = 'add';
+                    break;
+                case 'subtract':
+                    amount = parseInt(document.getElementById('subtractCredits').value);
+                    operation = 'subtract';
+                    break;
+                case 'set':
+                    amount = parseInt(document.getElementById('setCredits').value);
+                    operation = 'set';
+                    break;
+            }
+            
+            if (isNaN(amount) || amount < 0) {
+                alert('Please enter a valid credits amount!');
+                return;
+            }
+            
+            try {
+                const response = await fetchJSON(API + '?action=modify_credits', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        user_id: userId,
+                        operation: operation,
+                        amount: amount
+                    })
+                });
+                
+                if (response.success) {
+                    alert('Credits updated successfully!');
+                    closeEditCreditsModal();
+                    loadUsers(); // Reload users list
+                } else {
+                    alert('Error: ' + response.message);
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+        
+        function logout() {
+            localStorage.removeItem('admin_token');
+            window.location.href = 'admin-login.html';
+        }
+        
+        // ===== MODAL EVENTS =====
+        window.onclick = function(event) {
+            const modal = document.getElementById('editCreditsModal');
+            if (event.target === modal) {
+                closeEditCreditsModal();
+            }
+        }
+        
+        // ===== INITIALIZATION =====
+        async function init() {
+            if (!await ensureAuth()) return;
+            
+            // Load admin info
+            try {
+                const userData = await fetchJSON(API + '?action=admin_info');
+                if (userData.success) {
+                    const username = userData.data.username || 'Admin';
+                    document.getElementById('user-name').textContent = username;
+                    document.getElementById('user-avatar').textContent = username.charAt(0).toUpperCase();
+                }
+            } catch (error) {
+                console.error('Error loading admin info:', error);
+            }
+            
+            // Load data
+            await loadUsers();
+            await loadModels();
+        }
+        
+        // ===== START =====
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
 </body>
 </html>
-
-

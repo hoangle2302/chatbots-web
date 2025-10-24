@@ -1,7 +1,6 @@
 <?php
 /**
- * Router for PHP Development Server
- * Sử dụng: php -S localhost:8001 server.php
+ * Simple Router for PHP Development Server
  */
 
 // Get request URI and method
@@ -43,7 +42,7 @@ if ($uri === '/api/documents' || strpos($uri, '/api/documents/') === 0) {
     exit;
 }
 
-if ($uri === '/api/models' || $uri === '/api/models.php') {
+if ($uri === '/api/models') {
     require __DIR__ . '/api/models.php';
     exit;
 }
@@ -63,9 +62,3 @@ if ($uri === '/' || $uri === '') {
 // Fallback to index.php for other routes
 require __DIR__ . '/index.php';
 ?>
-
-
-
-
-
-

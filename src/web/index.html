@@ -850,7 +850,149 @@
 
     <!-- Scripts của ứng dụng -->
     <script src="config.js?v=3"></script>
-    <script src="script-backend.js?v=3"></script>
+    <script src="script-backend.js?v=4"></script>
+    
+    <!-- Script load models từ Key4U API -->
+    <script>
+        // Load models từ Key4U API
+        async function loadModelsFromAPI() {
+            try {
+                console.log('🔄 Loading models from Key4U API...');
+                
+                const response = await fetch('http://127.0.0.1:8000/api/models', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success && data.data) {
+                    console.log('✅ Models loaded successfully from API');
+                    
+                    // Populate model select với tất cả models từ Key4U
+                    const modelSelect = document.getElementById('model-select');
+                    if (modelSelect) {
+                        // Clear existing options
+                        modelSelect.innerHTML = '';
+                        
+                        // Thêm models từ Key4U API
+                        const allModels = [];
+                        
+                        // Chat models
+                        if (data.data.key4u && data.data.key4u.chat) {
+                            data.data.key4u.chat.forEach(model => {
+                                allModels.push({
+                                    value: model,
+                                    text: `🤖 ${model}`,
+                                    type: 'chat'
+                                });
+                            });
+                        }
+                        
+                        // Image models
+                        if (data.data.key4u && data.data.key4u.image) {
+                            data.data.key4u.image.forEach(model => {
+                                allModels.push({
+                                    value: model,
+                                    text: `🎨 ${model}`,
+                                    type: 'image'
+                                });
+                            });
+                        }
+                        
+                        // Audio models
+                        if (data.data.key4u && data.data.key4u.audio) {
+                            data.data.key4u.audio.forEach(model => {
+                                allModels.push({
+                                    value: model,
+                                    text: `🎵 ${model}`,
+                                    type: 'audio'
+                                });
+                            });
+                        }
+                        
+                        // Video models
+                        if (data.data.key4u && data.data.key4u.video) {
+                            data.data.key4u.video.forEach(model => {
+                                allModels.push({
+                                    value: model,
+                                    text: `🎬 ${model}`,
+                                    type: 'video'
+                                });
+                            });
+                        }
+                        
+                        // Thêm models vào select
+                        allModels.forEach(model => {
+                            const option = document.createElement('option');
+                            option.value = model.value;
+                            option.textContent = model.text;
+                            option.dataset.type = model.type;
+                            modelSelect.appendChild(option);
+                        });
+                        
+                        // Set default model là Qwen (từ API data)
+                        if (data.data.default_chat_model) {
+                            const defaultModel = data.data.default_chat_model;
+                            for (let i = 0; i < modelSelect.options.length; i++) {
+                                if (modelSelect.options[i].value === defaultModel) {
+                                    modelSelect.selectedIndex = i;
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        console.log(`✅ Loaded ${allModels.length} models from Key4U API`);
+                        
+                        // Update model count info
+                        updateModelCountInfo(allModels.length);
+                        
+                        // Trigger filter update
+                        if (typeof filterModels === 'function') {
+                            filterModels();
+                        }
+                    }
+                } else {
+                    throw new Error('Invalid API response format');
+                }
+                
+            } catch (error) {
+                console.error('❌ Error loading models from API:', error);
+                
+                // Fallback: show error message
+                const modelSelect = document.getElementById('model-select');
+                if (modelSelect) {
+                    modelSelect.innerHTML = '<option disabled>❌ Lỗi tải models từ API</option>';
+                }
+            }
+        }
+        
+        function updateModelCountInfo(totalCount) {
+            const totalModelsElement = document.querySelector('.total-models');
+            const filteredModelsElement = document.querySelector('.filtered-models');
+            
+            if (totalModelsElement) {
+                totalModelsElement.textContent = `Tổng: ${totalCount} models`;
+            }
+            if (filteredModelsElement) {
+                filteredModelsElement.textContent = `Hiển thị: ${totalCount} models`;
+            }
+        }
+        
+        // Load models khi DOM ready
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load models từ API sau khi trang load
+            setTimeout(() => {
+                loadModelsFromAPI();
+            }, 1000);
+        });
+    </script>
     
     <!-- Script quản lý trạng thái đăng nhập -->
     <script>
