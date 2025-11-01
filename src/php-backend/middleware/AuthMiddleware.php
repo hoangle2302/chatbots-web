@@ -73,10 +73,9 @@ class AuthMiddleware {
      * Kiểm tra user đã đăng nhập
      */
     public function isAuthenticated() {
-        $headers = getallheaders();
-        $authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? '';
+        $authHeader = $this->getAuthorizationHeader();
         
-        if (strpos($authHeader, 'Bearer ') !== 0) {
+        if (!$this->isBearerHeader($authHeader)) {
             return false;
         }
         
@@ -88,14 +87,42 @@ class AuthMiddleware {
      * Lấy token từ request
      */
     public function getTokenFromRequest() {
-        $headers = getallheaders();
-        $authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? '';
+        $authHeader = $this->getAuthorizationHeader();
         
-        if (strpos($authHeader, 'Bearer ') !== 0) {
+        if (!$this->isBearerHeader($authHeader)) {
             return null;
         }
         
         return substr($authHeader, 7);
+    }
+
+    /**
+     * Lấy Authorization header, hỗ trợ các server khác nhau
+     */
+    private function getAuthorizationHeader() {
+        $headers = function_exists('getallheaders') ? getallheaders() : [];
+        $authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? null;
+
+        if (!$authHeader) {
+            if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
+                $authHeader = $_SERVER['HTTP_AUTHORIZATION'];
+            } elseif (isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) {
+                $authHeader = $_SERVER['REDIRECT_HTTP_AUTHORIZATION'];
+            }
+        }
+
+        return is_string($authHeader) ? trim($authHeader) : null;
+    }
+
+    /**
+     * Kiểm tra header có phải dạng Bearer token không
+     */
+    private function isBearerHeader($authHeader) {
+        if (!$authHeader || !is_string($authHeader)) {
+            return false;
+        }
+
+        return stripos($authHeader, 'Bearer ') === 0;
     }
     
     /**

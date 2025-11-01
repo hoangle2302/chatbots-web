@@ -1073,9 +1073,18 @@
                         try {
                             const token = localStorage.getItem('token');
                             if (token) {
-                                const res = await fetch((window.APP_CONFIG?.BACKEND_URL || 'http://127.0.0.1:8000') + '/api/user/profile', {
-                                    headers: { 'Authorization': 'Bearer ' + token }
-                                });
+                            const res = await fetch((window.APP_CONFIG?.BACKEND_URL || 'http://127.0.0.1:8000') + '/api/user/profile', {
+                                headers: { 'Authorization': 'Bearer ' + token }
+                            });
+
+                            if (res.status === 401) {
+                                console.warn('Token hết hạn hoặc không hợp lệ, xóa localStorage và hiển thị lại form đăng nhập.');
+                                localStorage.removeItem('token');
+                                localStorage.removeItem('user');
+                                localStorage.removeItem('user_data');
+                                showAuthSection();
+                                return;
+                            }
                                 const payload = await res.json().catch(()=>null);
                                 if (res.ok && payload && payload.success && payload.data && payload.data.user) {
                                     const freshUser = payload.data.user;
@@ -2044,32 +2053,6 @@
             }
             
            
-            clearButton.addEventListener('click', function() {
-                if (searchInput) searchInput.value = '';
-                selectedCategory = '';
-                
-                // Reset dropdown to "Tất cả providers"
-                const providerIconElement = dropdownSelected.querySelector('.provider-icon');
-                const providerNameElement = dropdownSelected.querySelector('.provider-name');
-                
-                if (providerIconElement) {
-                    providerIconElement.textContent = '🧠';
-                }
-                if (providerNameElement) {
-                    providerNameElement.textContent = 'Tất cả providers';
-                }
-                
-                // Remove selected class from all options
-                dropdownOptionElements.forEach(opt => opt.classList.remove('selected'));
-                
-                // Add selected to first option (Tất cả providers)
-                dropdownOptionElements[0].classList.add('selected');
-                
-                filterModels();
-            });
-            
-            // Thêm nút vào sau provider container
-            document.querySelector('.provider-container').appendChild(clearButton);
         });
     </script>
     

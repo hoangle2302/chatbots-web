@@ -97,19 +97,15 @@ try {
                 
                 case 'me':
                     requireAdmin($auth);
-                    $headers = getallheaders();
-                    $authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? '';
-                    $token = substr($authHeader, 7);
-                    $user = $auth->getCurrentUser($token);
+                    $token = $auth->getTokenFromRequest();
+                    $user = $token ? $auth->getCurrentUser($token) : null;
                     echo json_encode(['success' => true, 'data' => $user]);
                     break;
                 
                 case 'admin_info':
                     requireAdmin($auth);
-                    $headers = getallheaders();
-                    $authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? '';
-                    $token = substr($authHeader, 7);
-                    $user = $auth->getCurrentUser($token);
+                    $token = $auth->getTokenFromRequest();
+                    $user = $token ? $auth->getCurrentUser($token) : null;
                     
                     // Get additional admin info
                     $stats = getAdminStats($userModel, $db);
@@ -284,19 +280,17 @@ function requireAuth($auth) {
  * Yêu cầu quyền admin
  */
 function requireAdmin($auth) {
-    $headers = getallheaders();
-    $authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? '';
-    
-    if (strpos($authHeader, 'Bearer ') !== 0) {
+    $token = $auth->getTokenFromRequest();
+
+    if (!$token) {
         http_response_code(401);
         echo json_encode(['success' => false, 'message' => 'Chưa đăng nhập']);
         exit;
     }
-    
-    $token = substr($authHeader, 7);
+
     $user = $auth->getCurrentUser($token);
-    
-    if (!$user || $user['role'] !== 'admin') {
+
+    if (!$user || ($user['role'] ?? null) !== 'admin') {
         http_response_code(403);
         echo json_encode(['success' => false, 'message' => 'Cần quyền admin']);
         exit;

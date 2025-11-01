@@ -1,4 +1,4 @@
--- MySQL schema for Thư Viện AI
+-- MySQL schema for Thư Viện AI (Fresh Install)
 -- Usage:
 --   mysql -u <user> -p -h <host> -P <port> < src/php-backend/tools/mysql-schema.sql
 
@@ -9,8 +9,8 @@ CREATE DATABASE IF NOT EXISTS `thuvien_ai`
 
 USE `thuvien_ai`;
 
--- Users table (newer SQL: adds email, display_name, last_login_at, indexes)
-CREATE TABLE IF NOT EXISTS `users` (
+-- Users table
+CREATE TABLE `users` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `username` VARCHAR(150) NOT NULL,
   `email` VARCHAR(255) NULL,
@@ -28,18 +28,8 @@ CREATE TABLE IF NOT EXISTS `users` (
   KEY `idx_users_active_created` (`is_active`, `created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Backfill columns for older installs (MySQL 8.0.29+ supports IF NOT EXISTS)
-ALTER TABLE `users` ADD COLUMN IF NOT EXISTS `email` VARCHAR(255) NULL;
-ALTER TABLE `users` ADD COLUMN IF NOT EXISTS `display_name` VARCHAR(255) NULL;
-ALTER TABLE `users` ADD COLUMN IF NOT EXISTS `last_login_at` TIMESTAMP NULL DEFAULT NULL;
-ALTER TABLE `users` MODIFY COLUMN `username` VARCHAR(150) NOT NULL;
-CREATE UNIQUE INDEX IF NOT EXISTS `uk_users_username` ON `users`(`username`);
-CREATE UNIQUE INDEX IF NOT EXISTS `uk_users_email` ON `users`(`email`);
-CREATE INDEX IF NOT EXISTS `idx_users_role` ON `users`(`role`);
-CREATE INDEX IF NOT EXISTS `idx_users_active_created` ON `users`(`is_active`, `created_at`);
-
--- Logs table (newer SQL: adds ip_address, user_agent)
-CREATE TABLE IF NOT EXISTS `logs` (
+-- Logs table
+CREATE TABLE `logs` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `user_id` INT NULL,
   `action` VARCHAR(100) NOT NULL,
@@ -51,12 +41,9 @@ CREATE TABLE IF NOT EXISTS `logs` (
     FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE SET NULL,
   KEY `idx_logs_user_time` (`user_id`, `timestamp`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-ALTER TABLE `logs` ADD COLUMN IF NOT EXISTS `ip_address` VARCHAR(45) NULL;
-ALTER TABLE `logs` ADD COLUMN IF NOT EXISTS `user_agent` VARCHAR(500) NULL;
-CREATE INDEX IF NOT EXISTS `idx_logs_user_time` ON `logs`(`user_id`, `timestamp`);
 
--- AI query history (newer SQL: adds separated token counts, latency, status)
-CREATE TABLE IF NOT EXISTS `ai_query_history` (
+-- AI query history
+CREATE TABLE `ai_query_history` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `user_id` INT NULL,
   `query` TEXT NOT NULL,
@@ -73,14 +60,9 @@ CREATE TABLE IF NOT EXISTS `ai_query_history` (
   INDEX `idx_user_timestamp` (`user_id`, `timestamp`),
   INDEX `idx_model` (`model`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-ALTER TABLE `ai_query_history` ADD COLUMN IF NOT EXISTS `prompt_tokens` INT DEFAULT 0;
-ALTER TABLE `ai_query_history` ADD COLUMN IF NOT EXISTS `completion_tokens` INT DEFAULT 0;
-ALTER TABLE `ai_query_history` ADD COLUMN IF NOT EXISTS `latency_ms` INT DEFAULT 0;
-ALTER TABLE `ai_query_history` ADD COLUMN IF NOT EXISTS `status` VARCHAR(30) DEFAULT 'ok';
-ALTER TABLE `ai_query_history` MODIFY COLUMN `model` VARCHAR(100);
 
--- Documents table (newer SQL: adds checksum, mime_type index)
-CREATE TABLE IF NOT EXISTS `documents` (
+-- Documents table
+CREATE TABLE `documents` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `user_id` INT NULL,
   `filename` VARCHAR(255) NOT NULL,
@@ -98,10 +80,6 @@ CREATE TABLE IF NOT EXISTS `documents` (
   INDEX `idx_user_created` (`user_id`, `created_at`),
   INDEX `idx_docs_checksum` (`checksum`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-ALTER TABLE `documents` ADD COLUMN IF NOT EXISTS `checksum` VARCHAR(128) NULL;
-ALTER TABLE `documents` ADD COLUMN IF NOT EXISTS `mime_type` VARCHAR(100) NULL;
 
 -- Note: admin seed (admin/admin) will be auto-created by PHP on first connection
 -- via Database::ensureSingleAdmin().
-
-
