@@ -16,8 +16,17 @@ class AuthMiddleware {
      * Load cấu hình từ file config.env
      */
     private function loadConfig() {
-        $envFile = __DIR__ . '/../../config.env';
-        if (file_exists($envFile)) {
+        $envFiles = [
+            __DIR__ . '/../../config.env',
+            __DIR__ . '/../../../config.env',
+            __DIR__ . '/../../../../config.env'
+        ];
+
+        foreach ($envFiles as $envFile) {
+            if (!file_exists($envFile)) {
+                continue;
+            }
+
             $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
             foreach ($lines as $line) {
                 if (strpos($line, '=') !== false && strpos($line, '#') !== 0) {
@@ -25,6 +34,8 @@ class AuthMiddleware {
                     $_ENV[trim($key)] = trim($value);
                 }
             }
+
+            break;
         }
     }
     

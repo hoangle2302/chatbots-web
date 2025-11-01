@@ -47,6 +47,11 @@ if ($uri === '/api/models') {
     exit;
 }
 
+if ($uri === '/api/ai-tool') {
+    require __DIR__ . '/api/ai-tool.php';
+    exit;
+}
+
 // Check if file exists
 $file = __DIR__ . $uri;
 if ($uri !== '/' && file_exists($file) && is_file($file)) {

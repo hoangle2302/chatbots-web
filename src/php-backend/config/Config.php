@@ -34,6 +34,11 @@ class Config {
                 'default_max_tokens' => 2000,
                 'default_model' => 'gpt-4-turbo'
             ],
+            'ai_tool' => [
+                'base_url' => $_ENV['AI_TOOL_BASE_URL'] ?? 'http://127.0.0.1:8001',
+                'api_key' => $_ENV['AI_TOOL_INTERNAL_KEY'] ?? $_ENV['KEY4U_API_KEY'] ?? '',
+                'timeout' => isset($_ENV['AI_TOOL_TIMEOUT']) ? (int)$_ENV['AI_TOOL_TIMEOUT'] : 120
+            ],
             'models' => [
                 'o3-mini' => ['name' => 'OpenAI o3-mini', 'tier' => 1],
                 'o3' => ['name' => 'OpenAI o3', 'tier' => 1],
@@ -108,6 +113,10 @@ class Config {
     
     public function getKey4UApiKey() {
         return $this->config['key4u']['api_key'] ?? '';
+    }
+
+    public function getAiToolConfig() {
+        return $this->config['ai_tool'];
     }
     
     public function getYescaleConfig() {

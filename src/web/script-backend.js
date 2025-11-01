@@ -10,6 +10,9 @@ let selectedProvider = '';
 let isTyping = false;
 let currentConversation = null;
 let conversations = [];
+let uploadedDocument = null;
+
+const DEFAULT_DOCUMENT_PROMPT = 'Hãy tóm tắt tài liệu này bằng tiếng Việt và liệt kê các ý chính quan trọng.';
 
 // ===== AUTHENTICATION =====
 // Debug function để kiểm tra trạng thái
@@ -227,6 +230,277 @@ function initSearch() {
     const searchInput = document.getElementById('model-search');
     if (searchInput) {
         searchInput.addEventListener('input', filterModels);
+    }
+}
+
+// ===== DOCUMENT UPLOAD =====
+function formatFileSize(bytes) {
+    if (typeof bytes !== 'number' || Number.isNaN(bytes)) {
+        return '';
+    }
+
+    const units = ['B', 'KB', 'MB', 'GB'];
+    let size = bytes;
+    let unitIndex = 0;
+
+    while (size >= 1024 && unitIndex < units.length - 1) {
+        size /= 1024;
+        unitIndex += 1;
+    }
+
+    const formatted = unitIndex === 0 ? Math.round(size).toString() : size.toFixed(1);
+    return `${formatted} ${units[unitIndex]}`;
+}
+
+function showDocumentInfo(file) {
+    const info = document.getElementById('document-info');
+    const docName = document.getElementById('doc-name');
+
+    if (!info || !docName) return;
+
+    const sizeText = typeof file.size === 'number' ? ` (${formatFileSize(file.size)})` : '';
+    docName.textContent = `${file.name}${sizeText}`;
+    info.style.display = 'block';
+}
+
+function clearDocumentSelection(fileInput) {
+    uploadedDocument = null;
+
+    if (fileInput) {
+        fileInput.value = '';
+    }
+
+    const info = document.getElementById('document-info');
+    const docName = document.getElementById('doc-name');
+
+    if (docName) {
+        docName.textContent = '';
+    }
+
+    if (info) {
+        info.style.display = 'none';
+    }
+}
+
+function extractFilenameFromDisposition(disposition) {
+    if (!disposition) return null;
+
+    let match = disposition.match(/filename\*=UTF-8''([^;]+)/i);
+    if (match && match[1]) {
+        try {
+            return decodeURIComponent(match[1]);
+        } catch (error) {
+            console.warn('Không thể decode filename UTF-8:', error);
+        }
+    }
+
+    match = disposition.match(/filename="?([^";]+)"?/i);
+    if (match && match[1]) {
+        return match[1];
+    }
+
+    return null;
+}
+
+function triggerFileDownload(blob, filename) {
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+    }, 1000);
+}
+
+function displayAIToolResult(result) {
+    if (typeof result === 'string') {
+        addMessage(result, 'assistant');
+        return;
+    }
+
+    if (!result || typeof result !== 'object') {
+        addMessage('AI đã xử lý tài liệu.', 'assistant');
+        return;
+    }
+
+    const type = result.type || (typeof result.data === 'object' ? 'json' : 'text');
+    const data = result.data !== undefined ? result.data : result.result;
+
+    if (type === 'json') {
+        const pretty = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+        addMessage('📄 Kết quả JSON:\n' + pretty, 'assistant');
+        return;
+    }
+
+    if (type === 'file') {
+        addMessage('📁 AI đã tạo file kết quả. Vui lòng kiểm tra phần tải xuống.', 'assistant');
+        return;
+    }
+
+    if (type === 'text') {
+        addMessage(data || 'AI đã xử lý tài liệu.', 'assistant');
+        return;
+    }
+
+    if (data !== undefined && data !== null) {
+        const content = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+        addMessage(content, 'assistant');
+        return;
+    }
+
+    addMessage('AI đã xử lý tài liệu.', 'assistant');
+}
+
+async function processUploadedDocument(file) {
+    if (!file) return;
+
+    if (!currentUser) {
+        const loggedIn = await checkLoginStatus();
+        if (!loggedIn) {
+            addMessage('Vui lòng đăng nhập để sử dụng tính năng tải tài liệu.', 'assistant error');
+            return;
+        }
+    }
+
+    const chatInput = document.getElementById('chat-input');
+    let promptText = chatInput ? chatInput.value.trim() : '';
+    const usedCustomPrompt = Boolean(promptText);
+
+    let finalPrompt;
+    if (usedCustomPrompt) {
+        finalPrompt = `${promptText}\n\n(Tài liệu đính kèm: ${file.name})`;
+    } else {
+        finalPrompt = DEFAULT_DOCUMENT_PROMPT.replace('tài liệu này', `tài liệu "${file.name}"`);
+    }
+
+    addMessage(finalPrompt, 'user');
+
+    if (usedCustomPrompt && chatInput) {
+        chatInput.value = '';
+    }
+
+    showTypingIndicator();
+
+    const formData = new FormData();
+    formData.append('file', file, file.name);
+    formData.append('user_prompt', finalPrompt);
+    formData.append('output_format', 'auto');
+
+    const token = localStorage.getItem('user_token');
+    const headers = {};
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    try {
+        const response = await fetch('http://127.0.0.1:8000/api/ai-tool', {
+            method: 'POST',
+            headers,
+            body: formData
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP ${response.status}: ${errorText || response.statusText}`);
+        }
+
+        const disposition = response.headers.get('content-disposition') || '';
+        if (disposition.includes('attachment')) {
+            const blob = await response.blob();
+            const filename = extractFilenameFromDisposition(disposition) || `ket-qua-ai-${Date.now()}.bin`;
+            triggerFileDownload(blob, filename);
+            displayAIToolResult({ type: 'file' });
+            return;
+        }
+
+        const contentType = response.headers.get('content-type') || '';
+        let payload;
+
+        if (contentType.includes('application/json')) {
+            try {
+                payload = await response.json();
+            } catch (error) {
+                console.warn('Không thể parse JSON, đọc text fallback:', error);
+                const fallbackText = await response.text();
+                payload = fallbackText;
+            }
+        } else {
+            const rawText = await response.text();
+            try {
+                payload = JSON.parse(rawText);
+            } catch (error) {
+                payload = rawText;
+            }
+        }
+
+        if (payload && typeof payload === 'object' && 'success' in payload) {
+            if (!payload.success) {
+                addMessage('Lỗi: ' + (payload.message || 'Không thể xử lý tài liệu.'), 'assistant error');
+                return;
+            }
+
+            const normalized = {
+                type: payload.type || (typeof payload.data === 'object' ? 'json' : 'text'),
+                data: payload.data !== undefined ? payload.data : payload.result
+            };
+
+            displayAIToolResult(normalized);
+        } else {
+            displayAIToolResult(payload);
+        }
+    } catch (error) {
+        console.error('❌ Lỗi xử lý tài liệu:', error);
+        addMessage('Lỗi xử lý tài liệu: ' + error.message, 'assistant error');
+    } finally {
+        hideTypingIndicator();
+    }
+}
+
+function initDocumentUpload() {
+    const uploadBtn = document.getElementById('upload-btn');
+    const fileInput = document.getElementById('document-upload');
+    const removeBtn = document.getElementById('remove-doc');
+
+    if (uploadBtn && fileInput) {
+        uploadBtn.addEventListener('click', () => {
+            fileInput.click();
+        });
+    }
+
+    if (fileInput) {
+        fileInput.addEventListener('change', async (event) => {
+            const files = event.target.files;
+            const file = files && files[0];
+            if (!file) return;
+
+            uploadedDocument = file;
+            showDocumentInfo(file);
+
+            if (uploadBtn) {
+                uploadBtn.classList.add('loading');
+                uploadBtn.disabled = true;
+            }
+
+            try {
+                await processUploadedDocument(file);
+            } finally {
+                if (uploadBtn) {
+                    uploadBtn.classList.remove('loading');
+                    uploadBtn.disabled = false;
+                }
+                event.target.value = '';
+            }
+        });
+    }
+
+    if (removeBtn && fileInput) {
+        removeBtn.addEventListener('click', () => {
+            clearDocumentSelection(fileInput);
+        });
     }
 }
 
@@ -604,6 +878,7 @@ async function init() {
         // Khởi tạo các tính năng
         initProviderFiltering();
         initSearch();
+        initDocumentUpload();
         initKeyboardShortcuts();
         
         // Khởi tạo event listeners

@@ -1,229 +1,219 @@
-# 🧠 Thư Viện AI – Nền tảng Chat Đa Mô Hình Cho Mọi Nhu Cầu
+# 🧠 Thư Viện AI – Nền tảng chat đa mô hình
 
 [![PHP](https://img.shields.io/badge/PHP-8.2%2B-blue.svg)](https://www.php.net/)
-[![JavaScript](https://img.shields.io/badge/JavaScript-ES6%2B-yellow.svg)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
-[![HTML5](https://img.shields.io/badge/HTML5-ready-orange.svg)](https://developer.mozilla.org/en-US/docs/Web/HTML)
-[![CSS3](https://img.shields.io/badge/CSS3-modern-blue.svg)](https://developer.mozilla.org/en-US/docs/Web/CSS)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-ready-009485.svg)](https://fastapi.tiangolo.com/)
+[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-> “Every model you need, in one place.” – Thư Viện AI mang tới trải nghiệm trò chuyện, sáng tạo nội dung và quản trị người dùng bằng hơn **500 mô hình AI** thuộc các nhà cung cấp hàng đầu (OpenAI, Anthropic, Google, Qwen, Midjourney, DeepSeek, Suno…).
-
----
-
-## 📌 Mục lục
-
-1. [Tổng quan](#-tổng-quan)
-2. [Điểm nhấn tính năng](#-điểm-nhấn-tính-năng)
-3. [Kiến trúc hệ thống](#-kiến-trúc-hệ-thống)
-4. [Bộ công nghệ](#-bộ-công-nghệ)
-5. [Hướng dẫn cài đặt & chạy](#-hướng-dẫn-cài-đặt--chạy)
-6. [API & Tích hợp AI](#-api--tích-hợp-ai)
-7. [Giao diện & Trải nghiệm](#-giao-diện--trải-nghiệm)
-8. [Bảo mật & Hiệu năng](#-bảo-mật--hiệu-năng)
-9. [Roadmap](#-roadmap)
-10. [Đóng góp & Hỗ trợ](#-đóng-góp--hỗ-trợ)
-11. [Thông tin dự án](#-thông-tin-dự-án)
+“Thư Viện AI” là một sandbox kết hợp **PHP backend**, **FastAPI AI Tool microservice** và **frontend thuần HTML/CSS/JS**. Mục tiêu: mang lại trải nghiệm chat đa mô hình, xử lý tài liệu, tạo file theo yêu cầu và quản trị người dùng với UI thân thiện.
 
 ---
 
-## 🎯 Tổng quan
+## 📚 Nội dung chính
 
-Thư Viện AI là một nền tảng web thuần **PHP + JavaScript** với mục tiêu:
-
-- Cung cấp **trải nghiệm chat đa mô hình** (text, image, audio, video) chỉ qua một giao diện.
-- Hỗ trợ **nhà quản trị** quản lý người dùng, credits, thống kê sử dụng.
-- Cho phép **người dùng cuối** tiếp cận nhanh các mô hình AI mới nhất, kể cả khi không sở hữu API key đắt đỏ.
-- Mang lại **kiến trúc gọn nhẹ**, dễ triển khai ở môi trường nội bộ hoặc demo.
-
----
-
-## 🌟 Điểm nhấn tính năng
-
-| Nhóm đối tượng | Tính năng chính |
-|----------------|-----------------|
-| **Người dùng** | Đăng ký/đăng nhập, quản lý credits, trò chuyện realtime, chọn nhanh model, ENSEMBLE mode, lưu lịch sử.
-| **Quản trị viên** | Đăng nhập riêng, xem danh sách user, cộng/trừ/đặt credits, xem tổng hợp models, thống kê realtime.
-| **AI Models** | 500+ mô hình từ GPT-4, Claude, Gemini, Qwen, Midjourney, Flux, Suno…; phân loại theo text/image/audio/video.
-| **Tích hợp** | Key4U API (đa nhà cung cấp), Qwen API (miễn phí), dịch vụ nội bộ (chat-real, documents, models).
-| **UI/UX** | Thiết kế glassmorphism, responsive, dark tone, animation nhẹ nhàng, hỗ trợ mobile & desktop.
-
-### 🔑 Các điểm nổi bật mới nhất
-- **Header Authorization linh hoạt**: tương thích Windows, macOS, Docker, PHP built-in server → tránh lỗi 401/403.
-- **Bộ lọc model nâng cao**: tìm kiếm theo từ khoá, nhà cung cấp, loại dữ liệu; hiển thị số lượng realtime.
-- **Dashboard admin hiện đại**: widget thống kê, modal credits, bảng người dùng cố định, grid mô hình.
-- **Script hỗ trợ triển khai**: `setup-database`, `start.bat` (Windows) / `setup-database.sh` (Linux/macOS).
+1. [Kiến trúc](#kiến-trúc)
+2. [Tính năng nổi bật](#tính-năng-nổi-bật)
+3. [Chuẩn bị môi trường](#chuẩn-bị-môi-trường)
+4. [Cài đặt & chạy nhanh](#cài-đặt--chạy-nhanh)
+5. [Cấu hình quan trọng](#cấu-hình-quan-trọng)
+6. [Luồng xử lý tài liệu](#luồng-xử-lý-tài-liệu)
+7. [API PHP chính](#api-php-chính)
+8. [Front-end tips](#front-end-tips)
+9. [Đóng góp](#đóng-góp)
+10. [Thông tin nhóm](#thông-tin-nhóm)
 
 ---
 
-## 🧱 Kiến trúc hệ thống
+## 🏗️ Kiến trúc
 
 ```
-chatbots-web
-├── data/                      # Uploads, database tạm
+chatbots-web/
+├── config.env                 # cấu hình chung
+├── start.bat                  # script khởi động (Windows)
 ├── src/
-│   ├── php-backend/           # API PHP thuần
-│   │   ├── api/               # auth.php, admin.php, chat-real.php, documents.php...
-│   │   ├── models/            # User, Document, Log, AIQueryHistory
-│   │   ├── services/          # Key4UService, QwenService, AIService, DocumentService
-│   │   └── middleware/        # AuthMiddleware (JWT)
-│   └── web/                   # Frontend HTML/CSS/JS
-│       ├── index.html         # Trang chat chính
-│       ├── admin-dashboard.html / admin-login.html
-│       ├── login.html / register.html
-│       ├── script-backend.js / style.css / config.js
-└── start.bat / setup-database.*
+│   ├── php-backend/          # Backend PHP thuần (routing thủ công)
+│   │   ├── api/              # auth.php, chat-real.php, documents.php, ai-tool.php...
+│   │   ├── services/         # Key4UService, AIService, DocumentService...
+│   │   ├── tools/AI tool/    # FastAPI worker (Python)
+│   │   └── middleware/       # JWT AuthMiddleware
+│   └── web/                  # Frontend tĩnh (index.html, admin, login, script-backend.js...)
+└── data/                     # uploads, sqlite (tùy chọn)
 ```
 
-- **Frontend** chạy ở `127.0.0.1:8001` (có thể đổi tuỳ ý).
-- **Backend** PHP phục vụ API ở `127.0.0.1:8000`.
-- **JWT** dùng cho admin, người dùng thường lưu token/đối tượng trong localStorage.
+- **Frontend:** `127.0.0.1:8002` (chạy bằng PHP server hoặc bất kỳ static server).
+- **PHP API:** `127.0.0.1:8000` (các endpoint REST).
+- **FastAPI AI Tool:** `127.0.0.1:8001` (xử lý tài liệu, gọi mô hình Key4U/OpenAI).
 
 ---
 
-## 🛠️ Bộ công nghệ
+## ✨ Tính năng nổi bật
 
-| Lớp | Công nghệ |
-|------|-----------|
-| **Backend** | PHP 8.2+, PDO, JSON, JWT tự viết, Key4U API, Qwen API |
-| **Frontend** | HTML5, CSS3 (glassmorphism), JavaScript ES6+, Fetch API, DOM API, localStorage |
-| **Tools** | Composer, Git, PHP built-in server, PowerShell/Bash scripts, MySQL 8+, SQLite (tuỳ chọn) |
+### Người dùng cuối
+- Đăng ký / đăng nhập, lưu phiên localStorage an toàn.
+- Chọn nhanh hơn **450+ model** (GPT-4, Claude, Gemini, Qwen, DeepSeek...)
+- Chat realtime, hiển thị markdown/code block đẹp mắt.
+- Upload tài liệu (PDF/DOCX/Excel/...) và ra lệnh “tạo file python/md/...”.
+- Nhận link tải thủ công để chủ động tải file kết quả.
+
+### Quản trị viên
+- Dashboard credits, danh sách người dùng, ghi nhật ký truy cập.
+- Tùy chỉnh credits, khóa/mở tài khoản, xem tổng hợp mô hình.
+
+### AI Tool (FastAPI)
+- Parse tài liệu (PyPDF2, python-docx, pandas...).
+- Gửi prompt tới Key4U API (đa nhà cung cấp) hoặc OpenAI nếu có key.
+- Sinh nội dung text/JSON/CSV... theo yêu cầu và trả về cho PHP backend.
 
 ---
 
-## ⚡ Hướng dẫn cài đặt & chạy
+## 🧰 Chuẩn bị môi trường
 
-### 1. Chuẩn bị
+| Thành phần | Phiên bản khuyến nghị |
+|------------|-----------------------|
+| PHP        | 8.2+ (bật ext `curl`, `pdo_mysql`, `json`) |
+| Python     | 3.10+ (pip, virtualenv) |
+| Node (tùy chọn)| 18+ (nếu muốn chạy static server) |
+| MySQL      | 8.0+ hoặc MariaDB 10.6+ |
+| Hệ điều hành | Windows 10/11, macOS, Linux |
 
-- PHP ≥ 8.2 (bật `curl`, `json`, `pdo_mysql`).
-- MySQL ≥ 8.0 (hoặc MariaDB 10.6+).
-- Composer, Git.
-- Windows 10/11 hoặc Linux/macOS.
+---
 
-### 2. Thiết lập tự động (khuyến nghị)
+## ⚙️ Cài đặt & chạy nhanh
 
-```powershell
-# Tạo database, sinh config.env, import schema
-.\setup-database.ps1
-
-# Khởi động backend (8000) + frontend (8001)
-.\start.bat
-```
-
-> Linux/macOS: `chmod +x setup-database.sh && ./setup-database.sh`.
-
-### 3. Thiết lập thủ công
-
+### 1. Clone project
 ```bash
-# Tạo database
-mysql -u root -p -e "CREATE DATABASE thuvien_ai CHARACTER SET utf8mb4";
-mysql -u root -p thuvien_ai < src/php-backend/tools/mysql-schema.sql
-
-# Cấu hình
-cp config.env.example config.env  # Windows dùng copy
-# sửa DB_HOST, DB_USERNAME, DB_PASSWORD...
-
-# Chạy dev server
-cd src/php-backend && php -S 127.0.0.1:8000 server.php
-cd ../web         && php -S 127.0.0.1:8001
+git clone https://github.com/your-org/chatbots-web.git
+cd chatbots-web
 ```
 
-### 4. Tích hợp API Key (tuỳ chọn)
+### 2. Tạo database & copy cấu hình
+```bash
+cp config.env.example config.env
+# hoặc trên Windows: copy config.env.example config.env
 
+# chỉnh config.env: DB_HOST, DB_USERNAME, KEY4U_API_KEY...
+mysql -u root -p -e "CREATE DATABASE thuvien_ai CHARACTER SET utf8mb4"
+mysql -u root -p thuvien_ai < data/database/mysql-schema.sql
+```
+
+### 3. Cài dependency cho FastAPI worker
+```bash
+cd src/php-backend/tools/AI\ tool
+python -m venv .venv
+source .venv/bin/activate  # Windows: .\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+```
+
+### 4. Khởi chạy toàn hệ thống (Windows)
+```powershell
+.\start.bat
+# script sẽ mở 3 cửa sổ: PHP backend (8000), FastAPI (8001), frontend (8002)
+```
+
+Linux/macOS: chạy thủ công từng dịch vụ:
+```bash
+# Terminal 1: PHP backend
+cd src/php-backend
+php -S 127.0.0.1:8000 router.php
+
+# Terminal 2: FastAPI worker
+cd src/php-backend/tools/AI\ tool
+uvicorn main:app --host 127.0.0.1 --port 8001 --reload
+
+# Terminal 3: Frontend server
+cd src/web
+php -S 127.0.0.1:8002
+```
+
+Truy cập `http://127.0.0.1:8002` để sử dụng.
+
+---
+
+## 🔧 Cấu hình quan trọng
+
+`config.env`
 ```env
-# config.env
-KEY4U_API_KEY=sk-your-key4u...
+KEY4U_API_KEY=sk-key4u-your-key
+SERVER_PORT=8000
+DB_HOST=localhost
+DB_NAME=thuvien_ai
+DB_USERNAME=root
+DB_PASSWORD=...
+JWT_SECRET=thuvien-ai-super-secret-jwt-key
+AI_TOOL_BASE_URL=http://127.0.0.1:8001
+AI_TOOL_TIMEOUT=120
+# AI_TOOL_INTERNAL_KEY=optional-shared-key
 ```
 
-- Không có Key4U API → hệ thống dùng Qwen miễn phí.
-- Có Key4U API → mở khoá GPT-4, Claude, Gemini, Midjourney, Suno…
-
----
-
-## 🔌 API & Tích hợp AI
-
-| Endpoint | Method | Mô tả | Ghi chú |
-|----------|--------|-------|--------|
-| `/api/auth.php` | POST | Đăng ký/đăng nhập | body `{"action": "register" | "login"}` |
-| `/api/admin.php` | GET/POST | Quản trị users, models, credits | yêu cầu Bearer token admin |
-| `/api/chat-real.php` | POST | Gửi tin nhắn tới Key4U/Qwen | body `message`, `model`, `mode` |
-| `/api/documents.php` | POST | Upload & xử lý tài liệu | trả về link/ngữ cảnh |
-| `/api/models.php` | GET | Đồng bộ danh sách mô hình | gộp từ Key4U, Qwen, file cấu hình |
-| `/api/health.php` | GET | Health check | response `{ status: "ok" }` |
-
-Ví dụ: gửi tin nhắn tới GPT-4o
-```json
-POST /api/chat-real.php
-{
-  "message": "Tóm tắt tài liệu này",
-  "model": "gpt-4o",
-  "mode": "single"
-}
+`src/php-backend/tools/AI tool/.env`
+```env
+KEY4U_API_KEY=sk-key4u-your-key
+ KEY4U_API_URL=https://api.key4u.shop/v1/chat/completions
+# Hoặc dùng AI_API_KEY nếu gọi trực tiếp OpenAI
+AI_MODEL=gpt-4-turbo
 ```
 
 ---
 
-## 🖥️ Giao diện & Trải nghiệm
+## 📄 Luồng xử lý tài liệu
 
-### Trang chat (index.html)
-- Sidebar chọn model theo provider, bộ lọc nâng cao.
-- Ô tìm kiếm gợi ý từ khoá phổ biến.
-- Vùng chat realtime với hiệu ứng typing, lưu lịch sử.
-- Hiển thị credits, tên hiển thị, liên kết dashboard/ngắt kết nối.
-
-### Admin Dashboard
-- Header hiển thị avatar, tên admin, nút logout.
-- Widget thống kê: tổng users, active users, tổng credits, số model.
-- Bảng người dùng: ID, username, email, role, trạng thái, credits, hành động.
-- Modal chỉnh credits: cộng/trừ/đặt giá trị ngay lập tức.
-- Lưới mô hình AI (cập nhật tự động từ Key4U/Qwen).
-
-### Trang phụ
-- Login/Register: hiệu ứng floating label, validation realtime.
-- Document manager: upload nhiều định dạng, xem tiến trình.
-- Pricing: bảng giá credits (mockup), CTA rõ ràng.
+1. Người dùng chọn file qua nút **📎 Tải nhanh** (frontend chỉ lưu lại, không gửi ngay).
+2. Khi nhấn **Gửi** kèm câu như “tạo file python…”, frontend gửi multipart tới `/api/ai-tool`:
+   - file upload
+   - `user_prompt`
+   - `output_format` (auto hoặc do người dùng yêu cầu)
+   - token đăng nhập
+3. PHP proxy gọi FastAPI worker.
+4. FastAPI đọc file, tạo prompt, gọi Key4U/OpenAI → nhận phản hồi text.
+5. PHP trả kết quả về frontend.
+6. Frontend hiển thị nội dung trong chat; nếu yêu cầu định dạng, tạo **link tải thủ công** để người dùng tự click.
 
 ---
 
-## 🔒 Bảo mật & Hiệu năng
+## 🔌 API PHP chính
 
-- **AuthMiddleware** dùng lại hàm `getTokenFromRequest()` → tương thích mọi server.
-- **JWT** cho admin, token 24h, kiểm tra role trước khi trả dữ liệu.
-- **Client**: loại bỏ dữ liệu `undefined` trong localStorage, dọn token khi 401, đồng bộ đa tab.
-- **API**: validate đầu vào, hạn chế lộ thông báo lỗi nội bộ, trả JSON thống nhất.
-- **Hiệu năng**: cache model list ở frontend, lazy-load lịch sử, tối giản dependency.
+| Endpoint | Mô tả | Notes |
+|----------|-------|-------|
+| `POST /api/auth.php?action=login` | Đăng nhập, trả về JWT + thông tin user | lưu vào `localStorage` |
+| `POST /api/chat-real.php` | Chat thường qua Key4U/Qwen | cần `user_token` trong header |
+| `POST /api/ai-tool` | Proxy gửi file, prompt tới FastAPI | bắt buộc Bearer token |
+| `POST /api/documents.php?action=upload` | Lưu tài liệu vào hệ thống | hỗ trợ 10MB |
+| `GET /api/models.php` | Trả về danh sách mô hình đã đồng bộ | hiển thị ở sidebar |
 
----
-
-## 🧭 Roadmap
-
-| Trạng thái | Hạng mục |
-|------------|----------|
-| ✅ Hoàn tất | Chat đa model, ENSEMBLE, dashboard admin, sửa lỗi header authorization |
-| 🔄 Đang làm | Đồng bộ credits realtime giữa tab, tối ưu bộ lọc model (phân trang, fuzzy search) |
-| 📌 Kế hoạch | Đa ngôn ngữ, plugin AI (tích hợp các dịch vụ nội bộ), analytics nâng cao, mobile app |
+- Token lưu ở key `user_token` (đã đồng bộ với frontend).
+- AuthMiddleware đọc header `Authorization: Bearer <JWT>` hoặc trường `auth_token` trong form.
 
 ---
 
-## 🤝 Đóng góp & Hỗ trợ
+## 💡 Front-end tips
 
-- **Pull Request**: fork, tạo branch, viết mô tả ngắn gọn, đảm bảo chạy `setup-database` & `start` OK.
-- **Issue**: mô tả rõ môi trường (OS, PHP version, log kèm theo).
-- **Tài liệu**: `README.md`, `AI_MODELS_LIST.md`, `DATABASE_SETUP.md`.
-- **Email hỗ trợ**: `support@thuvienai.com` (trong phạm vi demo/POC).
-
----
-
-## 📄 Thông tin dự án
-
-- **Giấy phép**: MIT License → xem [LICENSE](LICENSE).
-- **Nhóm phát triển**:
-  - Trần Hải Bằng – Nhóm trưởng
-  - Lê Huy Hoàng – 077205003839
-  - Lương Thị Bích Hằng – Thành viên
-  - Phan Minh Hòa – Thành viên
-  - Hồ Ngọc Quyền – Thành viên
+- `script-backend.js`: giữ toàn bộ logic chat, upload, định dạng tin nhắn.
+- Markdown + code block hiển thị bằng hàm `formatMessageContent`.
+- Link tải thủ công được tạo bằng `createDownloadLink`, tự revoke sau 5 phút.
+- Lưu lịch sử chat trong `localStorage` (key `chat_conversations`).
+- Nếu thấy console báo “userData undefined”, đăng nhập lại để token hợp lệ.
 
 ---
 
-**© 2025 Thư Viện AI**  
-*Được xây dựng với ❤️ bằng PHP, JavaScript và những công nghệ web hiện đại.*
+## 🤝 Đóng góp
+
+1. Fork repo và tạo branch mới.
+2. Chạy `start.bat` hoặc các lệnh thủ công đảm bảo hệ thống hoạt động.
+3. Commit nhỏ gọn; PR mô tả rõ thay đổi.
+4. Báo bug: cung cấp log PHP/FastAPI, request payload.
+
+---
+
+## 👥 Thông tin nhóm
+
+- Trần Hải Bằng – Nhóm trưởng
+- Lê Huy Hoàng – 077205003839
+- Lương Thị Bích Hằng – Thành viên
+- Phan Minh Hòa – Thành viên
+- Hồ Ngọc Quyền – Thành viên
+
+Giấy phép: [MIT](LICENSE)
+
+---
+
+**© 2025 Thư Viện AI** – xây dựng với ❤️ bằng PHP, FastAPI và JavaScript.
