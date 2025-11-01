@@ -1669,7 +1669,7 @@ label[for="model-select"] {
     flex-direction: row-reverse;
 }
 
-.message.bot {
+.message.assistant {
     align-self: flex-start;
 }
 
@@ -1687,7 +1687,7 @@ label[for="model-select"] {
     border: 2px solid var(--black);
 }
 
-.message.bot .message-avatar {
+.message.assistant .message-avatar {
     background: var(--black);
     color: var(--white);
 }
@@ -1713,7 +1713,7 @@ label[for="model-select"] {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.message.bot .message-content {
+.message.assistant .message-content {
     background: var(--white);
     color: var(--black);
     border-bottom-left-radius: 8px;
@@ -1723,6 +1723,11 @@ label[for="model-select"] {
     background: var(--black);
     color: var(--white);
     border-bottom-right-radius: 8px;
+}
+
+.message.error .message-content {
+    border-color: #d62828;
+    box-shadow: 0 8px 32px rgba(214, 40, 40, 0.2);
 }
 
 /* Model info styling */

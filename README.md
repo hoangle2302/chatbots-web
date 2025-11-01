@@ -1,218 +1,260 @@
 # 🧠 Thư Viện AI – Nền tảng chat đa mô hình
 
-[![PHP](https://img.shields.io/badge/PHP-8.2%2B-blue.svg)](https://www.php.net/)
-[![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
+[![PHP](https://img.shields.io/badge/PHP-8.2%2B-777bb4.svg)](https://www.php.net/)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-3776ab.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-ready-009485.svg)](https://fastapi.tiangolo.com/)
-[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-“Thư Viện AI” là một sandbox kết hợp **PHP backend**, **FastAPI AI Tool microservice** và **frontend thuần HTML/CSS/JS**. Mục tiêu: mang lại trải nghiệm chat đa mô hình, xử lý tài liệu, tạo file theo yêu cầu và quản trị người dùng với UI thân thiện.
-
----
-
-## 📚 Nội dung chính
-
-1. [Kiến trúc](#kiến-trúc)
-2. [Tính năng nổi bật](#tính-năng-nổi-bật)
-3. [Chuẩn bị môi trường](#chuẩn-bị-môi-trường)
-4. [Cài đặt & chạy nhanh](#cài-đặt--chạy-nhanh)
-5. [Cấu hình quan trọng](#cấu-hình-quan-trọng)
-6. [Luồng xử lý tài liệu](#luồng-xử-lý-tài-liệu)
-7. [API PHP chính](#api-php-chính)
-8. [Front-end tips](#front-end-tips)
-9. [Đóng góp](#đóng-góp)
-10. [Thông tin nhóm](#thông-tin-nhóm)
+“Thư Viện AI” là sandbox phục vụ nghiên cứu và triển khai thực tế cho hệ thống chat đa mô hình. Dự án kết hợp **PHP backend**, **FastAPI microservice** và **frontend thuần HTML/CSS/JS**, hỗ trợ xử lý tài liệu, sinh file theo yêu cầu và quản trị người dùng, đồng thời cho phép tích hợp nhiều mô hình từ Key4U và OpenAI.
 
 ---
 
-## 🏗️ Kiến trúc
+## 📋 Mục lục
+
+1. [Tổng quan kiến trúc](#-tổng-quan-kiến-trúc)
+2. [Tính năng nổi bật](#-tính-năng-nổi-bật)
+3. [Yêu cầu môi trường](#-yêu-cầu-môi-trường)
+4. [Hướng dẫn cài đặt nhanh](#-hướng-dẫn-cài-đặt-nhanh)
+5. [Chi tiết cấu hình](#-chi-tiết-cấu-hình)
+6. [Luồng xử lý tài liệu](#-luồng-xử-lý-tài-liệu)
+7. [Danh sách API PHP](#-danh-sách-api-php)
+8. [Hướng dẫn frontend](#-hướng-dẫn-frontend)
+9. [Khắc phục sự cố thường gặp](#-khắc-phục-sự-cố-thường-gặp)
+10. [Đóng góp và phát triển](#-đóng-góp-và-phát-triển)
+11. [Thông tin nhóm & giấy phép](#-thông-tin-nhóm--giấy-phép)
+
+---
+
+## 🏗 Tổng quan kiến trúc
 
 ```
 chatbots-web/
-├── config.env                 # cấu hình chung
-├── start.bat                  # script khởi động (Windows)
+├── config.env                  # cấu hình chung cho PHP backend
+├── start.bat                   # script khởi động toàn hệ thống (Windows)
 ├── src/
-│   ├── php-backend/          # Backend PHP thuần (routing thủ công)
-│   │   ├── api/              # auth.php, chat-real.php, documents.php, ai-tool.php...
-│   │   ├── services/         # Key4UService, AIService, DocumentService...
-│   │   ├── tools/AI tool/    # FastAPI worker (Python)
-│   │   └── middleware/       # JWT AuthMiddleware
-│   └── web/                  # Frontend tĩnh (index.html, admin, login, script-backend.js...)
-└── data/                     # uploads, sqlite (tùy chọn)
+│   ├── php-backend/            # Backend PHP thuần (router.php, API, services...)
+│   │   ├── api/                # auth.php, chat-real.php, ai-tool.php...
+│   │   ├── middleware/         # AuthMiddleware (JWT)
+│   │   ├── services/           # Key4UService, AIToolService...
+│   │   └── tools/AI tool/      # FastAPI microservice (Python)
+│   └── web/                    # Frontend tĩnh (HTML/CSS/JS)
+└── data/                       # dữ liệu mẫu, uploads, schema SQL
 ```
 
-- **Frontend:** `127.0.0.1:8002` (chạy bằng PHP server hoặc bất kỳ static server).
-- **PHP API:** `127.0.0.1:8000` (các endpoint REST).
-- **FastAPI AI Tool:** `127.0.0.1:8001` (xử lý tài liệu, gọi mô hình Key4U/OpenAI).
+- Frontend: `http://127.0.0.1:8002`
+- PHP API (router): `http://127.0.0.1:8000`
+- FastAPI AI Tool: `http://127.0.0.1:8001`
+
+Mọi request từ frontend đi qua PHP backend nhằm tái sử dụng hệ thống auth, quota, logging trước khi chuyển tới dịch vụ AI.
 
 ---
 
 ## ✨ Tính năng nổi bật
 
 ### Người dùng cuối
-- Đăng ký / đăng nhập, lưu phiên localStorage an toàn.
-- Chọn nhanh hơn **450+ model** (GPT-4, Claude, Gemini, Qwen, DeepSeek...)
-- Chat realtime, hiển thị markdown/code block đẹp mắt.
-- Upload tài liệu (PDF/DOCX/Excel/...) và ra lệnh “tạo file python/md/...”.
-- Nhận link tải thủ công để chủ động tải file kết quả.
+- Chat realtime với hơn **450 mô hình** (GPT-4, Claude, Gemini, Qwen, DeepSeek...).
+- Upload tài liệu (PDF, DOCX, XLSX, TXT…) rồi yêu cầu AI tóm tắt hoặc tạo file mới.
+- Lệnh “tạo file <định dạng>” giúp sinh mã nguồn/document; kết quả hiển thị trong chat và cung cấp **link tải thủ công**.
+- Lưu lịch sử hội thoại ở localStorage, khôi phục lại sau khi tải trang.
 
 ### Quản trị viên
-- Dashboard credits, danh sách người dùng, ghi nhật ký truy cập.
-- Tùy chỉnh credits, khóa/mở tài khoản, xem tổng hợp mô hình.
+- Dashboard thống kê credits, người dùng, nhật ký hoạt động.
+- Thao tác khóa/mở tài khoản, cấp thêm credits, đồng bộ danh sách mô hình.
+- Cấu hình linh hoạt môi trường, key AI, timeout cho microservice.
 
-### AI Tool (FastAPI)
-- Parse tài liệu (PyPDF2, python-docx, pandas...).
-- Gửi prompt tới Key4U API (đa nhà cung cấp) hoặc OpenAI nếu có key.
-- Sinh nội dung text/JSON/CSV... theo yêu cầu và trả về cho PHP backend.
-
----
-
-## 🧰 Chuẩn bị môi trường
-
-| Thành phần | Phiên bản khuyến nghị |
-|------------|-----------------------|
-| PHP        | 8.2+ (bật ext `curl`, `pdo_mysql`, `json`) |
-| Python     | 3.10+ (pip, virtualenv) |
-| Node (tùy chọn)| 18+ (nếu muốn chạy static server) |
-| MySQL      | 8.0+ hoặc MariaDB 10.6+ |
-| Hệ điều hành | Windows 10/11, macOS, Linux |
+### FastAPI AI Tool
+- Nhận file, trích xuất nội dung bằng PyPDF2, python-docx, pandas…
+- Đồng bộ hóa API Key giữa PHP và Python (qua header `Authorization` hoặc `X-Internal-Key`).
+- Giao tiếp với Key4U API (hoặc OpenAI) để lấy kết quả, sau đó trả về text/JSON/file.
 
 ---
 
-## ⚙️ Cài đặt & chạy nhanh
+## 🧰 Yêu cầu môi trường
 
-### 1. Clone project
+| Thành phần | Phiên bản khuyến nghị | Ghi chú |
+|------------|-----------------------|--------|
+| PHP        | 8.2 trở lên           | Bật `curl`, `pdo_mysql`, `json`, `fileinfo` |
+| Python     | 3.10 trở lên          | Cần `venv`, `pip` |
+| MySQL      | 8.0+ hoặc MariaDB 10.6+ | Import schema từ thư mục `data/database` |
+| Node.js    | 18+ *(tuỳ chọn)*      | Chạy static server khác nếu muốn |
+| OS         | Windows 10/11, macOS, Linux | Script `start.bat` tối ưu cho Windows |
+
+---
+
+## ⚙ Hướng dẫn cài đặt nhanh
+
+### 1. Clone và chuẩn bị mã nguồn
 ```bash
 git clone https://github.com/your-org/chatbots-web.git
 cd chatbots-web
 ```
 
-### 2. Tạo database & copy cấu hình
+### 2. Tạo file cấu hình và database
 ```bash
-cp config.env.example config.env
-# hoặc trên Windows: copy config.env.example config.env
+cp config.env.example config.env               # Windows: copy config.env.example config.env
 
-# chỉnh config.env: DB_HOST, DB_USERNAME, KEY4U_API_KEY...
+# Chỉnh sửa config.env theo môi trường: DB_HOST, KEY4U_API_KEY...
+
 mysql -u root -p -e "CREATE DATABASE thuvien_ai CHARACTER SET utf8mb4"
 mysql -u root -p thuvien_ai < data/database/mysql-schema.sql
 ```
 
-### 3. Cài dependency cho FastAPI worker
+### 3. Cài đặt FastAPI microservice
 ```bash
 cd src/php-backend/tools/AI\ tool
 python -m venv .venv
-source .venv/bin/activate  # Windows: .\.venv\Scripts\Activate.ps1
+# Windows PowerShell
+.venv\Scripts\Activate.ps1
+# macOS / Linux
+source .venv/bin/activate
+
 pip install -r requirements.txt
 ```
 
-### 4. Khởi chạy toàn hệ thống (Windows)
+### 4. Khởi chạy toàn bộ hệ thống (Windows)
 ```powershell
+cd C:\path\to\chatbots-web
 .\start.bat
-# script sẽ mở 3 cửa sổ: PHP backend (8000), FastAPI (8001), frontend (8002)
 ```
+`start.bat` sẽ:
+1. Kiểm tra PHP & Python.
+2. Kill tiến trình cũ (php.exe, python.exe, uvicorn.exe).
+3. Mở 3 cửa sổ: PHP backend (`127.0.0.1:8000`), FastAPI (`127.0.0.1:8001`), frontend (`127.0.0.1:8002`).
+4. Tự động mở trình duyệt tới trang chủ.
 
-Linux/macOS: chạy thủ công từng dịch vụ:
+### 5. Khởi chạy thủ công (Linux/macOS hoặc môi trường tùy chỉnh)
 ```bash
-# Terminal 1: PHP backend
+# Terminal 1 - PHP backend
 cd src/php-backend
 php -S 127.0.0.1:8000 router.php
 
-# Terminal 2: FastAPI worker
+# Terminal 2 - FastAPI
 cd src/php-backend/tools/AI\ tool
 uvicorn main:app --host 127.0.0.1 --port 8001 --reload
 
-# Terminal 3: Frontend server
+# Terminal 3 - Frontend tĩnh
 cd src/web
 php -S 127.0.0.1:8002
 ```
 
-Truy cập `http://127.0.0.1:8002` để sử dụng.
+Truy cập `http://127.0.0.1:8002` để trải nghiệm.
 
 ---
 
-## 🔧 Cấu hình quan trọng
+## 🔧 Chi tiết cấu hình
 
-`config.env`
+### 1. PHP backend – `config.env`
 ```env
 KEY4U_API_KEY=sk-key4u-your-key
-SERVER_PORT=8000
+AI_TOOL_BASE_URL=http://127.0.0.1:8001
+AI_TOOL_TIMEOUT=120
+# AI_TOOL_INTERNAL_KEY=optional-shared-secret
+
 DB_HOST=localhost
 DB_NAME=thuvien_ai
 DB_USERNAME=root
-DB_PASSWORD=...
+DB_PASSWORD=your-password
+
 JWT_SECRET=thuvien-ai-super-secret-jwt-key
-AI_TOOL_BASE_URL=http://127.0.0.1:8001
-AI_TOOL_TIMEOUT=120
-# AI_TOOL_INTERNAL_KEY=optional-shared-key
+SERVER_PORT=8000
 ```
 
-`src/php-backend/tools/AI tool/.env`
+### 2. FastAPI AI Tool – `src/php-backend/tools/AI tool/.env`
 ```env
+# Ưu tiên dùng chung KEY4U_API_KEY
 KEY4U_API_KEY=sk-key4u-your-key
- KEY4U_API_URL=https://api.key4u.shop/v1/chat/completions
-# Hoặc dùng AI_API_KEY nếu gọi trực tiếp OpenAI
-AI_MODEL=gpt-4-turbo
+KEY4U_API_URL=https://api.key4u.shop/v1/chat/completions
+
+# Tuỳ chọn nếu gọi trực tiếp OpenAI
+# AI_API_KEY=sk-openai-your-key
+AI_MODEL=gpt-4o
+```
+
+### 3. Thay đổi hạn mức upload
+`start.bat` đã tăng `upload_max_filesize`, `post_max_size` lên 64MB và `memory_limit` 256MB. Nếu tự chạy, hãy thêm tham số khi khởi động PHP server:
+```bash
+php -d upload_max_filesize=64M -d post_max_size=64M -d memory_limit=256M -S 127.0.0.1:8000 router.php
 ```
 
 ---
 
 ## 📄 Luồng xử lý tài liệu
 
-1. Người dùng chọn file qua nút **📎 Tải nhanh** (frontend chỉ lưu lại, không gửi ngay).
-2. Khi nhấn **Gửi** kèm câu như “tạo file python…”, frontend gửi multipart tới `/api/ai-tool`:
-   - file upload
+1. Người dùng nhấn **Tải nhanh** và chọn file. Frontend lưu trạng thái, chưa gửi lên server.
+2. Khi nhấn **Gửi** kèm prompt (ví dụ “tạo file python tính toán cơ bản”), frontend gửi `FormData` tới `POST /api/ai-tool` gồm:
+   - `file`
    - `user_prompt`
-   - `output_format` (auto hoặc do người dùng yêu cầu)
-   - token đăng nhập
-3. PHP proxy gọi FastAPI worker.
-4. FastAPI đọc file, tạo prompt, gọi Key4U/OpenAI → nhận phản hồi text.
-5. PHP trả kết quả về frontend.
-6. Frontend hiển thị nội dung trong chat; nếu yêu cầu định dạng, tạo **link tải thủ công** để người dùng tự click.
+   - `output_format` (auto hoặc định dạng suy ra từ prompt)
+   - `Authorization` header / trường dự phòng `auth_token`
+3. PHP proxy (`api/ai-tool.php`) xác thực JWT, gọi `AIToolService`.
+4. `AIToolService` gửi yêu cầu tới FastAPI bằng `multipart/form-data`, đính kèm header `X-Internal-Key` nếu có.
+5. FastAPI đọc file tạm, trích nội dung, gọi Key4U API.
+6. Kết quả trả về:
+   - `text/json`: PHP trả lại JSON `{ success: true, data: ... }`.
+   - `file` (ví dụ docx): PHP gửi file nhị phân về frontend.
+7. Frontend hiển thị kết quả trong chat. Nếu là file, tạo **link tải thủ công** bằng `createDownloadLink(); URL tự revoke sau 5 phút`.
 
 ---
 
-## 🔌 API PHP chính
+## 🔌 Danh sách API PHP
 
-| Endpoint | Mô tả | Notes |
-|----------|-------|-------|
-| `POST /api/auth.php?action=login` | Đăng nhập, trả về JWT + thông tin user | lưu vào `localStorage` |
-| `POST /api/chat-real.php` | Chat thường qua Key4U/Qwen | cần `user_token` trong header |
-| `POST /api/ai-tool` | Proxy gửi file, prompt tới FastAPI | bắt buộc Bearer token |
-| `POST /api/documents.php?action=upload` | Lưu tài liệu vào hệ thống | hỗ trợ 10MB |
-| `GET /api/models.php` | Trả về danh sách mô hình đã đồng bộ | hiển thị ở sidebar |
+| Endpoint | Mô tả | Yêu cầu |
+|----------|-------|---------|
+| `POST /api/auth.php?action=login` | Đăng nhập, trả JWT + thông tin user | Body JSON `username`, `password` |
+| `POST /api/chat-real.php` | Chat trực tiếp (không upload file) | Header `Authorization: Bearer <JWT>` |
+| `POST /api/ai-tool` | Proxy xử lý tài liệu qua FastAPI | `multipart/form-data`, cần token |
+| `POST /api/documents.php?action=upload` | Upload tài liệu lưu trên hệ thống | Giới hạn 10MB |
+| `GET /api/models.php` | Danh sách mô hình hiển thị ở UI | Không bắt buộc auth |
+| `GET /api/health` | Kiểm tra tình trạng backend | Trả về JSON `status` |
 
-- Token lưu ở key `user_token` (đã đồng bộ với frontend).
-- AuthMiddleware đọc header `Authorization: Bearer <JWT>` hoặc trường `auth_token` trong form.
-
----
-
-## 💡 Front-end tips
-
-- `script-backend.js`: giữ toàn bộ logic chat, upload, định dạng tin nhắn.
-- Markdown + code block hiển thị bằng hàm `formatMessageContent`.
-- Link tải thủ công được tạo bằng `createDownloadLink`, tự revoke sau 5 phút.
-- Lưu lịch sử chat trong `localStorage` (key `chat_conversations`).
-- Nếu thấy console báo “userData undefined”, đăng nhập lại để token hợp lệ.
+Lưu ý: AuthMiddleware sẽ tìm JWT theo thứ tự `Authorization` header → `auth_token` (POST body) → các biến session.
 
 ---
 
-## 🤝 Đóng góp
+## 💡 Hướng dẫn frontend
 
-1. Fork repo và tạo branch mới.
-2. Chạy `start.bat` hoặc các lệnh thủ công đảm bảo hệ thống hoạt động.
-3. Commit nhỏ gọn; PR mô tả rõ thay đổi.
-4. Báo bug: cung cấp log PHP/FastAPI, request payload.
+- File chính: `src/web/script-backend.js`.
+- Các helper quan trọng:
+  - `processUploadedDocument`: gửi file lên PHP backend, trả kết quả thô.
+  - `sendMessage`: phân tích prompt, hiển thị tin nhắn và tạo link tải thủ công.
+  - `createDownloadLink`: tạo `Blob URL`, tự revoke sau 5 phút.
+  - `formatMessageContent`: hiển thị markdown, code block.
+- Lịch sử hội thoại lưu ở `localStorage` (key `chat_conversations`).
+- Để tránh lỗi `localStorage undefined`, hàm `getRawUserData` và `parseUserDataSafe` đã xử lý các giá trị `null`, `'undefined'`.
 
 ---
 
-## 👥 Thông tin nhóm
+## 🛠 Khắc phục sự cố thường gặp
 
-- Trần Hải Bằng – Nhóm trưởng
-- Lê Huy Hoàng – 077205003839
+| Vấn đề | Nguyên nhân | Cách xử lý |
+|--------|-------------|------------|
+| 401 Unauthorized khi call `/api/ai-tool` | Token hết hạn hoặc header thiếu | Đăng nhập lại, đảm bảo header `Authorization` tồn tại |
+| `POST Content-Length exceeds limit` | PHP giới hạn upload | Chạy PHP với tham số `-d upload_max_filesize=64M -d post_max_size=64M` |
+| `Call to undefined function mime_content_type()` | Chưa bật extension `fileinfo` | Cài / bật `php_fileinfo.dll` hoặc để hệ thống fallback theo đuôi file |
+| FastAPI trả lỗi `Incorrect API key` | Key chưa đồng bộ giữa PHP và Python | Kiểm tra `KEY4U_API_KEY`, `AI_TOOL_INTERNAL_KEY`, biến môi trường | 
+| Frontend hiển thị `%PDF-1.3` | Trước đây auto download file | Hiện tại đã chuyển sang link tải thủ công, refresh lại UI |
+
+---
+
+## 🤝 Đóng góp và phát triển
+
+1. Fork repository, tạo branch mới mô tả rõ chức năng (`feature/file-upload`, `fix/login`...).
+2. Chạy `start.bat` (hoặc các lệnh thủ công) đảm bảo môi trường hoạt động.
+3. Commit nhỏ, rõ ràng; sử dụng tiếng Việt hoặc tiếng Anh nhất quán.
+4. Khi gửi PR, đính kèm log/ảnh chụp màn hình nếu liên quan tới UI hoặc lỗi.
+5. Góp ý, báo lỗi qua Issues: vui lòng ghi rõ bước tái hiện, trích log từ PHP FastAPI và console.
+
+---
+
+## 👥 Thông tin nhóm & giấy phép
+
+- Trần Hải Bằng – 080205005769 (nhóm trưởng)
+- Lê Huy Hoàng – 077205003839 (thư ký)
 - Lương Thị Bích Hằng – Thành viên
 - Phan Minh Hòa – Thành viên
 - Hồ Ngọc Quyền – Thành viên
 
-Giấy phép: [MIT](LICENSE)
+Giấy phép: [MIT](LICENSE) – tự do sử dụng, chỉnh sửa, phân phối theo điều khoản MIT.
 
 ---
 

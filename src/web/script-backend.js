@@ -8,11 +8,46 @@ let currentUser = null;
 let selectedCategory = '';
 let selectedProvider = '';
 let isTyping = false;
-let currentConversation = null;
 let conversations = [];
 let uploadedDocument = null;
+let currentConversation = null;
 
 const DEFAULT_DOCUMENT_PROMPT = 'Hãy tóm tắt tài liệu này bằng tiếng Việt và liệt kê các ý chính quan trọng.';
+const FILE_FORMAT_ALIASES = {
+    python: 'py',
+    py: 'py',
+    txt: 'txt',
+    text: 'txt',
+    markdown: 'md',
+    md: 'md',
+    json: 'json',
+    html: 'html',
+    css: 'css',
+    javascript: 'js',
+    js: 'js',
+    typescript: 'ts',
+    ts: 'ts',
+    sql: 'sql',
+    shell: 'sh',
+    bash: 'sh',
+    sh: 'sh',
+    yaml: 'yaml',
+    yml: 'yaml'
+};
+
+const MIME_TYPES_BY_EXTENSION = {
+    txt: 'text/plain;charset=utf-8',
+    py: 'text/x-python;charset=utf-8',
+    md: 'text/markdown;charset=utf-8',
+    json: 'application/json;charset=utf-8',
+    html: 'text/html;charset=utf-8',
+    css: 'text/css;charset=utf-8',
+    js: 'application/javascript;charset=utf-8',
+    ts: 'application/typescript;charset=utf-8',
+    sql: 'application/sql;charset=utf-8',
+    sh: 'application/x-sh;charset=utf-8',
+    yaml: 'text/yaml;charset=utf-8'
+};
 
 // ===== AUTHENTICATION =====
 // Debug function để kiểm tra trạng thái
@@ -302,6 +337,39 @@ function extractFilenameFromDisposition(disposition) {
     return null;
 }
 
+function initDocumentUpload() {
+    const uploadBtn = document.getElementById('upload-btn');
+    const fileInput = document.getElementById('document-upload');
+    const removeBtn = document.getElementById('remove-doc');
+
+    if (uploadBtn && fileInput) {
+        uploadBtn.addEventListener('click', () => {
+            fileInput.click();
+        });
+    }
+
+    if (fileInput) {
+        fileInput.addEventListener('change', (event) => {
+            const files = event.target.files;
+            const file = files && files[0];
+            if (!file) return;
+
+            uploadedDocument = file;
+            showDocumentInfo(file);
+            addMessage(`📎 Đã chọn tài liệu "${file.name}". Hãy nhập yêu cầu rồi nhấn Gửi để xử lý.`, 'assistant', false);
+
+            event.target.value = '';
+        });
+    }
+
+    if (removeBtn && fileInput) {
+        removeBtn.addEventListener('click', () => {
+            clearDocumentSelection(fileInput);
+            addMessage('📎 Đã bỏ chọn tài liệu đính kèm.', 'assistant', false);
+        });
+    }
+}
+
 function triggerFileDownload(blob, filename) {
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -356,417 +424,112 @@ function displayAIToolResult(result) {
     addMessage('AI đã xử lý tài liệu.', 'assistant');
 }
 
-async function processUploadedDocument(file) {
-    if (!file) return;
+function resolveOutputFormat(keyword) {
+    if (!keyword) return null;
+    const normalized = keyword.trim().toLowerCase();
+    return FILE_FORMAT_ALIASES[normalized] || null;
+}
 
-    // Nếu người dùng chưa đăng nhập → nhắc đăng nhập trước khi gọi AI
-    if (!currentUser) {
-        const loggedIn = await checkLoginStatus();
-        if (!loggedIn) {
-            addMessage('Vui lòng đăng nhập để sử dụng tính năng tải tài liệu.', 'assistant error');
-            return;
-        }
-    }
-
-    const chatInput = document.getElementById('chat-input');
-    let promptText = chatInput ? chatInput.value.trim() : '';
-    const usedCustomPrompt = Boolean(promptText);
-
-    // Nếu người dùng không nhập gì, dùng prompt mặc định tóm tắt tài liệu
-    let finalPrompt;
-    if (usedCustomPrompt) {
-        finalPrompt = `${promptText}\n\n(Tài liệu đính kèm: ${file.name})`;
-    } else {
-        finalPrompt = DEFAULT_DOCUMENT_PROMPT.replace('tài liệu này', `tài liệu "${file.name}"`);
-    }
-
-    // Hiển thị người dùng đã yêu cầu gì trước khi chờ phản hồi
-    addMessage(finalPrompt, 'user');
-
-    if (usedCustomPrompt && chatInput) {
-        chatInput.value = '';
-    }
-
-    showTypingIndicator();
-
-    const formData = new FormData();
-    formData.append('file', file, file.name);
-    formData.append('user_prompt', finalPrompt);
-    formData.append('output_format', 'auto');
-
-    const token = localStorage.getItem('user_token'); // JWT được lưu bởi frontend
-    const headers = {};
-    if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-    }
-
+function createDownloadLink(data, filename, extensionHint) {
     try {
-        const response = await fetch('http://127.0.0.1:8000/api/ai-tool', {
-            method: 'POST',
-            headers,
-            body: formData
-        });
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`HTTP ${response.status}: ${errorText || response.statusText}`);
-        }
-
-        const disposition = response.headers.get('content-disposition') || '';
-        if (disposition.includes('attachment')) {
-            const blob = await response.blob();
-            const filename = extractFilenameFromDisposition(disposition) || `ket-qua-ai-${Date.now()}.bin`;
-            triggerFileDownload(blob, filename);
-            displayAIToolResult({ type: 'file' });
-            return;
-        }
-
-        const contentType = response.headers.get('content-type') || '';
-        let payload;
-
-        if (contentType.includes('application/json')) {
-            try {
-                payload = await response.json();
-            } catch (error) {
-                console.warn('Không thể parse JSON, đọc text fallback:', error);
-                const fallbackText = await response.text();
-                payload = fallbackText;
-            }
+        let blob;
+        if (data instanceof Blob) {
+            blob = data;
         } else {
-            const rawText = await response.text();
-            try {
-                payload = JSON.parse(rawText);
-            } catch (error) {
-                payload = rawText;
-            }
+            const ext = (extensionHint || filename.split('.').pop() || '').toLowerCase();
+            const mime = MIME_TYPES_BY_EXTENSION[ext] || 'text/plain;charset=utf-8';
+            blob = new Blob([String(data ?? '')], { type: mime });
         }
 
-        if (payload && typeof payload === 'object' && 'success' in payload) {
-            if (!payload.success) {
-                addMessage('Lỗi: ' + (payload.message || 'Không thể xử lý tài liệu.'), 'assistant error');
-                return;
-            }
+        const url = window.URL.createObjectURL(blob);
+        const cleanup = () => {
+            window.URL.revokeObjectURL(url);
+        };
 
-            const normalized = {
-                type: payload.type || (typeof payload.data === 'object' ? 'json' : 'text'),
-                data: payload.data !== undefined ? payload.data : payload.result
-            };
-
-            displayAIToolResult(normalized);
-        } else {
-            displayAIToolResult(payload);
-        }
+        return { url, filename, cleanup };
     } catch (error) {
-        console.error('❌ Lỗi xử lý tài liệu:', error);
-        addMessage('Lỗi xử lý tài liệu: ' + error.message, 'assistant error');
-    } finally {
-        hideTypingIndicator();
+        console.error('❌ Không thể tạo link tải file:', error);
+        return null;
     }
 }
 
-function initDocumentUpload() {
-    const uploadBtn = document.getElementById('upload-btn');
-    const fileInput = document.getElementById('document-upload');
-    const removeBtn = document.getElementById('remove-doc');
+function addDownloadLinkMessage(description, linkInfo) {
+    if (!linkInfo) return;
 
-    if (uploadBtn && fileInput) {
-        uploadBtn.addEventListener('click', () => {
-            fileInput.click();
-        });
-    }
+    const messagesContainer = document.getElementById('chat-area');
+    if (!messagesContainer) return;
 
-    if (fileInput) {
-        fileInput.addEventListener('change', async (event) => {
-            const files = event.target.files;
-            const file = files && files[0];
-            if (!file) return;
+    const messageDiv = document.createElement('div');
+    messageDiv.classList.add('message', 'assistant');
 
-            uploadedDocument = file;
-            showDocumentInfo(file);
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'message-content';
 
-            if (uploadBtn) {
-                uploadBtn.classList.add('loading');
-                uploadBtn.disabled = true;
-            }
+    const paragraph = document.createElement('p');
+    paragraph.appendChild(document.createTextNode(description + ' '));
 
+    const anchor = document.createElement('a');
+    anchor.href = linkInfo.url;
+    anchor.download = linkInfo.filename;
+    anchor.target = '_blank';
+    anchor.rel = 'noopener';
+    anchor.textContent = 'Tải xuống';
+    paragraph.appendChild(anchor);
+
+    contentDiv.appendChild(paragraph);
+    messageDiv.appendChild(contentDiv);
+
+    messagesContainer.appendChild(messageDiv);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+    addMessageToConversation(`${description} (${linkInfo.filename})`, 'assistant');
+
+    setTimeout(() => {
+        linkInfo.cleanup();
+    }, 5 * 60 * 1000);
+}
+
+function extractTextResult(result) {
+    if (result == null) return null;
+    if (typeof result === 'string') return result;
+
+    if (typeof result === 'object') {
+        if (typeof result.data === 'string') {
+            return result.data;
+        }
+        if (result.type === 'json' && result.data) {
             try {
-                await processUploadedDocument(file);
-            } finally {
-                if (uploadBtn) {
-                    uploadBtn.classList.remove('loading');
-                    uploadBtn.disabled = false;
-                }
-                event.target.value = '';
+                return typeof result.data === 'string'
+                    ? result.data
+                    : JSON.stringify(result.data, null, 2);
+            } catch (error) {
+                console.warn('Không thể chuyển JSON thành chuỗi:', error);
             }
-        });
-    }
-
-    if (removeBtn && fileInput) {
-        removeBtn.addEventListener('click', () => {
-            clearDocumentSelection(fileInput);
-        });
-    }
-}
-
-// ===== CHAT HISTORY MANAGEMENT =====
-// Tạo cuộc trò chuyện mới
-function createNewConversation() {
-    const conversationId = 'conv_' + Date.now();
-    const conversation = {
-        id: conversationId,
-        title: 'Cuộc trò chuyện mới',
-        messages: [],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-    };
-    
-    currentConversation = conversation;
-    conversations.unshift(conversation);
-    saveConversations();
-    updateConversationsList();
-    
-    // Clear chat area
-    const chatArea = document.getElementById('chat-area');
-    if (chatArea) {
-        chatArea.innerHTML = '';
-    }
-    
-    console.log('✅ Created new conversation:', conversationId);
-    return conversation;
-}
-
-// Lưu cuộc trò chuyện
-function saveConversations() {
-    localStorage.setItem('chat_conversations', JSON.stringify(conversations));
-    console.log('💾 Saved conversations to localStorage');
-}
-
-// Load cuộc trò chuyện từ localStorage
-function loadConversations() {
-    const saved = localStorage.getItem('chat_conversations');
-    if (saved) {
-        try {
-            conversations = JSON.parse(saved);
-            console.log('📂 Loaded conversations:', conversations.length);
-        } catch (error) {
-            console.error('❌ Error loading conversations:', error);
-            conversations = [];
+        }
+        if (typeof result.result === 'string') {
+            return result.result;
         }
     }
-    updateConversationsList();
+
+    return null;
 }
 
-// Cập nhật danh sách cuộc trò chuyện
-function updateConversationsList() {
-    const conversationsList = document.getElementById('conversations-list');
-    if (!conversationsList) return;
-    
-    if (conversations.length === 0) {
-        conversationsList.innerHTML = `
-            <div class="no-conversations">
-                <p>Chưa có cuộc trò chuyện nào</p>
-                <p>Bắt đầu chat để tạo lịch sử!</p>
-            </div>
-        `;
-        return;
-    }
-    
-    conversationsList.innerHTML = conversations.map(conv => `
-        <div class="conversation-item ${currentConversation && currentConversation.id === conv.id ? 'active' : ''}" 
-             data-conversation-id="${conv.id}">
-            <div class="conversation-title">${conv.title}</div>
-            <div class="conversation-time">${new Date(conv.updatedAt).toLocaleString()}</div>
-            <div class="conversation-messages-count">${conv.messages.length} tin nhắn</div>
-        </div>
-    `).join('');
-    
-    // Add click listeners
-    conversationsList.querySelectorAll('.conversation-item').forEach(item => {
-        item.addEventListener('click', () => {
-            const conversationId = item.dataset.conversationId;
-            loadConversation(conversationId);
-        });
+// Tạo phần tử <div class="message-content"> với nội dung xuống dòng đúng định dạng
+function createMessageContent(text) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'message-content';
+
+    const paragraph = document.createElement('p');
+    const lines = String(text ?? '').split('\n');
+    lines.forEach((line, index) => {
+        paragraph.appendChild(document.createTextNode(line));
+        if (index < lines.length - 1) {
+            paragraph.appendChild(document.createElement('br'));
+        }
     });
-}
 
-// Load cuộc trò chuyện
-function loadConversation(conversationId) {
-    const conversation = conversations.find(conv => conv.id === conversationId);
-    if (!conversation) return;
-    
-    currentConversation = conversation;
-    updateConversationsList();
-    
-    // Clear và load messages
-    const chatArea = document.getElementById('chat-area');
-    if (chatArea) {
-        chatArea.innerHTML = '';
-        conversation.messages.forEach(msg => {
-            addMessage(msg.content, msg.type, false); // false = không lưu lại
-        });
-    }
-    
-    console.log('📖 Loaded conversation:', conversationId);
-}
-
-// Thêm tin nhắn vào cuộc trò chuyện
-function addMessageToConversation(content, type) {
-    if (!currentConversation) {
-        createNewConversation();
-    }
-    
-    const message = {
-        content: content,
-        type: type,
-        timestamp: new Date().toISOString()
-    };
-    
-    currentConversation.messages.push(message);
-    currentConversation.updatedAt = new Date().toISOString();
-    
-    // Update title nếu là tin nhắn đầu tiên
-    if (currentConversation.messages.length === 1 && type === 'user') {
-        currentConversation.title = content.length > 30 ? content.substring(0, 30) + '...' : content;
-    }
-    
-    saveConversations();
-    updateConversationsList();
-}
-
-// Xóa tất cả cuộc trò chuyện
-function clearAllConversations() {
-    if (confirm('Bạn có chắc muốn xóa tất cả lịch sử chat?')) {
-        conversations = [];
-        currentConversation = null;
-        saveConversations();
-        updateConversationsList();
-        
-        // Clear chat area
-        const chatArea = document.getElementById('chat-area');
-        if (chatArea) {
-            chatArea.innerHTML = '';
-        }
-        
-        console.log('🗑️ Cleared all conversations');
-    }
-}
-
-// ===== CHAT FUNCTIONALITY =====
-// Gửi tin nhắn
-async function sendMessage() {
-    const messageInput = document.getElementById('chat-input');
-    const selectedModel = document.getElementById('model-select');
-    
-    if (!messageInput || !selectedModel) return;
-    
-    const message = messageInput.value.trim();
-    const model = selectedModel.value;
-    
-    if (!message) {
-        alert('Vui lòng nhập tin nhắn!');
-        return;
-    }
-    
-    // Nếu không chọn model, sử dụng QwenService mặc định
-    if (!model || model === 'loading' || model === '') {
-        console.log('🤖 Không chọn model, sử dụng QwenService mặc định');
-        // Hiển thị thông báo cho user
-        const chatHeader = document.querySelector('.chat-header span');
-        if (chatHeader) {
-            chatHeader.textContent = 'Trợ lý AI Qwen (mặc định)';
-        }
-    }
-    
-    if (!currentUser) {
-        console.log('❌ currentUser is null, trying to sync...');
-        debugUserStatus(); // Debug trạng thái
-        
-        // Thử force sync trước
-        if (forceSyncUser()) {
-            console.log('✅ Force sync successful');
-        } else {
-            // Thử force reload
-            if (!forceReloadUser()) {
-                // Thử cách khác - kiểm tra localStorage trực tiếp
-                let userData = localStorage.getItem('user_data');
-                if (!userData) {
-                    userData = localStorage.getItem('user');
-                }
-                if (!userData) {
-                    userData = localStorage.getItem('userData');
-                }
-                console.log('🔍 Direct localStorage check:', userData);
-                
-                if (userData) {
-                    try {
-                        const parsedUser = JSON.parse(userData);
-                        console.log('✅ Parsed user from localStorage:', parsedUser);
-                        currentUser = parsedUser;
-                    } catch (error) {
-                        console.error('❌ Error parsing user_data:', error);
-                        alert('Vui lòng đăng nhập để sử dụng chat!');
-                        return;
-                    }
-                } else {
-                    alert('Vui lòng đăng nhập để sử dụng chat!');
-                    return;
-                }
-            }
-        }
-    }
-    
-    console.log('✅ currentUser found:', currentUser);
-    
-    // Ẩn welcome screen nếu có
-    const welcomeScreen = document.getElementById('welcome-screen');
-    if (welcomeScreen) {
-        welcomeScreen.style.display = 'none';
-    }
-    
-    // Add user message to chat
-    addMessage(message, 'user');
-    messageInput.value = '';
-    
-    // Show loading
-    showTypingIndicator();
-    
-    try {
-        // Gọi API chat với QwenService làm mặc định
-        const response = await fetchAPI('http://127.0.0.1:8000/api/chat-real.php', {
-            method: 'POST',
-            body: JSON.stringify({
-                message: message,
-                model: model || 'qwen3-235b-a22b', // Sử dụng Qwen mặc định nếu không chọn model
-                user_id: currentUser.id,
-                use_qwen_default: false // Sử dụng Key4U API thay vì QwenService
-            })
-        });
-        
-        hideTypingIndicator();
-        
-        console.log('🔍 API Response:', response);
-        console.log('🔍 Response success:', response.success);
-        console.log('🔍 Response data:', response.data);
-        
-        if (response.success) {
-            const aiResponse = response.data.content || response.data.response || '';
-            console.log('✅ Adding AI message:', aiResponse);
-            
-            // Kiểm tra nếu response rỗng
-            if (!aiResponse || aiResponse.trim() === '') {
-                addMessage('Xin chào! Tôi là AI assistant của Thư Viện AI. Hiện tại tôi đang được cập nhật, vui lòng thử lại sau.', 'assistant');
-            } else {
-                addMessage(aiResponse, 'assistant');
-            }
-        } else {
-            console.log('❌ API Error:', response.message);
-            addMessage('Lỗi: ' + (response.message || 'Không thể gửi tin nhắn'), 'assistant error');
-        }
-        
-    } catch (error) {
-        hideTypingIndicator();
-        addMessage('Lỗi kết nối: ' + error.message, 'assistant error');
-    }
+    wrapper.appendChild(paragraph);
+    return wrapper;
 }
 
 // Thêm tin nhắn vào chat
@@ -782,8 +545,19 @@ function addMessage(content, type, saveToHistory = true) {
     }
     
     const messageDiv = document.createElement('div');
-    messageDiv.className = `message ${type}`;
-    messageDiv.textContent = content;
+    messageDiv.classList.add('message');
+
+    const loweredType = (type || '').toLowerCase();
+    if (loweredType.includes('user')) {
+        messageDiv.classList.add('user');
+    } else {
+        messageDiv.classList.add('assistant');
+    }
+    if (loweredType.includes('error')) {
+        messageDiv.classList.add('error');
+    }
+
+    messageDiv.appendChild(createMessageContent(content));
     
     console.log('🔍 Created messageDiv:', messageDiv);
     console.log('🔍 Appending to container...');
@@ -937,9 +711,12 @@ async function init() {
         if (clearAllBtn) {
             clearAllBtn.addEventListener('click', clearAllConversations);
         }
-        
+
+        // Nạp lịch sử chat từ localStorage (nếu có)
+        loadConversations();
+
         console.log('✅ Khởi tạo hoàn tất!');
-        
+
     } catch (error) {
         console.error('❌ Lỗi khởi tạo:', error);
     }
@@ -1096,4 +873,333 @@ function updateSelectedModelDisplay() {
             chatHeader.textContent = `Trợ lý AI - ${model}`;
         }
     }
+}
+
+function renderConversationMessages(conversation) {
+    const chatArea = document.getElementById('chat-area');
+    if (!chatArea) return;
+
+    chatArea.innerHTML = '';
+    if (!conversation || !Array.isArray(conversation.messages)) {
+        return;
+    }
+
+    conversation.messages.forEach((msg) => {
+        addMessage(msg.content, msg.type, false);
+    });
+}
+
+function updateConversationsList() {
+    const list = document.getElementById('conversations-list');
+    if (!list) return;
+
+    if (!Array.isArray(conversations) || conversations.length === 0) {
+        list.innerHTML = `
+            <div class="no-conversations">
+                <p>Chưa có cuộc trò chuyện nào</p>
+                <p>Bắt đầu chat để tạo lịch sử!</p>
+            </div>`;
+        return;
+    }
+
+    list.innerHTML = conversations.map((conv) => {
+        const activeClass = currentConversation && conv.id === currentConversation.id ? 'active' : '';
+        const title = conv.title || 'Cuộc trò chuyện mới';
+        const updatedAt = conv.updatedAt ? new Date(conv.updatedAt).toLocaleString() : '';
+        return `
+            <div class="conversation-item ${activeClass}" data-conversation-id="${conv.id}">
+                <div class="conversation-title">${title}</div>
+                <div class="conversation-time">${updatedAt}</div>
+                <div class="conversation-messages-count">${conv.messages?.length || 0} tin nhắn</div>
+            </div>`;
+    }).join('');
+
+    list.querySelectorAll('.conversation-item').forEach((item) => {
+        item.addEventListener('click', () => {
+            const id = item.getAttribute('data-conversation-id');
+            const found = conversations.find((conv) => conv.id === id);
+            if (found) {
+                currentConversation = found;
+                updateConversationsList();
+                renderConversationMessages(found);
+            }
+        });
+    });
+}
+
+function saveConversations() {
+    try {
+        localStorage.setItem('chat_conversations', JSON.stringify(conversations));
+    } catch (error) {
+        console.error('❌ Không thể lưu lịch sử chat:', error);
+    }
+}
+
+function loadConversations() {
+    const raw = localStorage.getItem('chat_conversations');
+    if (raw) {
+        try {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed)) {
+                conversations = parsed;
+            }
+        } catch (error) {
+            console.error('❌ Không thể parse lịch sử chat:', error);
+            conversations = [];
+        }
+    }
+
+    if (!Array.isArray(conversations)) {
+        conversations = [];
+    }
+
+    if (!currentConversation && conversations.length > 0) {
+        currentConversation = conversations[0];
+        renderConversationMessages(currentConversation);
+    }
+
+    updateConversationsList();
+}
+
+function createNewConversation() {
+    const conversation = {
+        id: `conv_${Date.now()}`,
+        title: 'Cuộc trò chuyện mới',
+        messages: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+    };
+
+    conversations.unshift(conversation);
+    currentConversation = conversation;
+    saveConversations();
+    updateConversationsList();
+    return conversation;
+}
+
+function addMessageToConversation(content, type) {
+    if (!currentConversation) {
+        createNewConversation();
+    }
+
+    if (!currentConversation) {
+        return;
+    }
+
+    const message = {
+        content,
+        type,
+        timestamp: new Date().toISOString()
+    };
+
+    currentConversation.messages = currentConversation.messages || [];
+    currentConversation.messages.push(message);
+    currentConversation.updatedAt = message.timestamp;
+
+    if (!currentConversation.title && type === 'user') {
+        currentConversation.title = content.slice(0, 40) || 'Cuộc trò chuyện mới';
+    }
+
+    saveConversations();
+    updateConversationsList();
+}
+
+function clearAllConversations() {
+    if (!confirm('Bạn có chắc muốn xóa tất cả lịch sử chat?')) {
+        return;
+    }
+    conversations = [];
+    currentConversation = null;
+    saveConversations();
+    updateConversationsList();
+    const chatArea = document.getElementById('chat-area');
+    if (chatArea) {
+        chatArea.innerHTML = '';
+    }
+}
+
+async function sendMessage() {
+    const messageInput = document.getElementById('chat-input');
+    const modelSelect = document.getElementById('model-select');
+    const fileInput = document.getElementById('document-upload');
+
+    if (!messageInput || !modelSelect) return;
+
+    const message = messageInput.value.trim();
+    const model = modelSelect.value;
+
+    if (!message && !uploadedDocument) {
+        alert('Vui lòng nhập tin nhắn hoặc chọn tài liệu!');
+        return;
+    }
+
+    if (!currentUser) {
+        const loggedIn = await checkLoginStatus();
+        if (!loggedIn) {
+            alert('Vui lòng đăng nhập để tiếp tục.');
+            return;
+        }
+    }
+
+    const formatMatch = message.match(/tạo\s+file\s+([\w.\-]+)/i);
+    const resolvedFormat = formatMatch && formatMatch[1] ? resolveOutputFormat(formatMatch[1]) : null;
+    const hasAttachment = Boolean(uploadedDocument);
+
+    if (message) {
+        addMessage(message, 'user');
+    }
+
+    messageInput.value = '';
+    showTypingIndicator();
+
+    try {
+        if (hasAttachment && uploadedDocument) {
+            const docResult = await processUploadedDocument(uploadedDocument, message, {
+                includeDocumentNote: true,
+                outputFormat: resolvedFormat || 'auto'
+            });
+
+            if (fileInput) {
+                clearDocumentSelection(fileInput);
+            } else {
+                uploadedDocument = null;
+            }
+
+            if (docResult && docResult.type === 'file' && docResult.blob) {
+                const linkInfo = createDownloadLink(docResult.blob, docResult.filename || `ket-qua-${Date.now()}.bin`);
+                if (linkInfo) {
+                    addDownloadLinkMessage(`📁 AI đã tạo file ${linkInfo.filename}.`, linkInfo);
+                } else {
+                    addMessage('⚠️ Không thể tạo link tải file.', 'assistant error');
+                }
+            } else {
+                const textContent = extractTextResult(docResult) || 'AI đã xử lý tài liệu.';
+                addMessage(textContent, 'assistant');
+
+                if (resolvedFormat) {
+                    const filename = `ket-qua-${Date.now()}.${resolvedFormat}`;
+                    const linkInfo = createDownloadLink(textContent, filename, resolvedFormat);
+                    if (linkInfo) {
+                        addDownloadLinkMessage(`📁 File .${resolvedFormat} đã sẵn sàng`, linkInfo);
+                    }
+                }
+            }
+        } else {
+            const response = await fetchAPI('http://127.0.0.1:8000/api/chat-real.php', {
+                method: 'POST',
+                body: JSON.stringify({
+                    message,
+                    model: model || 'qwen3-235b-a22b',
+                    user_id: currentUser.id,
+                    use_qwen_default: false
+                })
+            });
+
+            if (response.success) {
+                const aiResponse = response.data.content || response.data.response || '';
+                const finalText = aiResponse && aiResponse.trim() !== ''
+                    ? aiResponse
+                    : 'Xin chào! Tôi đang được cập nhật, vui lòng thử lại sau.';
+
+                addMessage(finalText, 'assistant');
+
+                if (resolvedFormat) {
+                    const filename = `ket-qua-${Date.now()}.${resolvedFormat}`;
+                    const linkInfo = createDownloadLink(finalText, filename, resolvedFormat);
+                    if (linkInfo) {
+                        addDownloadLinkMessage(`📁 File .${resolvedFormat} đã sẵn sàng`, linkInfo);
+                    }
+                }
+            } else {
+                addMessage('Lỗi: ' + (response.message || 'Không thể gửi tin nhắn'), 'assistant error');
+            }
+        }
+    } catch (error) {
+        console.error('❌ Lỗi khi gửi tin nhắn hoặc xử lý tài liệu:', error);
+        addMessage('Lỗi kết nối: ' + error.message, 'assistant error');
+    } finally {
+        hideTypingIndicator();
+    }
+}
+
+async function processUploadedDocument(file, promptText = '', options = {}) {
+    if (!file) return null;
+
+    if (!currentUser) {
+        const loggedIn = await checkLoginStatus();
+        if (!loggedIn) {
+            throw new Error('Vui lòng đăng nhập để sử dụng tính năng tải tài liệu.');
+        }
+    }
+
+    const { includeDocumentNote = true, outputFormat = 'auto' } = options;
+    const trimmedPrompt = (promptText || '').trim();
+    let finalPrompt = trimmedPrompt || DEFAULT_DOCUMENT_PROMPT.replace('tài liệu này', `tài liệu "${file.name}"`);
+
+    if (includeDocumentNote) {
+        finalPrompt = `${finalPrompt}\n\n(Tài liệu đính kèm: ${file.name})`;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file, file.name);
+    formData.append('user_prompt', finalPrompt);
+    formData.append('output_format', outputFormat || 'auto');
+
+    const token = localStorage.getItem('user_token');
+    const headers = {};
+    if (token) {
+        formData.append('auth_token', token);
+        headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch('http://127.0.0.1:8000/api/ai-tool', {
+        method: 'POST',
+        headers,
+        body: formData
+    });
+
+    if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText || response.statusText}`);
+    }
+
+    const disposition = response.headers.get('content-disposition') || '';
+    if (disposition.includes('attachment')) {
+        const blob = await response.blob();
+        const filename = extractFilenameFromDisposition(disposition) || `ket-qua-ai-${Date.now()}.bin`;
+        return { type: 'file', blob, filename };
+    }
+
+    const contentType = response.headers.get('content-type') || '';
+    let payload;
+
+    if (contentType.includes('application/json')) {
+        try {
+            payload = await response.json();
+        } catch (error) {
+            console.warn('Không thể parse JSON, đọc text fallback:', error);
+            const fallbackText = await response.text();
+            payload = fallbackText;
+        }
+    } else {
+        const rawText = await response.text();
+        try {
+            payload = JSON.parse(rawText);
+        } catch (error) {
+            payload = rawText;
+        }
+    }
+
+    if (payload && typeof payload === 'object' && 'success' in payload) {
+        if (!payload.success) {
+            throw new Error(payload.message || 'Không thể xử lý tài liệu.');
+        }
+
+        return {
+            type: payload.type || (typeof payload.data === 'object' ? 'json' : 'text'),
+            data: payload.data !== undefined ? payload.data : payload.result
+        };
+    }
+
+    return payload;
 }
