@@ -112,7 +112,7 @@ function logout() {
 // ===== API FUNCTIONS =====
 // Gọi API với authentication
 async function fetchAPI(url, options = {}) {
-    const token = localStorage.getItem('user_token');
+    const token = localStorage.getItem('user_token'); // JWT được lưu bởi frontend
     const headers = {
         'Content-Type': 'application/json',
         ...options.headers
@@ -317,6 +317,7 @@ function triggerFileDownload(blob, filename) {
 }
 
 function displayAIToolResult(result) {
+    // Hàm quy về dạng tin nhắn hiển thị trong chat dựa trên kiểu dữ liệu trả về
     if (typeof result === 'string') {
         addMessage(result, 'assistant');
         return;
@@ -358,6 +359,7 @@ function displayAIToolResult(result) {
 async function processUploadedDocument(file) {
     if (!file) return;
 
+    // Nếu người dùng chưa đăng nhập → nhắc đăng nhập trước khi gọi AI
     if (!currentUser) {
         const loggedIn = await checkLoginStatus();
         if (!loggedIn) {
@@ -370,6 +372,7 @@ async function processUploadedDocument(file) {
     let promptText = chatInput ? chatInput.value.trim() : '';
     const usedCustomPrompt = Boolean(promptText);
 
+    // Nếu người dùng không nhập gì, dùng prompt mặc định tóm tắt tài liệu
     let finalPrompt;
     if (usedCustomPrompt) {
         finalPrompt = `${promptText}\n\n(Tài liệu đính kèm: ${file.name})`;
@@ -377,6 +380,7 @@ async function processUploadedDocument(file) {
         finalPrompt = DEFAULT_DOCUMENT_PROMPT.replace('tài liệu này', `tài liệu "${file.name}"`);
     }
 
+    // Hiển thị người dùng đã yêu cầu gì trước khi chờ phản hồi
     addMessage(finalPrompt, 'user');
 
     if (usedCustomPrompt && chatInput) {
@@ -390,7 +394,7 @@ async function processUploadedDocument(file) {
     formData.append('user_prompt', finalPrompt);
     formData.append('output_format', 'auto');
 
-    const token = localStorage.getItem('user_token');
+    const token = localStorage.getItem('user_token'); // JWT được lưu bởi frontend
     const headers = {};
     if (token) {
         headers['Authorization'] = `Bearer ${token}`;
@@ -789,6 +793,7 @@ function addMessage(content, type, saveToHistory = true) {
     
     // Lưu vào lịch sử nếu cần
     if (saveToHistory) {
+        // Lưu lại nội dung thô để khôi phục khi người dùng mở lại lịch sử
         addMessageToConversation(content, type);
     }
     

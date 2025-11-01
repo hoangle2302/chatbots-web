@@ -25,6 +25,7 @@ def process_request(
 
     text = extract_text(file_path, filename)
 
+    # Tạo prompt tổng hợp: yêu cầu của người dùng + nội dung tài liệu trích xuất
     ai_prompt = f"""
 Hãy thực hiện yêu cầu sau dựa trên tài liệu được cung cấp.
 
@@ -35,9 +36,12 @@ Tài liệu:
 """
 
     json_mode = output_format in ["json", "csv"]
+    # Gọi AI (qua Key4U) với prompt đã xây dựng
     ai_response = call_ai(ai_prompt, json_mode=json_mode, api_key=api_key)
 
     if output_format in ["json", "csv"]:
+        # Với JSON/CSV: sinh file tạm để PHP tải về
         return generate_file(ai_response, output_format)
     else:
+        # Trả về plain text cho PHP hiển thị
         return ai_response

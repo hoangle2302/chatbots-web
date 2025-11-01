@@ -15,6 +15,7 @@ async def process_file(
     authorization: Optional[str] = Header(default=None),
     internal_key: Optional[str] = Header(default=None, alias="X-Internal-Key")
 ):
+    # Ưu tiên lấy API key từ header Authorization/X-Internal-Key do backend PHP gửi sang
     api_key: Optional[str] = None
     if authorization:
         scheme_split = authorization.split(" ", 1)
@@ -26,11 +27,13 @@ async def process_file(
         api_key = internal_key.strip()
 
     with tempfile.NamedTemporaryFile(delete=False) as tmp:
+        # Lưu nội dung upload vào file tạm để xử lý
         content = await file.read()
         tmp.write(content)
         tmp_path = tmp.name
 
     try:
+        # Gọi core.tasks.process_request để parse + gọi API mô hình
         result = process_request(
             file_path=tmp_path,
             filename=file.filename,
@@ -40,6 +43,7 @@ async def process_file(
         )
 
         if isinstance(result, dict) and "file_path" in result:
+            # Trả về file (docx/pdf/...) cho backend PHP
             return FileResponse(
                 path=result["file_path"],
                 filename=result["filename"],
@@ -51,5 +55,6 @@ async def process_file(
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
     finally:
+        # Dọn file tạm dù xử lý thành công hay thất bại
         if os.path.exists(tmp_path):
             os.unlink(tmp_path)

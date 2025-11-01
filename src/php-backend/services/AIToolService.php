@@ -13,8 +13,11 @@ class AIToolService
         $config = new Config();
         $aiToolConfig = $config->getAiToolConfig();
 
+        // URL FastAPI nội bộ nhận request xử lý file
         $this->baseUrl = rtrim($aiToolConfig['base_url'] ?? 'http://127.0.0.1:8001', '/');
+        // Thời gian chờ tối đa khi gọi qua mạng nội bộ
         $this->timeout = (int)($aiToolConfig['timeout'] ?? 120);
+        // Khóa nội bộ (nếu cấu hình) để xác thực giữa PHP ↔ FastAPI
         $this->internalKey = $aiToolConfig['api_key'] ?? '';
     }
 
@@ -32,6 +35,7 @@ class AIToolService
             throw new InvalidArgumentException('Prompt không được để trống.');
         }
 
+        // Đoán mime-type để FastAPI biết kiểu file nhận được
         $mime = $this->detectMimeType($filePath, $originalName);
         $curlFile = new CURLFile($filePath, $mime, $originalName ?: basename($filePath));
 
@@ -53,6 +57,7 @@ class AIToolService
 
         $headers = [];
         if (!empty($this->internalKey)) {
+            // Header xác thực nội bộ (FastAPI có thể kiểm tra)
             $headers[] = 'X-Internal-Key: ' . $this->internalKey;
             $headers[] = 'Authorization: Bearer ' . $this->internalKey;
         }
@@ -85,6 +90,7 @@ class AIToolService
         $contentDisposition = $this->extractHeader($headerString, 'Content-Disposition');
 
         if ($contentDisposition) {
+            // FastAPI trả về file: lưu ra file tạm rồi trả đường dẫn cho PHP API
             $filename = $this->parseFilenameFromDisposition($contentDisposition) ?? 'result.bin';
             $tmpPath = $this->storeTempFile($body, $filename);
 
@@ -96,6 +102,7 @@ class AIToolService
             ];
         }
 
+        // Trường hợp trả JSON/text thuần
         $decoded = json_decode($body, true);
         if (json_last_error() === JSON_ERROR_NONE) {
             return [
@@ -119,6 +126,7 @@ class AIToolService
             }
         }
 
+        // fallback: dựa vào đuôi file để chọn mime-type cơ bản
         $ext = strtolower(pathinfo($originalName ?: $filePath, PATHINFO_EXTENSION));
         $map = [
             'pdf' => 'application/pdf',
@@ -164,6 +172,7 @@ class AIToolService
 
     private function storeTempFile(string $content, string $filename): string
     {
+        // Lưu nội dung nhận được vào file tạm (để PHP trả về cho client)
         $tmpPath = tempnam(sys_get_temp_dir(), 'aitool_');
         if ($tmpPath === false) {
             throw new RuntimeException('Không thể tạo file tạm để lưu kết quả.');

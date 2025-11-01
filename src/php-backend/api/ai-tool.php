@@ -29,13 +29,16 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 try {
     $auth = new AuthMiddleware();
+    // Lấy JWT từ header Authorization (Bearer token)
     $token = $auth->getTokenFromRequest();
 
     if (!$token && isset($_POST['auth_token'])) {
+        // Trường hợp frontend gửi kèm qua form-data (đề phòng server bỏ header)
         $token = trim((string)$_POST['auth_token']);
     }
 
     if (!$token) {
+        // Không có token → từ chối luôn để tránh gọi FastAPI tốn tài nguyên
         header('Content-Type: application/json; charset=utf-8');
         http_response_code(401);
         echo json_encode([
@@ -45,6 +48,7 @@ try {
         exit;
     }
 
+    // Giải mã JWT để lấy thông tin người dùng
     $currentUser = $auth->getCurrentUser($token);
 
     if (!$currentUser) {
@@ -58,6 +62,7 @@ try {
     }
 
     if (!isset($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
+        // Frontend phải gửi kèm file hợp lệ thì mới xử lý
         throw new InvalidArgumentException('Vui lòng tải lên một file hợp lệ.');
     }
 
@@ -69,6 +74,7 @@ try {
     $originalName = $uploadedFile['name'];
 
     $service = new AIToolService();
+    // Gọi service PHP → proxy qua FastAPI xử lý tài liệu
     $result = $service->processFile($filePath, $originalName, $prompt, $outputFormat);
 
     if ($result['type'] === 'file') {
@@ -77,6 +83,7 @@ try {
         $path = $result['path'];
 
         if (!is_readable($path)) {
+            // Trường hợp hiếm: file tạm bị xóa trước khi trả về
             throw new RuntimeException('Không thể đọc file kết quả.');
         }
 
@@ -96,6 +103,7 @@ try {
     header('Content-Type: application/json; charset=utf-8');
     http_response_code(200);
     echo json_encode([
+        // Trả về dữ liệu (text/json) hoặc tên file để frontend chủ động hiển thị
         'success' => true,
         'data' => $result['data'] ?? $result['type'],
         'type' => $result['type']
