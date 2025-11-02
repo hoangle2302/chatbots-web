@@ -147,7 +147,8 @@ function logout() {
 // ===== API FUNCTIONS =====
 // Gọi API với authentication
 async function fetchAPI(url, options = {}) {
-    const token = localStorage.getItem('user_token'); // JWT được lưu bởi frontend
+    // Hỗ trợ cả 2 key: token và user_token
+    const token = localStorage.getItem('token') || localStorage.getItem('user_token');
     const headers = {
         'Content-Type': 'application/json',
         ...options.headers
@@ -753,7 +754,63 @@ function forceSyncUser() {
     }
 }
 
-// Function để refresh credits
+// Function để cập nhật credit hiển thị trên UI
+function updateUserCreditsDisplay(credits) {
+    const userCreditsElement = document.getElementById('user-credits');
+    if (userCreditsElement) {
+        // Format số với dấu phẩy để dễ đọc (ví dụ: 99,999)
+        const formattedCredits = credits.toLocaleString('vi-VN');
+        userCreditsElement.textContent = `${formattedCredits} credits`;
+        console.log('✅ Updated user credits display to:', formattedCredits, '(raw:', credits + ')');
+        
+        // Cập nhật trong localStorage nếu có currentUser
+        if (currentUser) {
+            currentUser.credits = credits;
+            localStorage.setItem('user_data', JSON.stringify(currentUser));
+            console.log('✅ Updated currentUser.credits to:', credits);
+        } else {
+            console.warn('⚠️ currentUser is not set, cannot update localStorage');
+        }
+    } else {
+        console.error('❌ user-credits element not found in DOM');
+    }
+}
+
+// Function để refresh credits từ API
+async function refreshUserCreditsFromAPI() {
+    try {
+        const token = localStorage.getItem('token') || localStorage.getItem('user_token');
+        if (!token) {
+            console.warn('⚠️ No token found, cannot refresh credits from API');
+            return;
+        }
+
+        const backendUrl = window.APP_CONFIG?.BACKEND_URL || 'http://127.0.0.1:8000';
+        const response = await fetch(`${backendUrl}/api/auth.php?action=profile`, {
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.status === 401) {
+            console.warn('⚠️ Token expired or invalid');
+            return;
+        }
+
+        if (response.ok) {
+            const data = await response.json();
+            if (data.success && data.data && data.data.credits !== undefined) {
+                updateUserCreditsDisplay(data.data.credits);
+                console.log('✅ Refreshed credits from API:', data.data.credits);
+            }
+        }
+    } catch (error) {
+        console.error('❌ Error refreshing credits from API:', error);
+    }
+}
+
+// Function để refresh credits từ localStorage
 function refreshUserCredits() {
     const userCreditsElement = document.getElementById('user-credits');
     if (!userCreditsElement) return;
@@ -770,8 +827,8 @@ function refreshUserCredits() {
     if (userData) {
         try {
             const user = JSON.parse(userData);
-            userCreditsElement.textContent = (user.credits || 0) + ' credits';
-            console.log('✅ Refreshed user credits:', user.credits || 0);
+            updateUserCreditsDisplay(user.credits || 0);
+            console.log('✅ Refreshed user credits from localStorage:', user.credits || 0);
         } catch (error) {
             console.error('❌ Error parsing user data:', error);
         }
@@ -1095,6 +1152,8 @@ async function sendMessage() {
                 })
             });
 
+            console.log('📥 Chat API Response:', response);
+
             if (response.success) {
                 const aiResponse = response.data.content || response.data.response || '';
                 const finalText = aiResponse && aiResponse.trim() !== ''
@@ -1102,6 +1161,18 @@ async function sendMessage() {
                     : 'Xin chào! Tôi đang được cập nhật, vui lòng thử lại sau.';
 
                 addMessage(finalText, 'assistant');
+
+                // Cập nhật credit nếu có trong response
+                if (response.data.credits_remaining !== undefined) {
+                    console.log('💳 Credits remaining from API:', response.data.credits_remaining);
+                    updateUserCreditsDisplay(response.data.credits_remaining);
+                } else {
+                    console.warn('⚠️ credits_remaining not found in response, refreshing from server...');
+                    // Refresh credits từ server nếu không có trong response
+                    setTimeout(() => {
+                        refreshUserCreditsFromAPI();
+                    }, 500);
+                }
 
                 if (resolvedFormat) {
                     const filename = `ket-qua-${Date.now()}.${resolvedFormat}`;
@@ -1111,7 +1182,18 @@ async function sendMessage() {
                     }
                 }
             } else {
-                addMessage('Lỗi: ' + (response.message || 'Không thể gửi tin nhắn'), 'assistant error');
+                // Xử lý lỗi không đủ credit
+                if (response.code === 'INSUFFICIENT_CREDITS') {
+                    addMessage('Không đủ credit để gửi câu hỏi. Vui lòng nạp thêm credit.', 'assistant error');
+                    // Cập nhật credit hiển thị nếu có
+                    if (response.credits !== undefined) {
+                        updateUserCreditsDisplay(response.credits);
+                    }
+                    // Refresh credits từ server
+                    refreshUserCredits();
+                } else {
+                    addMessage('Lỗi: ' + (response.error || response.message || 'Không thể gửi tin nhắn'), 'assistant error');
+                }
             }
         }
     } catch (error) {

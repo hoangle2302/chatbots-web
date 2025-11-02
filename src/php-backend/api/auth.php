@@ -51,7 +51,7 @@ switch ($method) {
     case 'POST':
         switch ($action) {
             case 'register':
-                handleRegister($user, $log);
+                handleRegister($user, $log, $auth);
                 break;
             case 'login':
                 handleLogin($user, $log, $auth);
@@ -81,7 +81,7 @@ switch ($method) {
 /**
  * Xử lý đăng ký người dùng
  */
-function handleRegister($user, $log) {
+function handleRegister($user, $log, $auth) {
     $input = json_decode(file_get_contents('php://input'), true);
     
     // Validation
@@ -119,12 +119,32 @@ function handleRegister($user, $log) {
         $log->detail = "User đăng ký: {$username}";
         $log->create();
         
+        // Lấy thông tin user đầy đủ sau khi tạo
+        $userData = $user->getById($user->id);
+        
+        // Tạo token để tự động đăng nhập
+        $token = $auth->generateToken($userData['id'], $userData['username'], $userData['role']);
+        
+        // Log đăng nhập tự động
+        $log->user_id = $user->id;
+        $log->action = 'user_login';
+        $log->detail = "User tự động đăng nhập sau đăng ký: {$username}";
+        $log->create();
+        
         echo json_encode([
             'success' => true,
             'message' => 'Đăng ký thành công',
             'data' => [
-                'user_id' => $user->id,
-                'username' => $username
+                'token' => $token,
+                'user' => [
+                    'id' => $userData['id'],
+                    'username' => $userData['username'],
+                    'email' => $userData['email'],
+                    'display_name' => $userData['display_name'],
+                    'role' => $userData['role'],
+                    'credits' => $userData['credits'] ?? 0
+                ],
+                'expires_in' => 24 * 60 * 60 // 24 hours
             ]
         ]);
     } else {

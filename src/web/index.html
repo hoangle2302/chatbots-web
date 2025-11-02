@@ -1238,42 +1238,178 @@
             const allOptions = Array.from(modelSelect.options);
             let originalOptions = [...allOptions];
             
+            // ===== PROVIDER MAPPING - Tối ưu logic lọc =====
+            const providerMappings = {
+                'openai': {
+                    keywords: ['gpt', 'dall', 'whisper', 'tts', 'o1', 'o3', 'o4', 'openai', 'chatgpt', 'text-', 'babbage', 'ada', 'davinci', 'curie'],
+                    providerName: 'OpenAI'
+                },
+                'openai-plus': {
+                    keywords: ['gpt-4', 'gpt-5', 'o1', 'o3', 'o4', 'plus'],
+                    providerName: 'OpenAI Plus'
+                },
+                'claude': {
+                    keywords: ['claude', 'anthropic'],
+                    providerName: 'Anthropic'
+                },
+                'google': {
+                    keywords: ['gemini', 'palm', 'bard', 'imagen', 'veo', 'google'],
+                    providerName: 'Google'
+                },
+                'chinese': {
+                    keywords: ['qwen', 'ernie', 'doubao', 'glm', 'hunyuan', 'yi', 'deepseek', 'kimi', 'baichuan', 'chatglm', 'zhipu', 'moonshot', 'internlm', 'spark', 'sensetime', 'minimax', '360', 'step', 'abab', 'skylark', 'chinese'],
+                    providerName: 'Chinese AI'
+                },
+                'image': {
+                    keywords: ['dall', 'flux', 'stable', 'midjourney', 'imagen', 'ideogram', 'recraft', 'image', 'ảnh', 'playground', 'leonardo', 'firefly', 'kandinsky', 'wuerstchen', 'sdxl', 'sd-', 'artistic', 'draw'],
+                    providerName: 'Image AI'
+                },
+                'audio': {
+                    keywords: ['whisper', 'tts', 'suno', 'riffusion', 'audio', 'speech', 'bark', 'musicgen', 'audiogen', 'elevenlabs', 'voice', 'sound'],
+                    providerName: 'Audio AI'
+                },
+                'video': {
+                    keywords: ['video', 'luma', 'runway', 'kling', 'minimax', 'veo', 'pika', 'gen-', 'synthesia', 'd-id', 'pictory', 'animatediff', 'zeroscope'],
+                    providerName: 'Video AI'
+                },
+                'siliconflow': {
+                    keywords: ['siliconflow'],
+                    providerName: 'SiliconFlow'
+                },
+                'deepseek': {
+                    keywords: ['deepseek'],
+                    providerName: 'DeepSeek'
+                },
+                'doubao': {
+                    keywords: ['doubao'],
+                    providerName: 'Doubao'
+                }
+            };
+            
+            // Vietnamese search mappings
+            const vietnameseSearchMap = {
+                'gpt': 'gpt',
+                'claude': 'claude',
+                'gemini': 'gemini',
+                'ảnh': ['dall', 'flux', 'stable'],
+                'âm thanh': ['whisper', 'tts', 'suno'],
+                'video': ['video', 'luma', 'runway']
+            };
+            
+            // ===== CACHE PROVIDER & MODEL TYPE - Tối ưu hiệu năng =====
+            const optionCache = new Map();
+            
+            // Thứ tự ưu tiên: Provider cụ thể trước, category chung sau
+            const providerPriority = [
+                'openai-plus', // Special case - check trước openai
+                'openai', 'claude', 'google', 'chinese', 
+                'deepseek', 'doubao', 'siliconflow', // Provider cụ thể
+                'image', 'video', 'audio' // Category chung sau cùng
+            ];
+            
+            allOptions.forEach(option => {
+                const text = option.textContent.toLowerCase();
+                const value = option.value.toLowerCase();
+                
+                // Cache provider - kiểm tra theo thứ tự ưu tiên
+                let provider = null;
+                
+                // Xử lý special cases trước - models có thể thuộc nhiều category
+                // "imagen" và "veo" là Google models, không phải Image/Video category
+                const specialGoogleKeywords = ['imagen', 'veo', 'gemini', 'palm', 'bard', 'google'];
+                const isGoogleModel = specialGoogleKeywords.some(keyword => 
+                    value.includes(keyword) || text.includes(keyword)
+                );
+                
+                if (isGoogleModel) {
+                    provider = 'google';
+                } else {
+                    // Kiểm tra theo thứ tự ưu tiên
+                    for (const key of providerPriority) {
+                        const mapping = providerMappings[key];
+                        if (mapping && mapping.keywords.some(keyword => {
+                            // Exact match hoặc contains
+                            return value.includes(keyword) || text.includes(keyword);
+                        })) {
+                            provider = key;
+                            break;
+                        }
+                    }
+                    
+                    // Nếu không tìm thấy trong priority list, kiểm tra các provider còn lại
+                    if (!provider) {
+                        for (const [key, mapping] of Object.entries(providerMappings)) {
+                            if (!providerPriority.includes(key) && 
+                                mapping.keywords.some(keyword => value.includes(keyword) || text.includes(keyword))) {
+                                provider = key;
+                                break;
+                            }
+                        }
+                    }
+                }
+                
+                if (!provider) provider = 'other';
+                
+                // Cache model type
+                let modelType = 'text';
+                if (text.includes('dall') || text.includes('flux') || text.includes('stable') || text.includes('image') || value.includes('image')) {
+                    modelType = 'image';
+                } else if (text.includes('whisper') || text.includes('tts') || text.includes('suno') || text.includes('audio') || value.includes('audio')) {
+                    modelType = 'audio';
+                } else if (text.includes('kling') || text.includes('veo') || text.includes('video') || value.includes('video')) {
+                    modelType = 'video';
+                }
+                
+                optionCache.set(option, { provider, modelType, text, value });
+            });
+            
+            // Debounce function for search input
+            function debounce(func, wait) {
+                let timeout;
+                return function executedFunction(...args) {
+                    const later = () => {
+                        clearTimeout(timeout);
+                        func(...args);
+                    };
+                    clearTimeout(timeout);
+                    timeout = setTimeout(later, wait);
+                };
+            }
+            
             // Cập nhật số lượng models cho mỗi provider
             updateProviderCounts();
             
-            // Debug tạm thời - có thể xóa sau
-            console.log('=== DEBUG PROVIDER COUNTS ===');
-            debugOpenAIModels();
+            // ===== KHỞI TẠO MẶC ĐỊNH - Không lọc gì cả, hiển thị tất cả models =====
+            // Đảm bảo tất cả filters ở trạng thái mặc định
+            selectedCategory = ''; // Chọn "Tất cả providers"
             
-            // Keyboard shortcuts để test nhanh
-            document.addEventListener('keydown', function(e) {
-                // Chỉ hoạt động khi không focus vào input
-                if (e.target.tagName !== 'INPUT') {
-                    switch(e.key) {
-                        case '1': testProviderFiltering('openai'); break;
-                        case '2': testProviderFiltering('claude'); break; 
-                        case '3': testProviderFiltering('google'); break;
-                        case '4': testProviderFiltering('chinese'); break;
-                        case '0': testProviderFiltering(''); break; // Reset
-                    }
+            // Đảm bảo tất cả checkboxes đều được check (hiển thị tất cả types)
+            Object.values(filterCheckboxes).forEach(checkbox => {
+                if (checkbox) {
+                    checkbox.checked = true;
                 }
             });
             
-            // Console helpers
-            console.log('🎮 Keyboard shortcuts:');
-            console.log('1 = OpenAI, 2 = Claude, 3 = Google, 4 = Chinese, 0 = Reset');
+            // Đảm bảo search input rỗng
+            if (searchInput) {
+                searchInput.value = '';
+            }
             
-            // Test ngay filtering khi load page
-            console.log('🧪 INITIAL TESTING...');
-            console.log('Total models available:', allOptions.length);
-            console.log('Provider options count:', providerOptions.length);
-            console.log('First few models:', allOptions.slice(0, 5).map(opt => opt.value));
+            // Đảm bảo provider "Tất cả providers" được active
+            if (providerOptions.length > 0) {
+                providerOptions.forEach(opt => opt.classList.remove('active'));
+                providerOptions[0].classList.add('active'); // Provider đầu tiên là "Tất cả providers"
+            }
             
-            // Test filtering ngay
-            setTimeout(() => {
-                console.log('🔄 Testing OpenAI filtering...');
-                testProviderFiltering('openai');
-            }, 1000);
+            // Reset sort về mặc định
+            if (sortSelect) {
+                sortSelect.value = 'default';
+            }
+            
+            // Hiển thị tất cả models mặc định (không lọc gì cả)
+            filterModels();
+            updateFilterStatus();
+            updateModelCount();
             
             // Tạo global function để user có thể test
             window.testOpenAI = () => {
@@ -1534,6 +1670,14 @@
             }
             
             function getProviderFromOption(option) {
+                // Sử dụng cache nếu có
+                const cached = optionCache.get(option);
+                if (cached && cached.provider) {
+                    // Convert provider key to display name
+                    return providerMappings[cached.provider]?.providerName || 'Other';
+                }
+                
+                // Fallback nếu không có cache (tương thích ngược)
                 const text = option.textContent.toLowerCase();
                 const value = option.value.toLowerCase();
                 
@@ -1635,7 +1779,7 @@
                 };
             }
             
-            // Hàm để debug và kiểm tra phân loại models
+            // Hàm để debug và kiểm tra phân loại models - Sử dụng cache trực tiếp
             function debugModelCategories() {
                 const categories = {
                     'OpenAI': [],
@@ -1649,9 +1793,41 @@
                     'Other': []
                 };
                 
+                // Map provider keys to display names
+                const providerKeyToDisplayName = {
+                    'openai': 'OpenAI',
+                    'openai-plus': 'OpenAI', // OpenAI Plus models go to OpenAI
+                    'claude': 'Anthropic',
+                    'google': 'Google',
+                    'chinese': 'Chinese',
+                    'image': 'Image',
+                    'audio': 'Audio',
+                    'video': 'Video',
+                    'siliconflow': 'SiliconFlow',
+                    'deepseek': 'Chinese', // DeepSeek is Chinese AI
+                    'doubao': 'Chinese', // Doubao is Chinese AI
+                    'other': 'Other'
+                };
+                
                 allOptions.forEach(option => {
-                    const provider = getProviderFromOption(option);
-                    categories[provider].push(option.textContent);
+                    // Sử dụng cache trực tiếp thay vì getProviderFromOption()
+                    const cached = optionCache.get(option);
+                    if (cached && cached.provider) {
+                        const displayName = providerKeyToDisplayName[cached.provider] || 'Other';
+                        if (categories[displayName]) {
+                            categories[displayName].push(option.textContent);
+                        } else {
+                            categories.Other.push(option.textContent);
+                        }
+                    } else {
+                        // Fallback nếu không có cache
+                        const provider = getProviderFromOption(option);
+                        if (categories[provider]) {
+                            categories[provider].push(option.textContent);
+                        } else {
+                            categories.Other.push(option.textContent);
+                        }
+                    }
                 });
                 
                 console.log('Model categories:', categories);
@@ -1753,7 +1929,7 @@
                 }
             }
             
-            // Hàm cập nhật số lượng models dựa trên kết quả filtering hiện tại
+            // Hàm cập nhật số lượng models dựa trên kết quả filtering hiện tại - Tối ưu với cache
             function updateDynamicProviderCounts(filteredOptions) {
                 const counts = {
                     'openai': 0,
@@ -1772,22 +1948,24 @@
                 let totalCount = filteredOptions.length;
                 
                 filteredOptions.forEach(option => {
-                    const provider = getProviderFromOption(option);
-                    const text = option.textContent.toLowerCase();
-                    const value = option.value.toLowerCase();
+                    const cached = optionCache.get(option);
+                    if (!cached) return;
                     
-                    // Map provider categories to UI values
-                    if (provider === 'OpenAI') {
+                    const { provider, value } = cached;
+                    
+                    // Map provider categories to UI values - Sử dụng cache
+                    if (provider === 'openai') {
                         counts['openai']++; // Tất cả models OpenAI
                         // Riêng các models cao cấp cũng được tính vào OpenAI Plus
-                        if (value.includes('gpt-4') || value.includes('o1') || value.includes('o3') || value.includes('o4')) {
+                        if (value.includes('gpt-4') || value.includes('gpt-5') || 
+                            value.includes('o1') || value.includes('o3') || value.includes('o4')) {
                             counts['openai-plus']++;
                         }
-                    } else if (provider === 'Anthropic') {
+                    } else if (provider === 'claude') {
                         counts['claude']++;
-                    } else if (provider === 'Google') {
+                    } else if (provider === 'google') {
                         counts['google']++;
-                    } else if (provider === 'Chinese') {
+                    } else if (provider === 'chinese') {
                         if (value.includes('deepseek')) {
                             counts['deepseek']++;
                         } else if (value.includes('doubao')) {
@@ -1795,13 +1973,13 @@
                         } else {
                             counts['chinese']++;
                         }
-                    } else if (provider === 'Image') {
+                    } else if (provider === 'image') {
                         counts['image']++;
-                    } else if (provider === 'Audio') {
+                    } else if (provider === 'audio') {
                         counts['other']++; // Audio models go to "other" for now
-                    } else if (provider === 'Video') {
+                    } else if (provider === 'video') {
                         counts['video']++;
-                    } else if (provider === 'SiliconFlow') {
+                    } else if (provider === 'siliconflow') {
                         counts['siliconflow']++;
                     } else {
                         counts['other']++;
@@ -1849,6 +2027,13 @@
             }
             
             function getModelType(option) {
+                // Sử dụng cache nếu có
+                const cached = optionCache.get(option);
+                if (cached) {
+                    return cached.modelType;
+                }
+                
+                // Fallback nếu không có cache
                 const text = option.textContent.toLowerCase();
                 const value = option.value.toLowerCase();
                 
@@ -1864,165 +2049,121 @@
                 return 'text';
             }
             
-            // Enhanced filter models function
+            // ===== TỐI ƯU HÓA HÀM FILTER - Sử dụng cache và mapping =====
+            function matchesSearch(cached, searchTerm) {
+                if (!searchTerm) return true;
+                
+                const { text, value } = cached;
+                
+                // Tìm kiếm cơ bản
+                if (text.includes(searchTerm) || value.includes(searchTerm)) {
+                    return true;
+                }
+                
+                // Hỗ trợ tìm kiếm tiếng Việt
+                for (const [vietnamese, keywords] of Object.entries(vietnameseSearchMap)) {
+                    if (searchTerm.includes(vietnamese)) {
+                        const keywordList = Array.isArray(keywords) ? keywords : [keywords];
+                        return keywordList.some(keyword => text.includes(keyword) || value.includes(keyword));
+                    }
+                }
+                
+                return false;
+            }
+            
+            function matchesCategory(cached, category) {
+                if (!category) return true;
+                
+                const { provider, value, text } = cached;
+                
+                // Xử lý special cases
+                if (category === 'openai-plus') {
+                    // OpenAI Plus models phải là OpenAI và có keywords premium
+                    if (provider !== 'openai') return false;
+                    return value.includes('gpt-4') || value.includes('gpt-5') || 
+                           value.includes('o1') || value.includes('o3') || value.includes('o4');
+                }
+                
+                if (category === 'other') {
+                    // Other = không thuộc các provider khác
+                    return provider === 'other';
+                }
+                
+                // Fallback cho các provider quan trọng - kiểm tra lại keywords nếu cache có thể sai
+                const providerMapping = providerMappings[category];
+                if (providerMapping) {
+                    // Nếu provider cache đúng, return true ngay
+                    if (provider === category) return true;
+                    
+                    // Fallback: kiểm tra lại keywords để đảm bảo không bỏ sót
+                    // Đặc biệt quan trọng cho Google, OpenAI, Claude
+                    return providerMapping.keywords.some(keyword => 
+                        value.includes(keyword) || text.includes(keyword)
+                    );
+                }
+                
+                // So sánh provider trực tiếp cho các provider khác
+                return provider === category;
+            }
+            
+            function matchesTypeFilter(cached) {
+                const { modelType } = cached;
+                const typeCheckbox = filterCheckboxes[modelType];
+                return typeCheckbox ? typeCheckbox.checked : true;
+            }
+            
+            // Enhanced filter models function - Tối ưu hiệu năng
             function filterModels() {
                 const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
-                
-                console.log('🔍 Filtering with:', {
-                    searchTerm,
-                    selectedCategory,
-                    totalModels: allOptions.length
-                });
                 
                 // Hiển thị loading state
                 modelSelect.innerHTML = '<option disabled>⏳ Đang lọc models...</option>';
                 
-                // Xóa tất cả options hiện tại
-                modelSelect.innerHTML = '';
-                
-                // Lọc options theo điều kiện
+                // Sử dụng cache để lọc nhanh hơn
                 const filteredOptions = allOptions.filter(option => {
-                    const text = option.textContent.toLowerCase();
-                    const value = option.value.toLowerCase();
+                    const cached = optionCache.get(option);
+                    if (!cached) return false;
                     
-                    // Kiểm tra tìm kiếm
-                    const matchesSearch = searchTerm === '' || 
-                        text.includes(searchTerm) || 
-                        value.includes(searchTerm) ||
-                        // Hỗ trợ tìm kiếm tiếng Việt
-                        (searchTerm.includes('gpt') && (text.includes('gpt') || value.includes('gpt'))) ||
-                        (searchTerm.includes('claude') && (text.includes('claude') || value.includes('claude'))) ||
-                        (searchTerm.includes('gemini') && (text.includes('gemini') || value.includes('gemini'))) ||
-                        (searchTerm.includes('ảnh') && (text.includes('dall') || text.includes('flux') || text.includes('stable'))) ||
-                        (searchTerm.includes('âm thanh') && (text.includes('whisper') || text.includes('tts') || text.includes('suno'))) ||
-                        (searchTerm.includes('video') && (text.includes('video') || text.includes('luma') || text.includes('runway')));
-                    
-                    // Kiểm tra phân loại provider - Cải thiện logic
-                    let matchesCategory = false;
-                    
-                    if (selectedCategory === '') {
-                        matchesCategory = true; // Hiển thị tất cả nếu không chọn provider
-                    } else if (selectedCategory === 'openai') {
-                        matchesCategory = value.includes('gpt') || value.includes('dall') || value.includes('whisper') || 
-                                         value.includes('tts') || value.includes('o1') || value.includes('o3') || 
-                                         value.includes('o4') || text.includes('openai') || value.includes('chatgpt') ||
-                                         value.includes('text-') || value.includes('babbage') || value.includes('ada') ||
-                                         value.includes('davinci') || value.includes('curie');
-                        
-                        // Debug log để kiểm tra
-                        if (value.includes('gpt')) {
-                            console.log('🔍 OpenAI match found:', value, text);
-                        }
-                    } else if (selectedCategory === 'openai-plus') {
-                        matchesCategory = value.includes('gpt-4') || value.includes('gpt-5') || value.includes('o1') || 
-                                         value.includes('o3') || value.includes('o4') || text.includes('plus');
-                    } else if (selectedCategory === 'claude') {
-                        matchesCategory = value.includes('claude') || text.includes('anthropic');
-                    } else if (selectedCategory === 'google') {
-                        matchesCategory = value.includes('gemini') || value.includes('palm') || value.includes('bard') || 
-                                         value.includes('imagen') || value.includes('veo') || text.includes('google');
-                    } else if (selectedCategory === 'chinese') {
-                        matchesCategory = value.includes('qwen') || value.includes('ernie') || value.includes('doubao') || 
-                                         value.includes('glm') || value.includes('hunyuan') || value.includes('yi') || 
-                                         value.includes('deepseek') || value.includes('kimi') || value.includes('baichuan') ||
-                                         value.includes('chatglm') || value.includes('zhipu') || value.includes('moonshot') ||
-                                         value.includes('internlm') || value.includes('spark') || value.includes('sensetime') ||
-                                         value.includes('minimax') || value.includes('360') || value.includes('step') ||
-                                         value.includes('abab') || value.includes('skylark') || text.includes('chinese');
-                    } else if (selectedCategory === 'image') {
-                        matchesCategory = value.includes('dall') || value.includes('flux') || value.includes('stable') || 
-                                         value.includes('midjourney') || value.includes('imagen') || value.includes('ideogram') || 
-                                         value.includes('recraft') || text.includes('image') || text.includes('ảnh') ||
-                                         value.includes('playground') || value.includes('leonardo') || value.includes('firefly') ||
-                                         value.includes('kandinsky') || value.includes('wuerstchen') || value.includes('sdxl') ||
-                                         value.includes('sd-') || value.includes('artistic') || value.includes('draw');
-                    } else if (selectedCategory === 'audio') {
-                        matchesCategory = value.includes('whisper') || value.includes('tts') || value.includes('suno') || 
-                                         value.includes('riffusion') || text.includes('audio') || text.includes('speech') ||
-                                         value.includes('bark') || value.includes('musicgen') || value.includes('audiogen') ||
-                                         value.includes('elevenlabs') || value.includes('voice') || value.includes('sound');
-                    } else if (selectedCategory === 'video') {
-                        matchesCategory = value.includes('video') || value.includes('luma') || value.includes('runway') || 
-                                         value.includes('kling') || value.includes('minimax') || value.includes('veo') || 
-                                         value.includes('pika') || text.includes('video') || value.includes('gen-') ||
-                                         value.includes('synthesia') || value.includes('d-id') || value.includes('pictory') ||
-                                         value.includes('animatediff') || value.includes('zeroscope');
-                    } else if (selectedCategory === 'siliconflow') {
-                        matchesCategory = text.includes('siliconflow') || value.includes('siliconflow');
-                    } else if (selectedCategory === 'deepseek') {
-                        matchesCategory = value.includes('deepseek') || text.includes('deepseek');
-                    } else if (selectedCategory === 'doubao') {
-                        matchesCategory = value.includes('doubao') || text.includes('doubao');
-                    } else if (selectedCategory === 'other') {
-                        // Kiểm tra model không thuộc các category khác
-                        const isNotOpenAI = !value.includes('gpt') && !value.includes('dall') && !value.includes('whisper') && 
-                                           !value.includes('tts') && !value.includes('o1') && !value.includes('o3') && 
-                                           !value.includes('o4') && !text.includes('openai');
-                        const isNotClaude = !value.includes('claude') && !text.includes('anthropic');
-                        const isNotGoogle = !value.includes('gemini') && !value.includes('palm') && !value.includes('bard') && 
-                                           !value.includes('imagen') && !value.includes('veo') && !text.includes('google');
-                        const isNotChinese = !value.includes('qwen') && !value.includes('ernie') && !value.includes('doubao') && 
-                                            !value.includes('glm') && !value.includes('hunyuan') && !value.includes('yi') && 
-                                            !value.includes('deepseek') && !value.includes('kimi') && !value.includes('baichuan');
-                        const isNotImage = !value.includes('dall') && !value.includes('flux') && !value.includes('stable') && 
-                                          !value.includes('midjourney') && !value.includes('imagen') && !value.includes('ideogram') && 
-                                          !value.includes('recraft') && !text.includes('image');
-                        const isNotAudio = !value.includes('whisper') && !value.includes('tts') && !value.includes('suno') && 
-                                          !value.includes('riffusion') && !text.includes('audio') && !text.includes('speech');
-                        const isNotVideo = !value.includes('video') && !value.includes('luma') && !value.includes('runway') && 
-                                          !value.includes('kling') && !value.includes('minimax') && !value.includes('veo') && 
-                                          !value.includes('pika') && !text.includes('video');
-                        const isNotSiliconflow = !text.includes('siliconflow') && !value.includes('siliconflow');
-                        const isNotDeepseek = !value.includes('deepseek') && !text.includes('deepseek');
-                        const isNotDoubao = !value.includes('doubao') && !text.includes('doubao');
-                        
-                        matchesCategory = isNotOpenAI && isNotClaude && isNotGoogle && isNotChinese && 
-                                         isNotImage && isNotAudio && isNotVideo && isNotSiliconflow && 
-                                         isNotDeepseek && isNotDoubao;
-                    }
-                    
-                    // Kiểm tra loại model (type filter)
-                    const modelType = getModelType(option);
-                    const typeCheckbox = filterCheckboxes[modelType];
-                    const matchesTypeFilter = typeCheckbox ? typeCheckbox.checked : true;
-                    
-                    return matchesSearch && matchesCategory && matchesTypeFilter;
+                    return matchesSearch(cached, searchTerm) && 
+                           matchesCategory(cached, selectedCategory) && 
+                           matchesTypeFilter(cached);
                 });
-                
-                console.log('Filtered results:', filteredOptions.length);
                 
                 // Apply current sort order
                 const sortType = sortSelect ? sortSelect.value : 'default';
                 let sortedOptions = [...filteredOptions];
                 
-                switch(sortType) {
-                    case 'name-asc':
-                        sortedOptions.sort((a, b) => a.textContent.localeCompare(b.textContent));
-                        break;
-                    case 'name-desc':
-                        sortedOptions.sort((a, b) => b.textContent.localeCompare(a.textContent));
-                        break;
-                    case 'provider':
-                        sortedOptions.sort((a, b) => {
-                            const aProvider = getProviderFromOption(a);
-                            const bProvider = getProviderFromOption(b);
-                            return aProvider.localeCompare(bProvider);
-                        });
-                        break;
+                if (sortType !== 'default') {
+                    switch(sortType) {
+                        case 'name-asc':
+                            sortedOptions.sort((a, b) => {
+                                const aCached = optionCache.get(a);
+                                const bCached = optionCache.get(b);
+                                return (aCached?.text || '').localeCompare(bCached?.text || '');
+                            });
+                            break;
+                        case 'name-desc':
+                            sortedOptions.sort((a, b) => {
+                                const aCached = optionCache.get(a);
+                                const bCached = optionCache.get(b);
+                                return (bCached?.text || '').localeCompare(aCached?.text || '');
+                            });
+                            break;
+                        case 'provider':
+                            sortedOptions.sort((a, b) => {
+                                const aCached = optionCache.get(a);
+                                const bCached = optionCache.get(b);
+                                const aProvider = providerMappings[aCached?.provider]?.providerName || 'Other';
+                                const bProvider = providerMappings[bCached?.provider]?.providerName || 'Other';
+                                return aProvider.localeCompare(bProvider);
+                            });
+                            break;
+                    }
                 }
                 
-                // Thêm lại các options đã lọc và sắp xếp
-                sortedOptions.forEach(option => {
-                    modelSelect.appendChild(option.cloneNode(true));
-                });
+                // Sử dụng DocumentFragment để tối ưu DOM manipulation
+                const fragment = document.createDocumentFragment();
                 
-                // Update model count
-                updateModelCount();
-                
-                // Update dynamic provider counts based on current filtering
-                updateDynamicProviderCounts(sortedOptions);
-                
-                // Hiển thị thông báo nếu không tìm thấy
                 if (filteredOptions.length === 0) {
                     const noResult = document.createElement('option');
                     const activeProvider = document.querySelector('.provider-option.active');
@@ -2036,19 +2177,34 @@
                     noResult.disabled = true;
                     noResult.style.color = '#f44336';
                     noResult.style.fontStyle = 'italic';
-                    modelSelect.appendChild(noResult);
-                    
-                    console.log('⚠️ No results found for:', selectedCategory, searchTerm);
+                    fragment.appendChild(noResult);
                 } else {
-                    console.log('✅ Found', filteredOptions.length, 'models for provider:', selectedCategory);
+                    // Clone và append options
+                    sortedOptions.forEach(option => {
+                        fragment.appendChild(option.cloneNode(true));
+                    });
                 }
+                
+                // Clear và append fragment (chỉ 1 lần DOM manipulation)
+                modelSelect.innerHTML = '';
+                modelSelect.appendChild(fragment);
+                
+                // Update model count
+                updateModelCount();
+                
+                // Update dynamic provider counts based on current filtering
+                updateDynamicProviderCounts(sortedOptions);
             }
             
-            // Lắng nghe sự kiện tìm kiếm
+            // Lắng nghe sự kiện tìm kiếm với debounce để tối ưu hiệu năng
+            const debouncedFilter = debounce(() => {
+                filterModels();
+                updateFilterStatus();
+            }, 300); // 300ms debounce
+            
             if (searchInput) {
                 searchInput.addEventListener('input', function() {
-                    filterModels();
-                    updateFilterStatus();
+                    debouncedFilter();
                 });
             }
             

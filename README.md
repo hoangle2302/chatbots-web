@@ -5,7 +5,7 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-ready-009485.svg)](https://fastapi.tiangolo.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-“Thư Viện AI” là sandbox phục vụ nghiên cứu và triển khai thực tế cho hệ thống chat đa mô hình. Dự án kết hợp **PHP backend**, **FastAPI microservice** và **frontend thuần HTML/CSS/JS**, hỗ trợ xử lý tài liệu, sinh file theo yêu cầu và quản trị người dùng, đồng thời cho phép tích hợp nhiều mô hình từ Key4U và OpenAI.
+"Thư Viện AI" là sandbox phục vụ nghiên cứu và triển khai thực tế cho hệ thống chat đa mô hình. Dự án kết hợp **PHP backend**, **FastAPI microservice** và **frontend thuần HTML/CSS/JS**, hỗ trợ xử lý tài liệu, sinh file theo yêu cầu và quản trị người dùng, đồng thời cho phép tích hợp nhiều mô hình từ Key4U và OpenAI.
 
 ---
 
@@ -13,15 +13,15 @@
 
 1. [Tổng quan kiến trúc](#-tổng-quan-kiến-trúc)
 2. [Tính năng nổi bật](#-tính-năng-nổi-bật)
-3. [Yêu cầu môi trường](#-yêu-cầu-môi-trường)
-4. [Hướng dẫn cài đặt nhanh](#-hướng-dẫn-cài-đặt-nhanh)
-5. [Chi tiết cấu hình](#-chi-tiết-cấu-hình)
-6. [Luồng xử lý tài liệu](#-luồng-xử-lý-tài-liệu)
-7. [Danh sách API PHP](#-danh-sách-api-php)
-8. [Hướng dẫn frontend](#-hướng-dẫn-frontend)
-9. [Khắc phục sự cố thường gặp](#-khắc-phục-sự-cố-thường-gặp)
-10. [Đóng góp và phát triển](#-đóng-góp-và-phát-triển)
-11. [Thông tin nhóm & giấy phép](#-thông-tin-nhóm--giấy-phép)
+3. [Yêu cầu hệ thống](#-yêu-cầu-hệ-thống)
+4. [Hướng dẫn cài đặt với XAMPP](#-hướng-dẫn-cài-đặt-với-xampp)
+5. [Hướng dẫn cài đặt thủ công (không dùng XAMPP)](#-hướng-dẫn-cài-đặt-thủ-công)
+6. [Chi tiết cấu hình](#-chi-tiết-cấu-hình)
+7. [Khởi động hệ thống](#-khởi-động-hệ-thống)
+8. [Luồng xử lý tài liệu](#-luồng-xử-lý-tài-liệu)
+9. [Danh sách API](#-danh-sách-api)
+10. [Khắc phục sự cố](#-khắc-phục-sự-cố)
+11. [Đóng góp và phát triển](#-đóng-góp-và-phát-triển)
 
 ---
 
@@ -29,233 +29,689 @@
 
 ```
 chatbots-web/
-├── config.env                  # cấu hình chung cho PHP backend
-├── start.bat                   # script khởi động toàn hệ thống (Windows)
+├── config.env                  # Cấu hình chung cho PHP backend
+├── start.bat                   # Script khởi động hệ thống (Windows)
 ├── src/
-│   ├── php-backend/            # Backend PHP thuần (router.php, API, services...)
+│   ├── php-backend/            # Backend PHP thuần
 │   │   ├── api/                # auth.php, chat-real.php, ai-tool.php...
 │   │   ├── middleware/         # AuthMiddleware (JWT)
 │   │   ├── services/           # Key4UService, AIToolService...
 │   │   └── tools/AI tool/      # FastAPI microservice (Python)
 │   └── web/                    # Frontend tĩnh (HTML/CSS/JS)
-└── data/                       # dữ liệu mẫu, uploads, schema SQL
+└── data/                       # Database schema, uploads
 ```
 
-- Frontend: `http://127.0.0.1:8002`
-- PHP API (router): `http://127.0.0.1:8000`
-- FastAPI AI Tool: `http://127.0.0.1:8001`
+**Kiến trúc mạng:**
+- **Frontend**: `http://127.0.0.1:8002` - Giao diện người dùng
+- **PHP API**: `http://127.0.0.1:8000` - Backend xử lý requests
+- **FastAPI AI Tool**: `http://127.0.0.1:8001` - Microservice xử lý AI
 
-Mọi request từ frontend đi qua PHP backend nhằm tái sử dụng hệ thống auth, quota, logging trước khi chuyển tới dịch vụ AI.
+Mọi request từ frontend đi qua PHP backend để xác thực, quản lý quota và logging trước khi chuyển tới dịch vụ AI.
 
 ---
 
 ## ✨ Tính năng nổi bật
 
 ### Người dùng cuối
-- Chat realtime với hơn **450 mô hình** (GPT-4, Claude, Gemini, Qwen, DeepSeek...).
-- Upload tài liệu (PDF, DOCX, XLSX, TXT…) rồi yêu cầu AI tóm tắt hoặc tạo file mới.
-- Lệnh “tạo file <định dạng>” giúp sinh mã nguồn/document; kết quả hiển thị trong chat và cung cấp **link tải thủ công**.
-- Lưu lịch sử hội thoại ở localStorage, khôi phục lại sau khi tải trang.
+- 💬 Chat realtime với hơn **450 mô hình AI** (GPT-4, Claude, Gemini, Qwen, DeepSeek...)
+- 📄 Upload và xử lý tài liệu (PDF, DOCX, XLSX, TXT...)
+- 📝 Tạo file tự động theo yêu cầu (Python, JavaScript, Markdown...)
+- 💰 Hệ thống credits - mỗi câu hỏi trừ 1 credit
+- 💾 Lưu lịch sử hội thoại trong localStorage
 
 ### Quản trị viên
-- Dashboard thống kê credits, người dùng, nhật ký hoạt động.
-- Thao tác khóa/mở tài khoản, cấp thêm credits, đồng bộ danh sách mô hình.
-- Cấu hình linh hoạt môi trường, key AI, timeout cho microservice.
+- 📊 Dashboard thống kê credits, người dùng, nhật ký
+- 👥 Quản lý người dùng: khóa/mở tài khoản, cấp credits
+- 🔧 Cấu hình linh hoạt môi trường, API keys
 
 ### FastAPI AI Tool
-- Nhận file, trích xuất nội dung bằng PyPDF2, python-docx, pandas…
-- Đồng bộ hóa API Key giữa PHP và Python (qua header `Authorization` hoặc `X-Internal-Key`).
-- Giao tiếp với Key4U API (hoặc OpenAI) để lấy kết quả, sau đó trả về text/JSON/file.
+- 🔄 Nhận file, trích xuất nội dung tự động
+- 🔐 Đồng bộ hóa API Key giữa PHP và Python
+- 🌐 Giao tiếp với Key4U API/OpenAI
 
 ---
 
-## 🧰 Yêu cầu môi trường
+## 🧰 Yêu cầu hệ thống
 
 | Thành phần | Phiên bản khuyến nghị | Ghi chú |
-|------------|-----------------------|--------|
-| PHP        | 8.2 trở lên           | Bật `curl`, `pdo_mysql`, `json`, `fileinfo` |
-| Python     | 3.10 trở lên          | Cần `venv`, `pip` |
-| MySQL      | 8.0+ hoặc MariaDB 10.6+ | Import schema từ thư mục `data/database` |
-| Node.js    | 18+ *(tuỳ chọn)*      | Chạy static server khác nếu muốn |
-| OS         | Windows 10/11, macOS, Linux | Script `start.bat` tối ưu cho Windows |
+|------------|-----------------------|---------|
+| **PHP** | 8.2+ | Bật extensions: `curl`, `pdo_mysql`, `json`, `fileinfo` |
+| **Python** | 3.10+ | Cần `venv`, `pip` |
+| **MySQL** | 8.0+ hoặc MariaDB 10.6+ | Hoặc dùng MySQL trong XAMPP |
+| **Node.js** | 18+ *(tuỳ chọn)* | Chỉ cần nếu không dùng PHP built-in server |
+| **OS** | Windows 10/11, macOS, Linux | Khuyến nghị Windows với XAMPP |
+
+**Khuyến nghị:** Sử dụng **XAMPP** để dễ dàng cài đặt PHP, MySQL và Apache cùng lúc.
 
 ---
 
-## ⚙ Hướng dẫn cài đặt nhanh
+## 📦 Hướng dẫn cài đặt với XAMPP
 
-### 1. Clone và chuẩn bị mã nguồn
-```bash
-git clone https://github.com/your-org/chatbots-web.git
-cd chatbots-web
-```
+### Bước 1: Tải và cài đặt XAMPP
 
-### 2. Tạo file cấu hình và database
-```bash
-cp config.env.example config.env               # Windows: copy config.env.example config.env
+1. **Tải XAMPP:**
+   - Truy cập: https://www.apachefriends.org/download.html
+   - Chọn phiên bản phù hợp với hệ điều hành (Windows khuyến nghị)
+   - Download file `.exe` (khoảng 150MB)
 
-# Chỉnh sửa config.env theo môi trường: DB_HOST, KEY4U_API_KEY...
+2. **Cài đặt XAMPP:**
+   - Chạy file installer với quyền Administrator
+   - Chọn thư mục cài đặt (mặc định: `C:\xampp`)
+   - Chọn các thành phần cần thiết:
+     - ✅ **Apache** (bắt buộc)
+     - ✅ **MySQL** (bắt buộc)
+     - ✅ **PHP** (bắt buộc)
+     - ✅ **phpMyAdmin** (khuyến nghị để quản lý database)
+     - ⬜ Perl, FileZilla, Tomcat (không cần)
+   - Nhấn **Next** và chờ cài đặt hoàn tất
 
-mysql -u root -p -e "CREATE DATABASE thuvien_ai CHARACTER SET utf8mb4"
-mysql -u root -p thuvien_ai < data/database/mysql-schema.sql
-```
+3. **Khởi động XAMPP Control Panel:**
+   - Mở **XAMPP Control Panel** từ Start Menu
+   - Hoặc chạy file: `C:\xampp\xampp-control.exe`
 
-### 3. Cài đặt FastAPI microservice
-```bash
-cd src/php-backend/tools/AI\ tool
-python -m venv .venv
-# Windows PowerShell
-.venv\Scripts\Activate.ps1
-# macOS / Linux
-source .venv/bin/activate
+### Bước 2: Khởi động Apache và MySQL
 
-pip install -r requirements.txt
-```
+1. **Trong XAMPP Control Panel:**
+   - Nhấn **Start** cho **Apache**
+   - Nhấn **Start** cho **MySQL**
+   - Kiểm tra cả 2 service đã chuyển sang màu xanh ✅
 
-### 4. Khởi chạy toàn bộ hệ thống (Windows)
-```powershell
-cd C:\path\to\chatbots-web
-.\start.bat
-```
-`start.bat` sẽ:
-1. Kiểm tra PHP & Python.
-2. Kill tiến trình cũ (php.exe, python.exe, uvicorn.exe).
-3. Mở 3 cửa sổ: PHP backend (`127.0.0.1:8000`), FastAPI (`127.0.0.1:8001`), frontend (`127.0.0.1:8002`).
-4. Tự động mở trình duyệt tới trang chủ.
+2. **Kiểm tra cài đặt:**
+   - Mở trình duyệt, truy cập: `http://localhost`
+   - Bạn sẽ thấy trang chủ XAMPP
+   - Truy cập: `http://localhost/phpmyadmin` để kiểm tra MySQL
 
-### 5. Khởi chạy thủ công (Linux/macOS hoặc môi trường tùy chỉnh)
-```bash
-# Terminal 1 - PHP backend
-cd src/php-backend
-php -S 127.0.0.1:8000 router.php
+### Bước 3: Cấu hình PHP trong XAMPP
 
-# Terminal 2 - FastAPI
-cd src/php-backend/tools/AI\ tool
-uvicorn main:app --host 127.0.0.1 --port 8001 --reload
+1. **Tìm file `php.ini`:**
+   - Vị trí: `C:\xampp\php\php.ini`
+   - Hoặc mở XAMPP Control Panel → Apache → **Config** → **PHP (php.ini)**
 
-# Terminal 3 - Frontend tĩnh
-cd src/web
-php -S 127.0.0.1:8002
-```
+2. **Bật các extension cần thiết:**
+   - Mở `php.ini` bằng Notepad++ hoặc editor khác
+   - Tìm và bỏ dấu `;` (uncomment) các dòng sau:
+   ```ini
+   extension=curl
+   extension=pdo_mysql
+   extension=mysqli
+   extension=fileinfo
+   extension=json
+   extension=mbstring
+   ```
+   - Lưu file
 
-Truy cập `http://127.0.0.1:8002` để trải nghiệm.
+3. **Cấu hình upload (tùy chọn):**
+   - Tìm và chỉnh sửa:
+   ```ini
+   upload_max_filesize = 64M
+   post_max_size = 64M
+   memory_limit = 256M
+   max_execution_time = 300
+   ```
+   - Lưu file
+
+4. **Thêm PHP vào PATH (Windows):**
+   - Mở **System Properties** → **Environment Variables**
+   - Tìm biến `Path` trong **System variables**
+   - Thêm: `C:\xampp\php`
+   - Thêm: `C:\xampp\php\ext`
+   - Nhấn **OK** và khởi động lại Command Prompt
+
+5. **Kiểm tra PHP:**
+   ```cmd
+   php --version
+   ```
+   - Bạn sẽ thấy phiên bản PHP (ví dụ: PHP 8.2.x)
+
+### Bước 4: Cài đặt Python (nếu chưa có)
+
+1. **Tải Python:**
+   - Truy cập: https://www.python.org/downloads/
+   - Download Python 3.10+ cho Windows
+
+2. **Cài đặt Python:**
+   - ✅ **Quan trọng:** Đánh dấu **"Add Python to PATH"**
+   - Chọn **"Install Now"**
+   - Chờ cài đặt hoàn tất
+
+3. **Kiểm tra Python:**
+   ```cmd
+   python --version
+   pip --version
+   ```
+
+### Bước 5: Clone và cấu hình dự án
+
+1. **Clone repository:**
+   ```bash
+   git clone https://github.com/your-org/chatbots-web.git
+   cd chatbots-web
+   ```
+
+2. **Tạo file cấu hình:**
+   ```bash
+   # Windows
+   copy config.env.example config.env
+   
+   # Linux/macOS
+   cp config.env.example config.env
+   ```
+
+3. **Chỉnh sửa `config.env`:**
+   - Mở file `config.env` bằng Notepad hoặc editor
+   - Cập nhật thông tin database:
+   ```env
+   DB_HOST=localhost
+   DB_NAME=thuvien_ai
+   DB_USERNAME=root
+   DB_PASSWORD=
+   ```
+   - ⚠️ **Lưu ý:** XAMPP MySQL mặc định không có password cho user `root`
+   - Nếu bạn đã đặt password, điền vào `DB_PASSWORD`
+
+4. **Thêm API Key (nếu có):**
+   ```env
+   KEY4U_API_KEY=sk-key4u-your-key-here
+   JWT_SECRET=your-super-secret-jwt-key-change-this
+   ```
+
+### Bước 6: Setup Database với phpMyAdmin
+
+#### Cách 1: Dùng phpMyAdmin (Khuyến nghị)
+
+1. **Truy cập phpMyAdmin:**
+   - Mở trình duyệt: `http://localhost/phpmyadmin`
+   - Đăng nhập với:
+     - **Username:** `root`
+     - **Password:** (để trống nếu chưa đặt)
+
+2. **Tạo database mới:**
+   - Click tab **"Databases"**
+   - Nhập tên database: `thuvien_ai`
+   - Chọn **Collation:** `utf8mb4_unicode_ci`
+   - Click **"Create"**
+
+3. **Import schema:**
+   - Click vào database `thuvien_ai` ở sidebar bên trái
+   - Click tab **"Import"**
+   - Click **"Choose File"** và chọn file: `data/database/mysql-schema.sql`
+   - Click **"Go"** ở cuối trang
+   - Đợi import hoàn tất (sẽ thấy thông báo thành công)
+
+#### Cách 2: Dùng MySQL Command Line
+
+1. **Mở MySQL Command Line:**
+   - Mở Command Prompt
+   - Chuyển đến thư mục XAMPP:
+   ```cmd
+   cd C:\xampp\mysql\bin
+   ```
+
+2. **Đăng nhập MySQL:**
+   ```cmd
+   mysql.exe -u root -p
+   ```
+   - Nhấn Enter nếu không có password
+   - Hoặc nhập password nếu đã đặt
+
+3. **Tạo database và import:**
+   ```sql
+   CREATE DATABASE thuvien_ai CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+   USE thuvien_ai;
+   SOURCE C:/path/to/chatbots-web/data/database/mysql-schema.sql;
+   EXIT;
+   ```
+
+#### Cách 3: Dùng PHP script
+
+1. **Chạy script tự động:**
+   ```cmd
+   cd C:\path\to\chatbots-web
+   php src/php-backend/tools/init-mysql.php
+   ```
+   - Script sẽ tự động tạo database và import schema
+
+### Bước 7: Cài đặt FastAPI microservice
+
+1. **Di chuyển đến thư mục AI Tool:**
+   ```cmd
+   cd src\php-backend\tools\AI tool
+   ```
+
+2. **Tạo virtual environment:**
+   ```cmd
+   python -m venv .venv
+   ```
+
+3. **Kích hoạt virtual environment:**
+   ```cmd
+   # Windows Command Prompt
+   .venv\Scripts\activate.bat
+   
+   # Windows PowerShell
+   .venv\Scripts\Activate.ps1
+   
+   # Linux/macOS
+   source .venv/bin/activate
+   ```
+
+4. **Cài đặt dependencies:**
+   ```cmd
+   pip install -r requirements.txt
+   ```
+   - Nếu file `requirements.txt` không tồn tại trong thư mục này, tìm trong thư mục gốc dự án
+
+5. **Kiểm tra cài đặt:**
+   ```cmd
+   python -c "import uvicorn; print('OK')"
+   ```
+
+---
+
+## ⚙️ Hướng dẫn cài đặt thủ công (không dùng XAMPP)
+
+Nếu bạn không muốn dùng XAMPP, có thể cài đặt từng thành phần riêng:
+
+### 1. Cài đặt PHP độc lập
+
+1. **Tải PHP:**
+   - Truy cập: https://windows.php.net/download/
+   - Download PHP 8.2+ Thread Safe (ZIP)
+   - Giải nén vào: `C:\php`
+
+2. **Cấu hình:**
+   - Copy `php.ini-development` thành `php.ini`
+   - Bật extensions như hướng dẫn ở trên
+   - Thêm PHP vào PATH
+
+### 2. Cài đặt MySQL độc lập
+
+1. **Tải MySQL:**
+   - Truy cập: https://dev.mysql.com/downloads/installer/
+   - Download MySQL Installer
+   - Chọn **"Developer Default"** hoặc **"Server only"**
+
+2. **Cấu hình:**
+   - Đặt root password (nhớ ghi lại!)
+   - Cập nhật `config.env` với password đã đặt
 
 ---
 
 ## 🔧 Chi tiết cấu hình
 
-### 1. PHP backend – `config.env`
+### 1. File `config.env` (ở thư mục gốc)
+
 ```env
-KEY4U_API_KEY=sk-key4u-your-key
+# API Keys
+KEY4U_API_KEY=sk-key4u-your-key-here
 AI_TOOL_BASE_URL=http://127.0.0.1:8001
 AI_TOOL_TIMEOUT=120
-# AI_TOOL_INTERNAL_KEY=optional-shared-secret
 
+# Database (XAMPP mặc định)
 DB_HOST=localhost
 DB_NAME=thuvien_ai
 DB_USERNAME=root
-DB_PASSWORD=your-password
+DB_PASSWORD=
 
-JWT_SECRET=thuvien-ai-super-secret-jwt-key
+# JWT Secret (thay đổi trong production!)
+JWT_SECRET=thuvien-ai-super-secret-jwt-key-change-this
+
+# Server Ports
 SERVER_PORT=8000
 ```
 
-### 2. FastAPI AI Tool – `src/php-backend/tools/AI tool/.env`
-```env
-# Ưu tiên dùng chung KEY4U_API_KEY
-KEY4U_API_KEY=sk-key4u-your-key
-KEY4U_API_URL=https://api.key4u.shop/v1/chat/completions
+### 2. File `src/php-backend/config.env` (nếu có)
 
-# Tuỳ chọn nếu gọi trực tiếp OpenAI
-# AI_API_KEY=sk-openai-your-key
+```env
+# Tương tự như config.env ở thư mục gốc
+# Nếu file này tồn tại, nó sẽ được ưu tiên
+```
+
+### 3. File `src/php-backend/tools/AI tool/.env` (tùy chọn)
+
+```env
+KEY4U_API_KEY=sk-key4u-your-key-here
+KEY4U_API_URL=https://api.key4u.shop/v1/chat/completions
 AI_MODEL=gpt-4o
 ```
 
-### 3. Thay đổi hạn mức upload
-`start.bat` đã tăng `upload_max_filesize`, `post_max_size` lên 64MB và `memory_limit` 256MB. Nếu tự chạy, hãy thêm tham số khi khởi động PHP server:
-```bash
+---
+
+## 🚀 Khởi động hệ thống
+
+### Cách 1: Dùng script tự động (Windows)
+
+```cmd
+# Trong thư mục gốc dự án
+start.bat
+```
+
+Script này sẽ:
+1. ✅ Kiểm tra PHP và Python đã cài đặt
+2. ✅ Dừng các tiến trình cũ (nếu có)
+3. ✅ Khởi động 3 server:
+   - PHP Backend: `http://127.0.0.1:8000`
+   - FastAPI AI Tool: `http://127.0.0.1:8001`
+   - Frontend: `http://127.0.0.1:8002`
+4. ✅ Tự động mở trình duyệt
+
+### Cách 2: Khởi động thủ công
+
+**Terminal 1 - PHP Backend:**
+```cmd
+cd src\php-backend
 php -d upload_max_filesize=64M -d post_max_size=64M -d memory_limit=256M -S 127.0.0.1:8000 router.php
 ```
+
+**Terminal 2 - FastAPI:**
+```cmd
+cd src\php-backend\tools\AI tool
+.venv\Scripts\activate  # Windows
+# hoặc: source .venv/bin/activate  # Linux/macOS
+uvicorn main:app --host 127.0.0.1 --port 8001 --reload
+```
+
+**Terminal 3 - Frontend:**
+```cmd
+cd src\web
+php -S 127.0.0.1:8002
+```
+
+### Cách 3: Dùng XAMPP Apache (không khuyến nghị)
+
+Nếu muốn dùng Apache từ XAMPP thay vì PHP built-in server:
+
+1. **Cấu hình Virtual Host:**
+   - Mở: `C:\xampp\apache\conf\extra\httpd-vhosts.conf`
+   - Thêm:
+   ```apache
+   <VirtualHost *:80>
+       ServerName chatbots.local
+       DocumentRoot "C:/path/to/chatbots-web/src/web"
+       <Directory "C:/path/to/chatbots-web/src/web">
+           Options Indexes FollowSymLinks
+           AllowOverride All
+           Require all granted
+       </Directory>
+   </VirtualHost>
+   
+   <VirtualHost *:8000>
+       ServerName api.local
+       DocumentRoot "C:/path/to/chatbots-web/src/php-backend"
+       <Directory "C:/path/to/chatbots-web/src/php-backend">
+           Options Indexes FollowSymLinks
+           AllowOverride All
+           Require all granted
+       </Directory>
+   </VirtualHost>
+   ```
+
+2. **Thêm vào hosts file:**
+   - Mở: `C:\Windows\System32\drivers\etc\hosts` (với quyền Admin)
+   - Thêm:
+   ```
+   127.0.0.1    chatbots.local
+   127.0.0.1    api.local
+   ```
+
+3. **Khởi động lại Apache từ XAMPP Control Panel**
+
+⚠️ **Lưu ý:** Cách này phức tạp hơn và có thể gây conflict với các port. Khuyến nghị dùng cách 1 hoặc 2.
 
 ---
 
 ## 📄 Luồng xử lý tài liệu
 
-1. Người dùng nhấn **Tải nhanh** và chọn file. Frontend lưu trạng thái, chưa gửi lên server.
-2. Khi nhấn **Gửi** kèm prompt (ví dụ “tạo file python tính toán cơ bản”), frontend gửi `FormData` tới `POST /api/ai-tool` gồm:
-   - `file`
-   - `user_prompt`
-   - `output_format` (auto hoặc định dạng suy ra từ prompt)
-   - `Authorization` header / trường dự phòng `auth_token`
-3. PHP proxy (`api/ai-tool.php`) xác thực JWT, gọi `AIToolService`.
-4. `AIToolService` gửi yêu cầu tới FastAPI bằng `multipart/form-data`, đính kèm header `X-Internal-Key` nếu có.
-5. FastAPI đọc file tạm, trích nội dung, gọi Key4U API.
-6. Kết quả trả về:
-   - `text/json`: PHP trả lại JSON `{ success: true, data: ... }`.
-   - `file` (ví dụ docx): PHP gửi file nhị phân về frontend.
-7. Frontend hiển thị kết quả trong chat. Nếu là file, tạo **link tải thủ công** bằng `createDownloadLink(); URL tự revoke sau 5 phút`.
+1. **Người dùng upload file** → Frontend lưu vào `File` object
+2. **Gửi message kèm file** → Frontend gửi `FormData` đến `POST /api/ai-tool`
+3. **PHP xác thực JWT** → Kiểm tra token, trừ credits
+4. **PHP proxy request** → Gửi đến FastAPI với `multipart/form-data`
+5. **FastAPI xử lý** → Trích xuất nội dung file, gọi Key4U API
+6. **Trả kết quả** → JSON hoặc file (link download)
+
+**Ví dụ workflow:**
+```
+User: "Tạo file python tính toán cơ bản"
+     ↓
+Frontend → PHP Backend (xác thực, trừ credit)
+     ↓
+PHP → FastAPI (xử lý)
+     ↓
+FastAPI → Key4U API
+     ↓
+Response → Python code
+     ↓
+Frontend hiển thị + link download
+```
 
 ---
 
-## 🔌 Danh sách API PHP
+## 🔌 Danh sách API
 
-| Endpoint | Mô tả | Yêu cầu |
-|----------|-------|---------|
-| `POST /api/auth.php?action=login` | Đăng nhập, trả JWT + thông tin user | Body JSON `username`, `password` |
-| `POST /api/chat-real.php` | Chat trực tiếp (không upload file) | Header `Authorization: Bearer <JWT>` |
-| `POST /api/ai-tool` | Proxy xử lý tài liệu qua FastAPI | `multipart/form-data`, cần token |
-| `POST /api/documents.php?action=upload` | Upload tài liệu lưu trên hệ thống | Giới hạn 10MB |
-| `GET /api/models.php` | Danh sách mô hình hiển thị ở UI | Không bắt buộc auth |
-| `GET /api/health` | Kiểm tra tình trạng backend | Trả về JSON `status` |
+### Authentication
+| Endpoint | Method | Mô tả |
+|----------|--------|-------|
+| `/api/auth.php?action=register` | POST | Đăng ký tài khoản mới |
+| `/api/auth.php?action=login` | POST | Đăng nhập, trả JWT token |
+| `/api/auth.php?action=profile` | GET | Lấy thông tin user (cần token) |
 
-Lưu ý: AuthMiddleware sẽ tìm JWT theo thứ tự `Authorization` header → `auth_token` (POST body) → các biến session.
+### Chat & AI
+| Endpoint | Method | Mô tả |
+|----------|--------|-------|
+| `/api/chat-real.php` | POST | Chat với AI models |
+| `/api/ai-tool` | POST | Xử lý tài liệu qua FastAPI |
+| `/api/models.php` | GET | Danh sách AI models |
+
+### Documents
+| Endpoint | Method | Mô tả |
+|----------|--------|-------|
+| `/api/documents.php?action=upload` | POST | Upload tài liệu |
+| `/api/documents.php?action=list` | GET | Danh sách tài liệu |
+
+### Admin
+| Endpoint | Method | Mô tả |
+|----------|--------|-------|
+| `/api/admin.php` | GET/POST | Quản lý users, credits (cần admin role) |
+
+### System
+| Endpoint | Method | Mô tả |
+|----------|--------|-------|
+| `/api/health.php` | GET | Health check |
+
+**Lưu ý:** Hầu hết API yêu cầu header `Authorization: Bearer <JWT_TOKEN>`
 
 ---
 
-## 💡 Hướng dẫn frontend
+## 🛠 Khắc phục sự cố
 
-- File chính: `src/web/script-backend.js`.
-- Các helper quan trọng:
-  - `processUploadedDocument`: gửi file lên PHP backend, trả kết quả thô.
-  - `sendMessage`: phân tích prompt, hiển thị tin nhắn và tạo link tải thủ công.
-  - `createDownloadLink`: tạo `Blob URL`, tự revoke sau 5 phút.
-  - `formatMessageContent`: hiển thị markdown, code block.
-- Lịch sử hội thoại lưu ở `localStorage` (key `chat_conversations`).
-- Để tránh lỗi `localStorage undefined`, hàm `getRawUserData` và `parseUserDataSafe` đã xử lý các giá trị `null`, `'undefined'`.
+### ❌ Lỗi "Access denied for user 'root'@'localhost'"
 
----
+**Nguyên nhân:** Sai thông tin đăng nhập MySQL
 
-## 🛠 Khắc phục sự cố thường gặp
+**Cách xử lý:**
+1. Kiểm tra XAMPP Control Panel → MySQL đã chạy chưa
+2. Kiểm tra `config.env`:
+   ```env
+   DB_USERNAME=root
+   DB_PASSWORD=  # Để trống nếu XAMPP mặc định
+   ```
+3. Thử đăng nhập phpMyAdmin với thông tin tương tự
+4. Nếu vẫn lỗi, đặt lại password MySQL:
+   ```sql
+   ALTER USER 'root'@'localhost' IDENTIFIED BY '';
+   FLUSH PRIVILEGES;
+   ```
 
-| Vấn đề | Nguyên nhân | Cách xử lý |
-|--------|-------------|------------|
-| 401 Unauthorized khi call `/api/ai-tool` | Token hết hạn hoặc header thiếu | Đăng nhập lại, đảm bảo header `Authorization` tồn tại |
-| `POST Content-Length exceeds limit` | PHP giới hạn upload | Chạy PHP với tham số `-d upload_max_filesize=64M -d post_max_size=64M` |
-| `Call to undefined function mime_content_type()` | Chưa bật extension `fileinfo` | Cài / bật `php_fileinfo.dll` hoặc để hệ thống fallback theo đuôi file |
-| FastAPI trả lỗi `Incorrect API key` | Key chưa đồng bộ giữa PHP và Python | Kiểm tra `KEY4U_API_KEY`, `AI_TOOL_INTERNAL_KEY`, biến môi trường | 
-| Frontend hiển thị `%PDF-1.3` | Trước đây auto download file | Hiện tại đã chuyển sang link tải thủ công, refresh lại UI |
+### ❌ Lỗi "Call to undefined function curl_init()"
+
+**Nguyên nhân:** Extension `curl` chưa bật
+
+**Cách xử lý:**
+1. Mở `C:\xampp\php\php.ini`
+2. Tìm dòng: `;extension=curl`
+3. Bỏ dấu `;` thành: `extension=curl`
+4. Lưu file và khởi động lại Apache
+
+### ❌ Lỗi "PDOException: could not find driver"
+
+**Nguyên nhân:** Extension `pdo_mysql` chưa bật
+
+**Cách xử lý:**
+1. Mở `C:\xampp\php\php.ini`
+2. Tìm và uncomment:
+   ```ini
+   extension=pdo_mysql
+   extension=mysqli
+   ```
+3. Lưu và khởi động lại
+
+### ❌ Port 8000 hoặc 8001 đã được sử dụng
+
+**Nguyên nhân:** Có ứng dụng khác đang dùng port
+
+**Cách xử lý:**
+1. Tìm process đang dùng port:
+   ```cmd
+   netstat -ano | findstr :8000
+   ```
+2. Kill process (thay `<PID>` bằng số tìm được):
+   ```cmd
+   taskkill /PID <PID> /F
+   ```
+3. Hoặc đổi port trong `start.bat` và `config.env`
+
+### ❌ FastAPI không khởi động được
+
+**Nguyên nhân:** Thiếu dependencies hoặc virtual environment
+
+**Cách xử lý:**
+1. Đảm bảo đã kích hoạt virtual environment:
+   ```cmd
+   cd src\php-backend\tools\AI tool
+   .venv\Scripts\activate
+   ```
+2. Cài đặt lại dependencies:
+   ```cmd
+   pip install -r requirements.txt
+   ```
+3. Kiểm tra uvicorn đã cài:
+   ```cmd
+   pip install uvicorn fastapi
+   ```
+
+### ❌ "ModuleNotFoundError: No module named 'xxx'"
+
+**Nguyên nhân:** Thiếu Python package
+
+**Cách xử lý:**
+1. Đảm bảo đang trong virtual environment
+2. Cài package còn thiếu:
+   ```cmd
+   pip install <package-name>
+   ```
+
+### ❌ Frontend không load được
+
+**Cách xử lý:**
+1. Kiểm tra frontend server đã chạy:
+   ```cmd
+   # Phải thấy: http://127.0.0.1:8002
+   ```
+2. Kiểm tra Console trong trình duyệt (F12) xem có lỗi CORS không
+3. Kiểm tra network tab xem requests có bị block không
+
+### ❌ Credit không bị trừ sau khi chat
+
+**Cách xử lý:**
+1. Kiểm tra token JWT có được gửi kèm request (Network tab → Headers)
+2. Kiểm tra backend logs xem có log về credit deduction
+3. Kiểm tra database xem credit có thay đổi:
+   ```sql
+   SELECT id, username, credits FROM users;
+   ```
 
 ---
 
 ## 🤝 Đóng góp và phát triển
 
-1. Fork repository, tạo branch mới mô tả rõ chức năng (`feature/file-upload`, `fix/login`...).
-2. Chạy `start.bat` (hoặc các lệnh thủ công) đảm bảo môi trường hoạt động.
-3. Commit nhỏ, rõ ràng; sử dụng tiếng Việt hoặc tiếng Anh nhất quán.
-4. Khi gửi PR, đính kèm log/ảnh chụp màn hình nếu liên quan tới UI hoặc lỗi.
-5. Góp ý, báo lỗi qua Issues: vui lòng ghi rõ bước tái hiện, trích log từ PHP FastAPI và console.
+### Quy trình đóng góp
+
+1. **Fork repository** và tạo branch mới:
+   ```bash
+   git checkout -b feature/ten-tinh-nang
+   ```
+
+2. **Commit changes:**
+   ```bash
+   git commit -m "Thêm tính năng XYZ"
+   ```
+
+3. **Push và tạo Pull Request:**
+   ```bash
+   git push origin feature/ten-tinh-nang
+   ```
+
+### Hướng dẫn code
+
+- Sử dụng **tiếng Việt** cho comments và log messages
+- Format code theo chuẩn PSR-12 (PHP) và PEP 8 (Python)
+- Viết commit message rõ ràng, mô tả đầy đủ thay đổi
+- Test kỹ trước khi commit
+
+### Báo lỗi
+
+Khi báo lỗi, vui lòng cung cấp:
+- **OS và phiên bản:** Windows 10, macOS 13, etc.
+- **PHP version:** `php --version`
+- **Python version:** `python --version`
+- **MySQL version:** Xem trong phpMyAdmin
+- **Logs:** Console logs, server logs, error messages
+- **Steps to reproduce:** Các bước tái hiện lỗi
 
 ---
 
-## 👥 Thông tin nhóm & giấy phép
+## 📞 Liên hệ và hỗ trợ
 
-- Trần Hải Bằng – 080205005769 (nhóm trưởng)
-- Lê Huy Hoàng – 077205003839 (thư ký)
-- Lương Thị Bích Hằng – Thành viên
-- Phan Minh Hòa – Thành viên
-- Hồ Ngọc Quyền – Thành viên
-
-Giấy phép: [MIT](LICENSE) – tự do sử dụng, chỉnh sửa, phân phối theo điều khoản MIT.
+- **GitHub Issues:** https://github.com/your-org/chatbots-web/issues
+- **Email:** support@thuvienai.example (tùy chọn)
 
 ---
 
-**© 2025 Thư Viện AI** – xây dựng với ❤️ bằng PHP, FastAPI và JavaScript.
+## 👥 Thông tin nhóm
+
+- **Trần Hải Bằng** – 080205005769 (Nhóm trưởng)
+- **Lê Huy Hoàng** – 077205003839 (Thư ký)
+- **Lương Thị Bích Hằng** – Thành viên
+- **Phan Minh Hòa** – Thành viên
+- **Hồ Ngọc Quyền** – Thành viên
+
+---
+
+## 📄 Giấy phép
+
+Dự án được phát hành dưới giấy phép **[MIT License](LICENSE)**.
+
+---
+
+## 🎯 Tóm tắt nhanh
+
+### Cài đặt với XAMPP (5 phút)
+
+```cmd
+# 1. Cài XAMPP và khởi động Apache + MySQL
+# 2. Tạo database qua phpMyAdmin
+# 3. Cài Python 3.10+
+# 4. Clone repo và cấu hình config.env
+# 5. Chạy start.bat
+```
+
+### Truy cập
+
+- **Frontend:** http://127.0.0.1:8002
+- **Backend API:** http://127.0.0.1:8000/api/health
+- **FastAPI Docs:** http://127.0.0.1:8001/docs
+- **phpMyAdmin:** http://localhost/phpmyadmin
+
+---
+
+**© 2025 Thư Viện AI** – Xây dựng với ❤️ bằng PHP, FastAPI và JavaScript.

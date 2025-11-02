@@ -758,13 +758,15 @@
                 
                 const data = await response.json();
                 
-                if (response.ok) {
-                    successMessage.textContent = data.message;
+                if (response.ok && data.success) {
+                    successMessage.textContent = data.message || 'Đăng ký thành công';
                     successMessage.style.display = 'block';
                     
-                    // Lưu thông tin user vào localStorage
-                    localStorage.setItem('user', JSON.stringify(data.user));
-                    localStorage.setItem('token', data.token || 'simulated_token');
+                    // Lưu thông tin user và token vào localStorage từ response
+                    if (data.data && data.data.user && data.data.token) {
+                        localStorage.setItem('user', JSON.stringify(data.data.user));
+                        localStorage.setItem('token', data.data.token);
+                    }
                     
                     // Chuyển hướng sau 2 giây
                     setTimeout(() => {

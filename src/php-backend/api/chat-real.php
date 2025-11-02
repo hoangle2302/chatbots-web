@@ -64,10 +64,62 @@ try {
 
     // Load configuration
     require_once __DIR__ . '/../config/Config.php';
+    require_once __DIR__ . '/../config/Database.php';
+    require_once __DIR__ . '/../models/User.php';
+    require_once __DIR__ . '/../middleware/AuthMiddleware.php';
     
     // Try to get API key from config
     $config = new Config();
     $apiKey = $config->getKey4UApiKey();
+    
+    // Kiểm tra authentication và credit nếu có user đăng nhập
+    $userId = null;
+    $userCredits = null;
+    $database = null;
+    $userModel = null;
+    $auth = new AuthMiddleware();
+    $token = $auth->getTokenFromRequest();
+    
+    error_log("Chat API Debug - Token received: " . ($token ? "Yes (length: " . strlen($token) . ")" : "No"));
+    
+    if ($token) {
+        $user_data = $auth->getCurrentUser($token);
+        error_log("Chat API Debug - User data from token: " . json_encode($user_data));
+        
+        if ($user_data && isset($user_data['user_id'])) {
+            $userId = intval($user_data['user_id']);
+            error_log("Chat API Debug - User ID: {$userId}");
+            
+            // Lấy thông tin user và credit
+            $database = new Database();
+            $db = $database->getConnection();
+            $userModel = new User($db);
+            $userInfo = $userModel->getById($userId);
+            
+            if ($userInfo) {
+                $userCredits = intval($userInfo['credits'] ?? 0);
+                error_log("Chat API Debug - User credits: {$userCredits}");
+                
+                // Kiểm tra credit trước khi cho phép chat
+                if ($userCredits < 1) {
+                    http_response_code(403);
+                    echo json_encode([
+                        'success' => false,
+                        'error' => 'Không đủ credit để gửi câu hỏi. Vui lòng nạp thêm credit.',
+                        'code' => 'INSUFFICIENT_CREDITS',
+                        'credits' => $userCredits
+                    ]);
+                    exit();
+                }
+            } else {
+                error_log("Chat API Debug - Warning: User info not found for user ID: {$userId}");
+            }
+        } else {
+            error_log("Chat API Debug - Warning: Invalid token or missing user_id");
+        }
+    } else {
+        error_log("Chat API Debug - No token provided, chat will proceed without credit deduction");
+    }
     
     $response = "";
     $source = "simulated";
@@ -151,6 +203,29 @@ try {
         }
     }
 
+    // Trừ credit sau khi đã xử lý câu hỏi thành công (chỉ khi có user đăng nhập)
+    $newCredits = null;
+    if ($userId !== null && $userCredits !== null && $userModel !== null) {
+        error_log("Chat API Debug - Attempting to deduct credit. User ID: {$userId}, Current credits: {$userCredits}");
+        
+        // Trừ 1 credit
+        $deducted = $userModel->deductCredits($userId, 1);
+        
+        if ($deducted) {
+            // Lấy credit mới sau khi trừ
+            $updatedUser = $userModel->getById($userId);
+            $newCredits = intval($updatedUser['credits'] ?? 0);
+            
+            error_log("✅ Credit deducted successfully. User ID: {$userId}, Old credits: {$userCredits}, New credits: {$newCredits}");
+        } else {
+            error_log("❌ Warning: Failed to deduct credit for user ID: {$userId}. Possible reasons: insufficient credits or database error.");
+            // Nếu trừ không thành công, giữ nguyên credit cũ
+            $newCredits = $userCredits;
+        }
+    } else {
+        error_log("Chat API Debug - Credit deduction skipped. userId: " . ($userId ?? 'null') . ", userCredits: " . ($userCredits ?? 'null') . ", userModel: " . ($userModel ? 'set' : 'null'));
+    }
+    
     // Debug logging
     error_log("Chat API Debug - Response: " . $response);
     error_log("Chat API Debug - Source: " . $source);
@@ -170,6 +245,15 @@ try {
     // Add ensemble responses if available
     if ($isEnsemble && !empty($ensembleResponses)) {
         $responseData['ensemble_responses'] = $ensembleResponses;
+    }
+    
+    // Thêm thông tin credit vào response nếu có user
+    if ($userId !== null) {
+        if (isset($newCredits)) {
+            $responseData['credits_remaining'] = $newCredits;
+        } elseif ($userCredits !== null) {
+            $responseData['credits_remaining'] = $userCredits - 1;
+        }
     }
     
     $finalResponse = [
