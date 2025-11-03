@@ -1001,6 +1001,40 @@
             // Xóa dữ liệu user khỏi localStorage
             localStorage.removeItem('user');
             localStorage.removeItem('token');
+            localStorage.removeItem('user_token');
+            localStorage.removeItem('user_data');
+            localStorage.removeItem('userData');
+            
+            // Xóa lịch sử chat khỏi localStorage
+            localStorage.removeItem('chat_conversations');
+            
+            // Xóa currentUser và conversations nếu có trong script-backend.js
+            if (typeof currentUser !== 'undefined') {
+                currentUser = null;
+            }
+            if (typeof conversations !== 'undefined') {
+                conversations = [];
+            }
+            if (typeof currentConversation !== 'undefined') {
+                currentConversation = null;
+            }
+            
+            // Xóa tất cả messages trong chat-area (chỉ xóa div.message, giữ lại welcome-screen)
+            const chatArea = document.getElementById('chat-area');
+            if (chatArea) {
+                // Xóa tất cả các div.message
+                const messages = chatArea.querySelectorAll('.message');
+                messages.forEach(msg => msg.remove());
+                
+                // Xóa class has-messages để hiển thị lại welcome screen
+                chatArea.classList.remove('has-messages');
+                
+                // Đảm bảo welcome-screen được hiển thị
+                const welcomeScreen = document.getElementById('welcome-screen');
+                if (welcomeScreen) {
+                    welcomeScreen.style.display = 'block';
+                }
+            }
             
             // Hiển thị lại section đăng nhập/đăng ký
             showAuthSection();
@@ -1096,6 +1130,25 @@
                             }
                         } catch (e) {
                             console.debug('Skip refresh profile:', e?.message);
+                        }
+                        
+                        // Load lịch sử chat sau khi đăng nhập thành công
+                        try {
+                            if (typeof loadConversations === 'function') {
+                                console.log('🔄 Loading chat history after login...');
+                                loadConversations();
+                            } else {
+                                console.log('⚠️ loadConversations function not available yet, retrying...');
+                                // Thử lại sau một chút nếu script-backend.js chưa load xong
+                                setTimeout(() => {
+                                    if (typeof loadConversations === 'function') {
+                                        console.log('🔄 Retrying load chat history...');
+                                        loadConversations();
+                                    }
+                                }, 1000);
+                            }
+                        } catch (e) {
+                            console.debug('Skip load chat history:', e?.message);
                         }
                     } else {
                         console.error('❌ User section element not found!');

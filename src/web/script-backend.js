@@ -133,6 +133,9 @@ function showUserSection() {
 function logout() {
     localStorage.removeItem('user_data');
     localStorage.removeItem('user_token');
+    localStorage.removeItem('token'); // Xóa cả key 'token' nếu có
+    localStorage.removeItem('user');
+    localStorage.removeItem('userData');
     currentUser = null;
     
     const authSection = document.getElementById('auth-section');
@@ -147,8 +150,12 @@ function logout() {
 // ===== API FUNCTIONS =====
 // Gọi API với authentication
 async function fetchAPI(url, options = {}) {
-    // Hỗ trợ cả 2 key: token và user_token
-    const token = localStorage.getItem('token') || localStorage.getItem('user_token');
+    // Tìm token với các key khác nhau (hỗ trợ cả 'token' và 'user_token')
+    let token = localStorage.getItem('user_token');
+    if (!token) {
+        token = localStorage.getItem('token');
+    }
+    
     const headers = {
         'Content-Type': 'application/json',
         ...options.headers
@@ -566,6 +573,9 @@ function addMessage(content, type, saveToHistory = true) {
     messagesContainer.appendChild(messageDiv);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
     
+    // Thêm class has-messages để ẩn welcome screen
+    messagesContainer.classList.add('has-messages');
+    
     // Lưu vào lịch sử nếu cần
     if (saveToHistory) {
         // Lưu lại nội dung thô để khôi phục khi người dùng mở lại lịch sử
@@ -754,63 +764,7 @@ function forceSyncUser() {
     }
 }
 
-// Function để cập nhật credit hiển thị trên UI
-function updateUserCreditsDisplay(credits) {
-    const userCreditsElement = document.getElementById('user-credits');
-    if (userCreditsElement) {
-        // Format số với dấu phẩy để dễ đọc (ví dụ: 99,999)
-        const formattedCredits = credits.toLocaleString('vi-VN');
-        userCreditsElement.textContent = `${formattedCredits} credits`;
-        console.log('✅ Updated user credits display to:', formattedCredits, '(raw:', credits + ')');
-        
-        // Cập nhật trong localStorage nếu có currentUser
-        if (currentUser) {
-            currentUser.credits = credits;
-            localStorage.setItem('user_data', JSON.stringify(currentUser));
-            console.log('✅ Updated currentUser.credits to:', credits);
-        } else {
-            console.warn('⚠️ currentUser is not set, cannot update localStorage');
-        }
-    } else {
-        console.error('❌ user-credits element not found in DOM');
-    }
-}
-
-// Function để refresh credits từ API
-async function refreshUserCreditsFromAPI() {
-    try {
-        const token = localStorage.getItem('token') || localStorage.getItem('user_token');
-        if (!token) {
-            console.warn('⚠️ No token found, cannot refresh credits from API');
-            return;
-        }
-
-        const backendUrl = window.APP_CONFIG?.BACKEND_URL || 'http://127.0.0.1:8000';
-        const response = await fetch(`${backendUrl}/api/auth.php?action=profile`, {
-            headers: { 
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (response.status === 401) {
-            console.warn('⚠️ Token expired or invalid');
-            return;
-        }
-
-        if (response.ok) {
-            const data = await response.json();
-            if (data.success && data.data && data.data.credits !== undefined) {
-                updateUserCreditsDisplay(data.data.credits);
-                console.log('✅ Refreshed credits from API:', data.data.credits);
-            }
-        }
-    } catch (error) {
-        console.error('❌ Error refreshing credits from API:', error);
-    }
-}
-
-// Function để refresh credits từ localStorage
+// Function để refresh credits
 function refreshUserCredits() {
     const userCreditsElement = document.getElementById('user-credits');
     if (!userCreditsElement) return;
@@ -827,8 +781,8 @@ function refreshUserCredits() {
     if (userData) {
         try {
             const user = JSON.parse(userData);
-            updateUserCreditsDisplay(user.credits || 0);
-            console.log('✅ Refreshed user credits from localStorage:', user.credits || 0);
+            userCreditsElement.textContent = (user.credits || 0) + ' credits';
+            console.log('✅ Refreshed user credits:', user.credits || 0);
         } catch (error) {
             console.error('❌ Error parsing user data:', error);
         }
@@ -992,7 +946,108 @@ function saveConversations() {
     }
 }
 
-function loadConversations() {
+// Load lịch sử chat từ server
+async function loadChatHistoryFromServer() {
+    try {
+        // Tìm token với các key khác nhau
+        let token = localStorage.getItem('user_token');
+        if (!token) {
+            token = localStorage.getItem('token');
+        }
+        
+        if (!token) {
+            console.log('⚠️ No token found, skipping server history load');
+            return;
+        }
+        
+        const response = await fetchAPI((window.APP_CONFIG?.BACKEND_URL || 'http://127.0.0.1:8000') + '/api/history');
+        
+        if (response && response.success && Array.isArray(response.data?.history)) {
+            const serverHistory = response.data.history;
+            console.log('✅ Loaded history from server:', serverHistory.length, 'records');
+            
+            // Convert server history (AIQueryHistory format) sang conversations format
+            // Group theo thời gian - mỗi ngày là một conversation
+            const historyByDate = {};
+            
+            serverHistory.forEach(record => {
+                const date = new Date(record.created_at);
+                const dateKey = date.toISOString().split('T')[0]; // YYYY-MM-DD
+                
+                if (!historyByDate[dateKey]) {
+                    historyByDate[dateKey] = {
+                        id: `server_${dateKey}_${Date.now()}`,
+                        title: `Chat ${new Date(dateKey).toLocaleDateString('vi-VN')}`,
+                        messages: [],
+                        createdAt: dateKey,
+                        updatedAt: record.created_at,
+                        isFromServer: true
+                    };
+                }
+                
+                // Thêm message user
+                historyByDate[dateKey].messages.push({
+                    content: record.prompt || '',
+                    type: 'user',
+                    timestamp: record.created_at
+                });
+                
+                // Thêm message assistant
+                historyByDate[dateKey].messages.push({
+                    content: record.response || '',
+                    type: 'assistant',
+                    model: record.model || '',
+                    timestamp: record.created_at
+                });
+            });
+            
+            // Convert object thành array và sort theo ngày (mới nhất trước)
+            const serverConversations = Object.values(historyByDate).sort((a, b) => {
+                return new Date(b.createdAt) - new Date(a.createdAt);
+            });
+            
+            // Merge với conversations hiện tại từ localStorage
+            const localRaw = localStorage.getItem('chat_conversations');
+            let localConversations = [];
+            
+            if (localRaw) {
+                try {
+                    const parsed = JSON.parse(localRaw);
+                    if (Array.isArray(parsed)) {
+                        // Chỉ lấy conversations không từ server (tránh duplicate)
+                        localConversations = parsed.filter(conv => !conv.isFromServer);
+                    }
+                } catch (error) {
+                    console.error('❌ Không thể parse lịch sử local:', error);
+                }
+            }
+            
+            // Merge: server conversations trước, local conversations sau
+            conversations = [...serverConversations, ...localConversations];
+            
+            // Lưu lại vào localStorage
+            saveConversations();
+            
+            // Nếu chưa có currentConversation, chọn conversation đầu tiên
+            if (!currentConversation && conversations.length > 0) {
+                currentConversation = conversations[0];
+                renderConversationMessages(currentConversation);
+            }
+            
+            updateConversationsList();
+            console.log('✅ Merged history: ' + serverConversations.length + ' from server, ' + localConversations.length + ' from local');
+        } else {
+            console.log('⚠️ No history from server or invalid format');
+        }
+    } catch (error) {
+        console.error('❌ Lỗi load lịch sử từ server:', error);
+        // Fallback về localStorage nếu không load được từ server
+        loadConversationsFromLocal();
+    }
+}
+
+// Load conversations chỉ từ localStorage (fallback)
+function loadConversationsFromLocal() {
     const raw = localStorage.getItem('chat_conversations');
     if (raw) {
         try {
@@ -1016,6 +1071,15 @@ function loadConversations() {
     }
 
     updateConversationsList();
+}
+
+// Load conversations (từ server hoặc localStorage)
+function loadConversations() {
+    // Thử load từ server trước, fallback về local
+    loadChatHistoryFromServer().catch(() => {
+        console.log('⚠️ Falling back to local history');
+        loadConversationsFromLocal();
+    });
 }
 
 function createNewConversation() {
@@ -1152,8 +1216,6 @@ async function sendMessage() {
                 })
             });
 
-            console.log('📥 Chat API Response:', response);
-
             if (response.success) {
                 const aiResponse = response.data.content || response.data.response || '';
                 const finalText = aiResponse && aiResponse.trim() !== ''
@@ -1161,18 +1223,6 @@ async function sendMessage() {
                     : 'Xin chào! Tôi đang được cập nhật, vui lòng thử lại sau.';
 
                 addMessage(finalText, 'assistant');
-
-                // Cập nhật credit nếu có trong response
-                if (response.data.credits_remaining !== undefined) {
-                    console.log('💳 Credits remaining from API:', response.data.credits_remaining);
-                    updateUserCreditsDisplay(response.data.credits_remaining);
-                } else {
-                    console.warn('⚠️ credits_remaining not found in response, refreshing from server...');
-                    // Refresh credits từ server nếu không có trong response
-                    setTimeout(() => {
-                        refreshUserCreditsFromAPI();
-                    }, 500);
-                }
 
                 if (resolvedFormat) {
                     const filename = `ket-qua-${Date.now()}.${resolvedFormat}`;
@@ -1182,18 +1232,7 @@ async function sendMessage() {
                     }
                 }
             } else {
-                // Xử lý lỗi không đủ credit
-                if (response.code === 'INSUFFICIENT_CREDITS') {
-                    addMessage('Không đủ credit để gửi câu hỏi. Vui lòng nạp thêm credit.', 'assistant error');
-                    // Cập nhật credit hiển thị nếu có
-                    if (response.credits !== undefined) {
-                        updateUserCreditsDisplay(response.credits);
-                    }
-                    // Refresh credits từ server
-                    refreshUserCredits();
-                } else {
-                    addMessage('Lỗi: ' + (response.error || response.message || 'Không thể gửi tin nhắn'), 'assistant error');
-                }
+                addMessage('Lỗi: ' + (response.message || 'Không thể gửi tin nhắn'), 'assistant error');
             }
         }
     } catch (error) {
@@ -1227,7 +1266,11 @@ async function processUploadedDocument(file, promptText = '', options = {}) {
     formData.append('user_prompt', finalPrompt);
     formData.append('output_format', outputFormat || 'auto');
 
-    const token = localStorage.getItem('user_token');
+    // Tìm token với các key khác nhau (hỗ trợ cả 'token' và 'user_token')
+    let token = localStorage.getItem('user_token');
+    if (!token) {
+        token = localStorage.getItem('token');
+    }
     const headers = {};
     if (token) {
         formData.append('auth_token', token);

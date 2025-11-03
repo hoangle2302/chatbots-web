@@ -330,16 +330,61 @@ function handleGetProfile($db) {
  * Lấy lịch sử chat
  */
 function handleGetHistory($db) {
-    $userId = getCurrentUserId();
-    if (!$userId) {
-        sendError('Unauthorized', 401);
-        return;
+    try {
+        // Kiểm tra database connection
+        if (!$db) {
+            error_log("Database connection is null in handleGetHistory");
+            sendError('Database connection failed', 500);
+            return;
+        }
+        
+        // Sử dụng JWT authentication thay vì session
+        $auth = new AuthMiddleware();
+        
+        $token = $auth->getTokenFromRequest();
+        if (!$token) {
+            sendError('No token provided', 401);
+            return;
+        }
+        
+        $user_data = $auth->getCurrentUser($token);
+        if (!$user_data) {
+            sendError('Invalid token', 401);
+            return;
+        }
+        
+        $userId = $user_data['user_id'];
+        
+        if (!$userId) {
+            error_log("User ID is null in handleGetHistory");
+            sendError('Invalid user ID', 400);
+            return;
+        }
+        
+        $history = new AIQueryHistory($db);
+        
+        try {
+            $records = $history->getByUserId($userId);
+            
+            // Đảm bảo records là array
+            if (!is_array($records)) {
+                error_log("getByUserId returned non-array, converting to empty array");
+                $records = [];
+            }
+            
+            sendSuccess(['history' => $records]);
+        } catch (Exception $e) {
+            error_log("Exception when calling getByUserId: " . $e->getMessage());
+            // Trả về empty array thay vì error để không làm gián đoạn UI
+            sendSuccess(['history' => []]);
+        }
+    } catch (Exception $e) {
+        error_log("Error in handleGetHistory: " . $e->getMessage());
+        error_log("Stack trace: " . $e->getTraceAsString());
+        // Trả về empty array thay vì error để không làm gián đoạn UI
+        // Frontend sẽ fallback về local history nếu không có data
+        sendSuccess(['history' => []]);
     }
-    
-    $history = new AIQueryHistory($db);
-    $records = $history->getByUserId($userId);
-    
-    sendSuccess(['history' => $records]);
 }
 
 /**

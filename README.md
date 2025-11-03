@@ -215,7 +215,36 @@ Mọi request từ frontend đi qua PHP backend để xác thực, quản lý qu
    JWT_SECRET=your-super-secret-jwt-key-change-this
    ```
 
-### Bước 6: Setup Database với phpMyAdmin
+### Bước 6: Cài đặt PHP dependencies (Composer)
+
+**Nếu bạn muốn cài PHP dependencies trước, có thể làm ở bước này:**
+
+1. **Kiểm tra Composer đã cài chưa:**
+   ```cmd
+   composer --version
+   ```
+   
+   **Nếu chưa có Composer:**
+   - **Windows:** Tải `Composer-Setup.exe` từ https://getcomposer.org/download/
+   - Chạy installer và làm theo hướng dẫn
+   - Đảm bảo PHP đã có trong PATH
+
+2. **Di chuyển đến thư mục PHP backend:**
+   ```cmd
+   cd src\php-backend
+   ```
+
+3. **Cài đặt PHP dependencies:**
+   ```cmd
+   composer install
+   ```
+   
+   **Hoặc production mode:**
+   ```cmd
+   composer install --no-dev --optimize-autoloader
+   ```
+
+### Bước 7: Setup Database với phpMyAdmin
 
 #### Cách 1: Dùng phpMyAdmin (Khuyến nghị)
 
@@ -271,7 +300,9 @@ Mọi request từ frontend đi qua PHP backend để xác thực, quản lý qu
    ```
    - Script sẽ tự động tạo database và import schema
 
-### Bước 7: Cài đặt FastAPI microservice
+### Bước 8: Cài đặt thư viện requirements
+
+#### 8.1. Cài đặt Python requirements (FastAPI microservice)
 
 1. **Di chuyển đến thư mục AI Tool:**
    ```cmd
@@ -282,29 +313,103 @@ Mọi request từ frontend đi qua PHP backend để xác thực, quản lý qu
    ```cmd
    python -m venv .venv
    ```
+   - Virtual environment sẽ tạo thư mục `.venv` trong thư mục hiện tại
 
 3. **Kích hoạt virtual environment:**
    ```cmd
    # Windows Command Prompt
    .venv\Scripts\activate.bat
    
-   # Windows PowerShell
+   # Windows PowerShell (nếu bị chặn chính sách)
    .venv\Scripts\Activate.ps1
+   # Nếu lỗi "cannot be loaded", chạy:
+   Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
    
    # Linux/macOS
    source .venv/bin/activate
    ```
+   - Sau khi kích hoạt, bạn sẽ thấy `(.venv)` ở đầu dòng command prompt
 
-4. **Cài đặt dependencies:**
+4. **Nâng cấp pip (khuyến nghị):**
    ```cmd
+   python -m pip install --upgrade pip
+   ```
+
+5. **Cài đặt Python dependencies từ requirements.txt:**
+   ```cmd
+   # Từ thư mục gốc dự án
+   cd C:\path\to\chatbots-web
    pip install -r requirements.txt
    ```
-   - Nếu file `requirements.txt` không tồn tại trong thư mục này, tìm trong thư mục gốc dự án
+   
+   **Danh sách thư viện sẽ được cài:**
+   - `fastapi` - Web framework cho FastAPI
+   - `uvicorn` - ASGI server chạy FastAPI
+   - `python-dotenv` - Đọc file .env
+   - `openai` - Client cho OpenAI API
+   - `PyPDF2` - Đọc file PDF
+   - `python-docx` - Đọc file Word (DOCX)
+   - `pandas` - Xử lý dữ liệu (Excel, CSV)
+   - `fpdf2` - Tạo file PDF
+   - `python-multipart` - Xử lý form data upload
 
-5. **Kiểm tra cài đặt:**
+   **Nếu gặp lỗi khi cài đặt:**
    ```cmd
-   python -c "import uvicorn; print('OK')"
+   # Thử cài từng package:
+   pip install fastapi uvicorn
+   pip install python-dotenv openai
+   pip install PyPDF2 python-docx pandas fpdf2 python-multipart
    ```
+
+6. **Kiểm tra cài đặt:**
+   ```cmd
+   python -c "import fastapi; import uvicorn; import openai; print('✅ All packages installed successfully!')"
+   ```
+
+#### 8.2. Cài đặt PHP dependencies (Composer)
+
+1. **Kiểm tra Composer đã cài chưa:**
+   ```cmd
+   composer --version
+   ```
+   
+   **Nếu chưa có Composer:**
+   - **Windows:** Tải `Composer-Setup.exe` từ https://getcomposer.org/download/
+   - Chạy installer và làm theo hướng dẫn
+   - Đảm bảo PHP đã có trong PATH
+
+2. **Di chuyển đến thư mục PHP backend:**
+   ```cmd
+   cd src\php-backend
+   ```
+
+3. **Cài đặt PHP dependencies từ composer.json:**
+   ```cmd
+   composer install
+   ```
+   
+   **Hoặc nếu muốn cài production (không có dev dependencies):**
+   ```cmd
+   composer install --no-dev --optimize-autoloader
+   ```
+   
+   **Danh sách thư viện sẽ được cài:**
+   - `guzzlehttp/guzzle` - HTTP client cho API requests
+   - `firebase/php-jwt` - Xử lý JWT tokens
+
+4. **Kiểm tra cài đặt:**
+   ```cmd
+   # Kiểm tra vendor folder đã được tạo
+   dir vendor
+   
+   # Hoặc test import:
+   php -r "require 'vendor/autoload.php'; echo '✅ Composer packages loaded!';"
+   ```
+
+**Lưu ý quan trọng:**
+- ✅ **Python virtual environment:** Luôn kích hoạt `.venv` trước khi chạy FastAPI
+- ✅ **PHP Composer:** Chỉ cần chạy `composer install` một lần, sau đó tự động load khi chạy PHP
+- ⚠️ **Windows PowerShell:** Có thể cần thay đổi ExecutionPolicy để chạy script activation
 
 ---
 
@@ -695,14 +800,36 @@ Dự án được phát hành dưới giấy phép **[MIT License](LICENSE)**.
 
 ## 🎯 Tóm tắt nhanh
 
-### Cài đặt với XAMPP (5 phút)
+### Cài đặt với XAMPP (10-15 phút)
 
 ```cmd
 # 1. Cài XAMPP và khởi động Apache + MySQL
-# 2. Tạo database qua phpMyAdmin
-# 3. Cài Python 3.10+
-# 4. Clone repo và cấu hình config.env
-# 5. Chạy start.bat
+# 2. Cài Python 3.10+ và Composer
+# 3. Clone repo và cấu hình config.env
+# 4. Tạo database qua phpMyAdmin
+# 5. Cài đặt Python requirements:
+cd C:\path\to\chatbots-web
+python -m venv src\php-backend\tools\AI tool\.venv
+src\php-backend\tools\AI tool\.venv\Scripts\activate
+pip install -r requirements.txt
+# 6. Cài đặt PHP dependencies:
+cd src\php-backend
+composer install
+# 7. Chạy start.bat
+```
+
+### Cài đặt requirements nhanh
+
+**Python requirements (từ thư mục gốc):**
+```cmd
+cd C:\path\to\chatbots-web
+pip install -r requirements.txt
+```
+
+**PHP dependencies (từ thư mục backend):**
+```cmd
+cd src\php-backend
+composer install
 ```
 
 ### Truy cập

@@ -72,53 +72,69 @@ try {
     $config = new Config();
     $apiKey = $config->getKey4UApiKey();
     
-    // Kiểm tra authentication và credit nếu có user đăng nhập
-    $userId = null;
-    $userCredits = null;
-    $database = null;
-    $userModel = null;
+    // Kiểm tra authentication bắt buộc
     $auth = new AuthMiddleware();
     $token = $auth->getTokenFromRequest();
     
     error_log("Chat API Debug - Token received: " . ($token ? "Yes (length: " . strlen($token) . ")" : "No"));
     
-    if ($token) {
-        $user_data = $auth->getCurrentUser($token);
-        error_log("Chat API Debug - User data from token: " . json_encode($user_data));
-        
-        if ($user_data && isset($user_data['user_id'])) {
-            $userId = intval($user_data['user_id']);
-            error_log("Chat API Debug - User ID: {$userId}");
-            
-            // Lấy thông tin user và credit
-            $database = new Database();
-            $db = $database->getConnection();
-            $userModel = new User($db);
-            $userInfo = $userModel->getById($userId);
-            
-            if ($userInfo) {
-                $userCredits = intval($userInfo['credits'] ?? 0);
-                error_log("Chat API Debug - User credits: {$userCredits}");
-                
-                // Kiểm tra credit trước khi cho phép chat
-                if ($userCredits < 1) {
-                    http_response_code(403);
-                    echo json_encode([
-                        'success' => false,
-                        'error' => 'Không đủ credit để gửi câu hỏi. Vui lòng nạp thêm credit.',
-                        'code' => 'INSUFFICIENT_CREDITS',
-                        'credits' => $userCredits
-                    ]);
-                    exit();
-                }
-            } else {
-                error_log("Chat API Debug - Warning: User info not found for user ID: {$userId}");
-            }
-        } else {
-            error_log("Chat API Debug - Warning: Invalid token or missing user_id");
-        }
-    } else {
-        error_log("Chat API Debug - No token provided, chat will proceed without credit deduction");
+    // Yêu cầu authentication bắt buộc
+    if (!$token) {
+        http_response_code(401);
+        echo json_encode([
+            'success' => false,
+            'error' => 'Authentication required. Vui lòng đăng nhập để chat với AI.',
+            'code' => 'AUTHENTICATION_REQUIRED'
+        ]);
+        exit();
+    }
+    
+    // Xác thực token
+    $user_data = $auth->getCurrentUser($token);
+    error_log("Chat API Debug - User data from token: " . json_encode($user_data));
+    
+    if (!$user_data || !isset($user_data['user_id'])) {
+        http_response_code(401);
+        echo json_encode([
+            'success' => false,
+            'error' => 'Invalid or expired token. Vui lòng đăng nhập lại.',
+            'code' => 'INVALID_TOKEN'
+        ]);
+        exit();
+    }
+    
+    $userId = intval($user_data['user_id']);
+    error_log("Chat API Debug - User ID: {$userId}");
+    
+    // Lấy thông tin user và credit
+    $database = new Database();
+    $db = $database->getConnection();
+    $userModel = new User($db);
+    $userInfo = $userModel->getById($userId);
+    
+    if (!$userInfo) {
+        http_response_code(404);
+        echo json_encode([
+            'success' => false,
+            'error' => 'User not found. Vui lòng đăng nhập lại.',
+            'code' => 'USER_NOT_FOUND'
+        ]);
+        exit();
+    }
+    
+    $userCredits = intval($userInfo['credits'] ?? 0);
+    error_log("Chat API Debug - User credits: {$userCredits}");
+    
+    // Kiểm tra credit trước khi cho phép chat
+    if ($userCredits < 1) {
+        http_response_code(403);
+        echo json_encode([
+            'success' => false,
+            'error' => 'Không đủ credit để gửi câu hỏi. Vui lòng nạp thêm credit.',
+            'code' => 'INSUFFICIENT_CREDITS',
+            'credits' => $userCredits
+        ]);
+        exit();
     }
     
     $response = "";

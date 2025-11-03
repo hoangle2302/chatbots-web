@@ -49,17 +49,57 @@ class AIQueryHistory {
      * Lấy lịch sử theo user ID
      */
     public function getByUserId($userId, $limit = 50) {
-        $query = "SELECT * FROM " . $this->table_name . " 
-                  WHERE user_id = :user_id 
-                  ORDER BY created_at DESC 
-                  LIMIT :limit";
-        
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(":user_id", $userId);
-        $stmt->bindParam(":limit", $limit, PDO::PARAM_INT);
-        $stmt->execute();
-        
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        try {
+            if (!$this->conn) {
+                error_log("Database connection is null in AIQueryHistory::getByUserId");
+                return [];
+            }
+            
+            if (!$userId) {
+                error_log("User ID is null or empty in AIQueryHistory::getByUserId");
+                return [];
+            }
+            
+            $query = "SELECT * FROM " . $this->table_name . " 
+                      WHERE user_id = :user_id 
+                      ORDER BY created_at DESC 
+                      LIMIT :limit";
+            
+            $stmt = $this->conn->prepare($query);
+            if (!$stmt) {
+                $errorInfo = $this->conn->errorInfo();
+                error_log("Failed to prepare query in AIQueryHistory::getByUserId: " . print_r($errorInfo, true));
+                return [];
+            }
+            
+            // Cast userId và limit sang int để đảm bảo type đúng
+            $userId = (int) $userId;
+            $limit = (int) $limit;
+            
+            $stmt->bindValue(":user_id", $userId, PDO::PARAM_INT);
+            $stmt->bindValue(":limit", $limit, PDO::PARAM_INT);
+            
+            if (!$stmt->execute()) {
+                $errorInfo = $stmt->errorInfo();
+                error_log("Failed to execute query in AIQueryHistory::getByUserId: " . print_r($errorInfo, true));
+                return [];
+            }
+            
+            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return $results ? $results : [];
+        } catch (PDOException $e) {
+            error_log("PDOException in AIQueryHistory::getByUserId: " . $e->getMessage());
+            error_log("SQL Error Code: " . $e->getCode());
+            // Nếu lỗi do table không tồn tại, trả về array rỗng thay vì throw error
+            if ($e->getCode() == '42S02') { // Table doesn't exist
+                error_log("Table " . $this->table_name . " does not exist, returning empty array");
+                return [];
+            }
+            return [];
+        } catch (Exception $e) {
+            error_log("Exception in AIQueryHistory::getByUserId: " . $e->getMessage());
+            return [];
+        }
     }
     
     /**
