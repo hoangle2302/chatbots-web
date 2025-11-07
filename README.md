@@ -352,6 +352,9 @@ Mọi request từ frontend đi qua PHP backend để xác thực, quản lý qu
    - `pandas` - Xử lý dữ liệu (Excel, CSV)
    - `fpdf2` - Tạo file PDF
    - `python-multipart` - Xử lý form data upload
+   - 'pytesseract'
+   - 'pdf2image' 
+   - 'Pillow'
 
    **Nếu gặp lỗi khi cài đặt:**
    ```cmd

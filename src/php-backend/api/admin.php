@@ -1,6 +1,6 @@
 <?php
 /**
- * 👑 API QUẢN TRỊ ADMIN
+ * API QUẢN TRỊ ADMIN
  * Quản lý người dùng và danh sách model
  */
 

@@ -98,6 +98,8 @@ class Database {
         } else {
             $this->createMySQLSchema();
         }
+
+        $this->ensureDailyCreditColumnExists();
     }
     
     /**
@@ -115,6 +117,7 @@ class Database {
             credits INTEGER DEFAULT 10,
             email VARCHAR(255),
             display_name VARCHAR(100),
+            last_daily_credit_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
         );
@@ -171,6 +174,7 @@ class Database {
             credits INT DEFAULT 10,
             email VARCHAR(255),
             display_name VARCHAR(100),
+            last_daily_credit_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -210,6 +214,25 @@ class Database {
         ";
         
         $this->conn->exec($sql);
+    }
+
+    private function ensureDailyCreditColumnExists() {
+        try {
+            if ($this->db_type === 'sqlite') {
+                $columnsStmt = $this->conn->query('PRAGMA table_info(users)');
+                $columns = $columnsStmt ? $columnsStmt->fetchAll(PDO::FETCH_COLUMN, 1) : [];
+                if ($columns && !in_array('last_daily_credit_at', $columns, true)) {
+                    $this->conn->exec('ALTER TABLE users ADD COLUMN last_daily_credit_at DATETIME');
+                } elseif (!$columns) {
+                    // Nếu fetchAll trả về rỗng (vd: lỗi), thử ALTER trực tiếp và bỏ qua lỗi
+                    $this->conn->exec('ALTER TABLE users ADD COLUMN last_daily_credit_at DATETIME');
+                }
+            } else {
+                $this->conn->exec('ALTER TABLE users ADD COLUMN IF NOT EXISTS last_daily_credit_at DATETIME NULL');
+            }
+        } catch (PDOException $e) {
+            error_log('ensureDailyCreditColumnExists error: ' . $e->getMessage());
+        }
     }
     
     /**

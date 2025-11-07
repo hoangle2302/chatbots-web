@@ -527,8 +527,20 @@ function createMessageContent(text) {
     const wrapper = document.createElement('div');
     wrapper.className = 'message-content';
 
+    const rawText = String(text ?? '');
+
+    if (window.marked) {
+        try {
+            const html = window.marked.parse(rawText, { breaks: true, smartLists: true });
+            wrapper.innerHTML = html;
+            return wrapper;
+        } catch (error) {
+            console.warn('Không thể render Markdown, fallback sang text thuần:', error);
+        }
+    }
+
     const paragraph = document.createElement('p');
-    const lines = String(text ?? '').split('\n');
+    const lines = rawText.split('\n');
     lines.forEach((line, index) => {
         paragraph.appendChild(document.createTextNode(line));
         if (index < lines.length - 1) {

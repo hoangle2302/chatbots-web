@@ -18,10 +18,19 @@ def _resolve_key_and_url(override_key: Optional[str] = None, override_url: Optio
 
     return api_key, api_url
 
+DEFAULT_SYSTEM_PROMPT = """Bạn là trợ lý AI hữu ích. Khi trả lời:
+- Sử dụng tiếng Việt (trừ khi người dùng yêu cầu ngôn ngữ khác).
+- Trình bày kết quả bằng Markdown dễ đọc.
+- Mở đầu bằng 1-2 câu tóm tắt ngắn gọn.
+- Chia nội dung thành các mục với tiêu đề cấp 3 (###) khi phù hợp.
+- Dùng danh sách gạch đầu dòng cho các ý chính, bảng hoặc mã chỉ khi cần thiết.
+- Giữ câu súc tích, tập trung vào thông tin quan trọng.
+"""
+
 
 def call_ai(
     prompt: str,
-    system_prompt: str = "Bạn là trợ lý AI hữu ích.",
+    system_prompt: str = DEFAULT_SYSTEM_PROMPT,
     json_mode: bool = False,
     temperature: float = 0.3,
     api_key: Optional[str] = None,

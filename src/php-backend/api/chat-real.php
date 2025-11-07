@@ -66,6 +66,7 @@ try {
     require_once __DIR__ . '/../config/Config.php';
     require_once __DIR__ . '/../config/Database.php';
     require_once __DIR__ . '/../models/User.php';
+    require_once __DIR__ . '/../models/Log.php';
     require_once __DIR__ . '/../middleware/AuthMiddleware.php';
     
     // Try to get API key from config
@@ -110,6 +111,7 @@ try {
     $database = new Database();
     $db = $database->getConnection();
     $userModel = new User($db);
+    $logModel = new Log($db);
     $userInfo = $userModel->getById($userId);
     
     if (!$userInfo) {
@@ -122,6 +124,22 @@ try {
         exit();
     }
     
+    $dailyBonus = $userModel->grantDailyCreditsIfNeeded($userId, 5);
+    if (!empty($dailyBonus['granted'])) {
+        $userInfo['credits'] = $dailyBonus['credits'];
+        $userInfo['last_daily_credit_at'] = $dailyBonus['last_daily_credit_at'];
+
+        $logModel->user_id = $userId;
+        $logModel->action = 'daily_credit_bonus';
+        $logModel->detail = 'Hệ thống cộng 5 credits hàng ngày khi sử dụng chat.';
+        $logModel->ip_address = $_SERVER['REMOTE_ADDR'] ?? null;
+        $logModel->user_agent = $_SERVER['HTTP_USER_AGENT'] ?? null;
+        $logModel->create();
+    } elseif ($dailyBonus['credits'] !== null) {
+        $userInfo['credits'] = $dailyBonus['credits'];
+        $userInfo['last_daily_credit_at'] = $dailyBonus['last_daily_credit_at'];
+    }
+
     $userCredits = intval($userInfo['credits'] ?? 0);
     error_log("Chat API Debug - User credits: {$userCredits}");
     
