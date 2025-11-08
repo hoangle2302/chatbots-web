@@ -168,12 +168,12 @@ class UserService {
      * Lấy danh sách tất cả users
      */
     public function getAll($limit = 100) {
-        $query = "SELECT id, username, email, display_name, role, is_active, created_at FROM users ORDER BY created_at DESC LIMIT :limit";
+        $query = "SELECT id, username, email, display_name, role, is_active, credits, created_at FROM users ORDER BY created_at DESC LIMIT :limit";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
         $stmt->execute();
         
-        return $stmt->fetchAll();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
     
     /**

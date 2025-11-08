@@ -148,7 +148,18 @@ try {
                         break;
                     }
                     $ok = $userService->update($id, $data);
-                    echo json_encode(['success' => (bool)$ok]);
+                    if ($ok) {
+                        echo json_encode([
+                            'success' => true,
+                            'message' => 'Cập nhật user thành công'
+                        ]);
+                    } else {
+                        http_response_code(500);
+                        echo json_encode([
+                            'success' => false,
+                            'message' => 'Không thể cập nhật user'
+                        ]);
+                    }
                     break;
                 
                 case 'add_credits':

@@ -263,7 +263,7 @@ Mọi request từ frontend đi qua PHP backend để xác thực, quản lý qu
 3. **Import schema:**
    - Click vào database `thuvien_ai` ở sidebar bên trái
    - Click tab **"Import"**
-   - Click **"Choose File"** và chọn file: `data/database/mysql-schema.sql`
+   - Click **"Choose File"** và chọn file: `data/database/thuvien_ai.sql`
    - Click **"Go"** ở cuối trang
    - Đợi import hoàn tất (sẽ thấy thông báo thành công)
 
@@ -287,18 +287,10 @@ Mọi request từ frontend đi qua PHP backend để xác thực, quản lý qu
    ```sql
    CREATE DATABASE thuvien_ai CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
    USE thuvien_ai;
-   SOURCE C:/path/to/chatbots-web/data/database/mysql-schema.sql;
+   SOURCE C:/path/to/chatbots-web/data/database/thuvien_ai.sql;
    EXIT;
    ```
 
-#### Cách 3: Dùng PHP script
-
-1. **Chạy script tự động:**
-   ```cmd
-   cd C:\path\to\chatbots-web
-   php src/php-backend/tools/init-mysql.php
-   ```
-   - Script sẽ tự động tạo database và import schema
 
 ### Bước 8: Cài đặt thư viện requirements
 
@@ -355,6 +347,8 @@ Mọi request từ frontend đi qua PHP backend để xác thực, quản lý qu
    - 'pytesseract'
    - 'pdf2image' 
    - 'Pillow'
+   -- các thư viện trên hỗ trợ cho tính năng ocr của AI, giúp cho việc xử lý file diễn ra chính xác hơn
+   
 
    **Nếu gặp lỗi khi cài đặt:**
    ```cmd

@@ -141,10 +141,13 @@ try {
     }
 
     $userCredits = intval($userInfo['credits'] ?? 0);
-    error_log("Chat API Debug - User credits: {$userCredits}");
+    $userRole = $userInfo['role'] ?? 'user';
+    $isAdmin = ($userRole === 'admin');
     
-    // Kiểm tra credit trước khi cho phép chat
-    if ($userCredits < 1) {
+    error_log("Chat API Debug - User credits: {$userCredits}, Role: {$userRole}, Is Admin: " . ($isAdmin ? 'Yes' : 'No'));
+    
+    // Kiểm tra credit trước khi cho phép chat (bỏ qua nếu là admin)
+    if (!$isAdmin && $userCredits < 1) {
         http_response_code(403);
         echo json_encode([
             'success' => false,
@@ -237,24 +240,31 @@ try {
         }
     }
 
-    // Trừ credit sau khi đã xử lý câu hỏi thành công (chỉ khi có user đăng nhập)
+    // Trừ credit sau khi đã xử lý câu hỏi thành công (bỏ qua nếu là admin)
     $newCredits = null;
     if ($userId !== null && $userCredits !== null && $userModel !== null) {
-        error_log("Chat API Debug - Attempting to deduct credit. User ID: {$userId}, Current credits: {$userCredits}");
-        
-        // Trừ 1 credit
-        $deducted = $userModel->deductCredits($userId, 1);
-        
-        if ($deducted) {
-            // Lấy credit mới sau khi trừ
-            $updatedUser = $userModel->getById($userId);
-            $newCredits = intval($updatedUser['credits'] ?? 0);
-            
-            error_log("✅ Credit deducted successfully. User ID: {$userId}, Old credits: {$userCredits}, New credits: {$newCredits}");
-        } else {
-            error_log("❌ Warning: Failed to deduct credit for user ID: {$userId}. Possible reasons: insufficient credits or database error.");
-            // Nếu trừ không thành công, giữ nguyên credit cũ
+        if ($isAdmin) {
+            // Admin không bị trừ credit
             $newCredits = $userCredits;
+            error_log("✅ Admin user detected. Credit deduction skipped. User ID: {$userId}, Credits: {$userCredits}");
+        } else {
+            // Chỉ trừ credit cho user thường
+            error_log("Chat API Debug - Attempting to deduct credit. User ID: {$userId}, Current credits: {$userCredits}");
+            
+            // Trừ 1 credit
+            $deducted = $userModel->deductCredits($userId, 1);
+            
+            if ($deducted) {
+                // Lấy credit mới sau khi trừ
+                $updatedUser = $userModel->getById($userId);
+                $newCredits = intval($updatedUser['credits'] ?? 0);
+                
+                error_log("✅ Credit deducted successfully. User ID: {$userId}, Old credits: {$userCredits}, New credits: {$newCredits}");
+            } else {
+                error_log("❌ Warning: Failed to deduct credit for user ID: {$userId}. Possible reasons: insufficient credits or database error.");
+                // Nếu trừ không thành công, giữ nguyên credit cũ
+                $newCredits = $userCredits;
+            }
         }
     } else {
         error_log("Chat API Debug - Credit deduction skipped. userId: " . ($userId ?? 'null') . ", userCredits: " . ($userCredits ?? 'null') . ", userModel: " . ($userModel ? 'set' : 'null'));

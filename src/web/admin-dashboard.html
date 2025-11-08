@@ -458,6 +458,17 @@
             color: var(--gray-700);
         }
 
+        .badge[onclick] {
+            transition: var(--transition);
+            user-select: none;
+        }
+
+        .badge[onclick]:hover {
+            opacity: 0.8;
+            transform: scale(1.05);
+            box-shadow: var(--shadow-sm);
+        }
+
         /* ===== ACTION BUTTONS ===== */
         .action-buttons {
             display: flex;
@@ -925,6 +936,45 @@
         </div>
     </div>
 
+    <!-- Edit User Modal -->
+    <div id="editUserModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit User</h3>
+                <span class="modal-close" onclick="closeEditUserModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="user-info-card">
+                    <p><strong>User ID:</strong> <span id="editUserId"></span></p>
+                    <p><strong>Username:</strong> <span id="editUsername"></span></p>
+                    <p><strong>Email:</strong> <span id="editEmail"></span></p>
+                </div>
+                
+                <div class="credit-actions">
+                    <div class="credit-action">
+                        <label for="editUserRole">Role:</label>
+                        <select id="editUserRole" class="credit-action input" style="padding: 0.625rem 0.875rem; border: 1px solid var(--gray-300); border-radius: var(--radius); background: var(--white); color: var(--gray-900); font-size: 0.875rem; width: 100%;">
+                            <option value="user">User</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    
+                    <div class="credit-action">
+                        <label for="editUserStatus">Status:</label>
+                        <select id="editUserStatus" class="credit-action input" style="padding: 0.625rem 0.875rem; border: 1px solid var(--gray-300); border-radius: var(--radius); background: var(--white); color: var(--gray-900); font-size: 0.875rem; width: 100%;">
+                            <option value="1">Active</option>
+                            <option value="0">Inactive</option>
+                        </select>
+                    </div>
+                    
+                    <div class="credit-action" style="margin-top: 1rem;">
+                        <button onclick="updateUser()" class="btn btn-primary" style="width: 100%;">Update User</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="config.js"></script>
     <script>
         // ===== CONFIGURATION =====
@@ -1004,7 +1054,8 @@
                     const statusClass = user.is_active ? 'badge-active' : 'badge-inactive';
                     const statusText = user.is_active ? 'Active' : 'Inactive';
                     const roleClass = user.role === 'admin' ? 'badge-admin' : 'badge-user';
-                    const userCredits = user.credits || 0;
+                    // Xử lý credits: chuyển thành số nguyên, null/undefined = 0
+                    const userCredits = parseInt(user.credits) || 0;
                     totalCredits += userCredits;
                     const createdDate = new Date(user.created_at).toLocaleDateString('vi-VN');
                     
@@ -1013,13 +1064,21 @@
                             <td><strong>${user.id}</strong></td>
                             <td><strong>${user.username}</strong></td>
                             <td>${user.email}</td>
-                            <td><span class="badge ${roleClass}">${user.role}</span></td>
-                            <td><span class="badge ${statusClass}">${statusText}</span></td>
+                            <td>
+                                <span class="badge ${roleClass}" onclick="toggleUserRole(${user.id}, '${user.role}', ${JSON.stringify(user.username)})" style="cursor: pointer;" title="Click để đổi role">
+                                    ${user.role}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge ${statusClass}" onclick="toggleUserStatus(${user.id}, ${user.is_active ? 1 : 0}, ${JSON.stringify(user.username)})" style="cursor: pointer;" title="Click để đổi status">
+                                    ${statusText}
+                                </span>
+                            </td>
                             <td><strong style="color: var(--warning);">${userCredits.toLocaleString()}</strong></td>
                             <td>${createdDate}</td>
                             <td>
                                 <div class="action-buttons">
-                                    <button class="btn btn-sm btn-success" onclick="openEditCreditsModal(${user.id}, '${user.username}', ${userCredits})" title="Edit Credits">
+                                    <button class="btn btn-sm btn-success" onclick="openEditCreditsModal(${user.id}, ${JSON.stringify(user.username)}, ${userCredits})" title="Edit Credits">
                                         💰 Credits
                                     </button>
                                     <button class="btn btn-sm btn-primary" onclick="editUser(${user.id})" title="Edit User">
@@ -1077,13 +1136,202 @@
         }
         
         // ===== USER ACTIONS =====
-        function editUser(userId) {
-            alert(`Edit user ${userId} - Feature coming soon!`);
+        async function editUser(userId) {
+            try {
+                // Lấy thông tin user
+                const users = await fetchJSON(API + '?action=users_all');
+                const user = users.data.find(u => u.id === userId);
+                
+                if (!user) {
+                    alert('Không tìm thấy user!');
+                    return;
+                }
+                
+                // Hiển thị modal
+                document.getElementById('editUserId').textContent = user.id;
+                document.getElementById('editUsername').textContent = user.username || '-';
+                document.getElementById('editEmail').textContent = user.email || '-';
+                document.getElementById('editUserRole').value = user.role || 'user';
+                document.getElementById('editUserStatus').value = user.is_active ? '1' : '0';
+                
+                // Store current user ID
+                window.currentEditUserId = userId;
+                
+                // Hiển thị modal
+                document.getElementById('editUserModal').style.display = 'block';
+                
+            } catch (error) {
+                alert('Lỗi khi tải thông tin user: ' + error.message);
+            }
         }
         
-        function deleteUser(userId) {
-            if (confirm(`Are you sure you want to delete user ${userId}?`)) {
-                alert(`Delete user ${userId} - Feature coming soon!`);
+        function closeEditUserModal() {
+            document.getElementById('editUserModal').style.display = 'none';
+            window.currentEditUserId = null;
+        }
+        
+        async function updateUser() {
+            const userId = window.currentEditUserId;
+            if (!userId) return;
+            
+            const role = document.getElementById('editUserRole').value;
+            const isActive = document.getElementById('editUserStatus').value === '1';
+            
+            // Kiểm tra nếu admin đang cố thay đổi quyền của chính mình
+            try {
+                const adminUserStr = localStorage.getItem('admin_user');
+                if (adminUserStr) {
+                    const adminUser = JSON.parse(adminUserStr);
+                    if (adminUser.id === userId) {
+                        // Lấy thông tin user hiện tại
+                        const users = await fetchJSON(API + '?action=users_all');
+                        const user = users.data.find(u => u.id === userId);
+                        if (user && user.role === 'admin' && role === 'user') {
+                            alert('Bạn không thể tự xóa quyền admin của chính mình!');
+                            return;
+                        }
+                        if (user && user.is_active === 1 && !isActive) {
+                            alert('Bạn không thể tự vô hiệu hóa tài khoản của chính mình!');
+                            return;
+                        }
+                    }
+                }
+            } catch (e) {
+                // Ignore error
+            }
+            
+            try {
+                const response = await fetchJSON(API + `?action=update_user&id=${userId}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({
+                        role: role,
+                        is_active: isActive
+                    })
+                });
+                
+                if (response.success) {
+                    alert('Cập nhật user thành công!');
+                    closeEditUserModal();
+                    loadUsers(); // Reload users list
+                } else {
+                    alert('Lỗi: ' + (response.message || 'Không thể cập nhật user'));
+                }
+            } catch (error) {
+                alert('Lỗi: ' + error.message);
+            }
+        }
+        
+        async function toggleUserRole(userId, currentRole, username) {
+            // Kiểm tra nếu admin đang cố thay đổi quyền của chính mình
+            try {
+                const adminUserStr = localStorage.getItem('admin_user');
+                if (adminUserStr) {
+                    const adminUser = JSON.parse(adminUserStr);
+                    if (adminUser.id === userId && currentRole === 'admin') {
+                        alert('Bạn không thể tự xóa quyền admin của chính mình!');
+                        return;
+                    }
+                }
+            } catch (e) {
+                // Ignore error
+            }
+            
+            const newRole = currentRole === 'admin' ? 'user' : 'admin';
+            if (!confirm(`Bạn có chắc chắn muốn đổi role của user "${username}" từ "${currentRole}" sang "${newRole}"?`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetchJSON(API + `?action=update_user&id=${userId}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({
+                        role: newRole
+                    })
+                });
+                
+                if (response.success) {
+                    alert(`Đã đổi role của user "${username}" thành "${newRole}"!`);
+                    loadUsers(); // Reload users list
+                } else {
+                    alert('Lỗi: ' + (response.message || 'Không thể cập nhật role'));
+                }
+            } catch (error) {
+                alert('Lỗi: ' + error.message);
+            }
+        }
+        
+        async function toggleUserStatus(userId, currentStatus, username) {
+            // Kiểm tra nếu admin đang cố vô hiệu hóa chính mình
+            try {
+                const adminUserStr = localStorage.getItem('admin_user');
+                if (adminUserStr) {
+                    const adminUser = JSON.parse(adminUserStr);
+                    if (adminUser.id === userId && currentStatus === 1) {
+                        alert('Bạn không thể tự vô hiệu hóa tài khoản của chính mình!');
+                        return;
+                    }
+                }
+            } catch (e) {
+                // Ignore error
+            }
+            
+            const newStatus = currentStatus === 1 ? 0 : 1;
+            const statusText = newStatus === 1 ? 'Active' : 'Inactive';
+            if (!confirm(`Bạn có chắc chắn muốn đổi status của user "${username}" sang "${statusText}"?`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetchJSON(API + `?action=update_user&id=${userId}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({
+                        is_active: newStatus
+                    })
+                });
+                
+                if (response.success) {
+                    alert(`Đã đổi status của user "${username}" thành "${statusText}"!`);
+                    loadUsers(); // Reload users list
+                } else {
+                    alert('Lỗi: ' + (response.message || 'Không thể cập nhật status'));
+                }
+            } catch (error) {
+                alert('Lỗi: ' + error.message);
+            }
+        }
+        
+        async function deleteUser(userId) {
+            // Kiểm tra nếu admin đang cố xóa chính mình
+            try {
+                const adminUserStr = localStorage.getItem('admin_user');
+                if (adminUserStr) {
+                    const adminUser = JSON.parse(adminUserStr);
+                    if (adminUser.id === userId) {
+                        alert('Bạn không thể xóa tài khoản của chính mình!');
+                        return;
+                    }
+                }
+            } catch (e) {
+                // Ignore error
+            }
+            
+            if (!confirm(`Bạn có chắc chắn muốn xóa user ${userId}? Hành động này không thể hoàn tác!`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetchJSON(API + `?action=delete_user&id=${userId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.success) {
+                    alert('Xóa user thành công!');
+                    loadUsers(); // Reload users list
+                } else {
+                    alert('Lỗi: ' + (response.message || 'Không thể xóa user'));
+                }
+            } catch (error) {
+                alert('Lỗi: ' + error.message);
             }
         }
         
@@ -1161,9 +1409,13 @@
         
         // ===== MODAL EVENTS =====
         window.onclick = function(event) {
-            const modal = document.getElementById('editCreditsModal');
-            if (event.target === modal) {
+            const creditsModal = document.getElementById('editCreditsModal');
+            const userModal = document.getElementById('editUserModal');
+            if (event.target === creditsModal) {
                 closeEditCreditsModal();
+            }
+            if (event.target === userModal) {
+                closeEditUserModal();
             }
         }
         

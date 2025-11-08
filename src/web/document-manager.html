@@ -1310,138 +1310,34 @@
 
             <!-- Documents Grid -->
             <div class="documents-grid slide-in" id="documents-grid">
-            <!-- Sample Documents -->
-            <div class="document-card slide-in" data-type="pdf">
-                <div class="doc-header">
-                    <span class="doc-icon">📄</span>
-                    <div class="doc-menu">
-                        <button class="doc-menu-btn">⋮</button>
-                    </div>
+                <div class="loading" id="loading-documents" style="display: none;">
+                    <div class="loading-spinner"></div>
+                    <p>Đang tải tài liệu...</p>
                 </div>
-                <div class="doc-content">
-                    <h3 class="doc-title">Báo cáo AI Trends 2024.pdf</h3>
-                    <div class="doc-meta">
-                        Ngày tải: 15/09/2024 • <span class="doc-size">2.4 MB</span>
-                    </div>
-                    <div class="doc-actions">
-                        <button class="doc-action-btn">Xem</button>
-                        <button class="doc-action-btn primary">Phân tích AI</button>
-                    </div>
+                <div class="empty-state" id="empty-state" style="display: none;">
+                    <div class="empty-icon">📁</div>
+                    <div class="empty-title">Chưa có tài liệu nào</div>
+                    <div class="empty-subtitle">Hãy upload tài liệu đầu tiên của bạn!</div>
                 </div>
-            </div>
-
-            <div class="document-card slide-in" data-type="doc">
-                <div class="doc-header">
-                    <span class="doc-icon">📝</span>
-                    <div class="doc-menu">
-                        <button class="doc-menu-btn">⋮</button>
-                    </div>
-                </div>
-                <div class="doc-content">
-                    <h3 class="doc-title">Kế hoạch Marketing Q4.docx</h3>
-                    <div class="doc-meta">
-                        Ngày tải: 12/09/2024 • <span class="doc-size">1.8 MB</span>
-                    </div>
-                    <div class="doc-actions">
-                        <button class="doc-action-btn">Xem</button>
-                        <button class="doc-action-btn primary">Phân tích AI</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="document-card slide-in" data-type="csv">
-                <div class="doc-header">
-                    <span class="doc-icon">📊</span>
-                    <div class="doc-menu">
-                        <button class="doc-menu-btn">⋮</button>
-                    </div>
-                </div>
-                <div class="doc-content">
-                    <h3 class="doc-title">Sales Data 2024.csv</h3>
-                    <div class="doc-meta">
-                        Ngày tải: 10/09/2024 • <span class="doc-size">892 KB</span>
-                    </div>
-                    <div class="doc-actions">
-                        <button class="doc-action-btn">Xem</button>
-                        <button class="doc-action-btn primary">Phân tích AI</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="document-card slide-in" data-type="txt">
-                <div class="doc-header">
-                    <span class="doc-icon">📋</span>
-                    <div class="doc-menu">
-                        <button class="doc-menu-btn">⋮</button>
-                    </div>
-                </div>
-                <div class="doc-content">
-                    <h3 class="doc-title">Meeting Notes.txt</h3>
-                    <div class="doc-meta">
-                        Ngày tải: 08/09/2024 • <span class="doc-size">125 KB</span>
-                    </div>
-                    <div class="doc-actions">
-                        <button class="doc-action-btn">Xem</button>
-                        <button class="doc-action-btn primary">Phân tích AI</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="document-card slide-in" data-type="pdf">
-                <div class="doc-header">
-                    <span class="doc-icon">📄</span>
-                    <div class="doc-menu">
-                        <button class="doc-menu-btn">⋮</button>
-                    </div>
-                </div>
-                <div class="doc-content">
-                    <h3 class="doc-title">User Manual v2.1.pdf</h3>
-                    <div class="doc-meta">
-                        Ngày tải: 05/09/2024 • <span class="doc-size">4.2 MB</span>
-                    </div>
-                    <div class="doc-actions">
-                        <button class="doc-action-btn">Xem</button>
-                        <button class="doc-action-btn primary">Phân tích AI</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="document-card slide-in" data-type="doc">
-                <div class="doc-header">
-                    <span class="doc-icon">📝</span>
-                    <div class="doc-menu">
-                        <button class="doc-menu-btn">⋮</button>
-                    </div>
-                </div>
-                <div class="doc-content">
-                    <h3 class="doc-title">Proposal Template.docx</h3>
-                    <div class="doc-meta">
-                        Ngày tải: 02/09/2024 • <span class="doc-size">967 KB</span>
-                    </div>
-                    <div class="doc-actions">
-                        <button class="doc-action-btn">Xem</button>
-                        <button class="doc-action-btn primary">Phân tích AI</button>
-                    </div>
-                </div>
-            </div>
+            <!-- Documents will be loaded here -->
         </div>
 
         <!-- Stats Bar -->
-        <div class="stats-bar slide-in">
+        <div class="stats-bar slide-in" id="stats-bar">
             <div class="stat-item">
-                <div class="stat-number">156</div>
+                <div class="stat-number" id="stat-total">0</div>
                 <div class="stat-label">Tổng tài liệu</div>
             </div>
             <div class="stat-item">
-                <div class="stat-number">47.2 MB</div>
+                <div class="stat-number" id="stat-size">0 MB</div>
                 <div class="stat-label">Dung lượng sử dụng</div>
             </div>
             <div class="stat-item">
-                <div class="stat-number">89</div>
+                <div class="stat-number" id="stat-analyzed">-</div>
                 <div class="stat-label">Đã phân tích</div>
             </div>
             <div class="stat-item">
-                <div class="stat-number">23</div>
+                <div class="stat-number" id="stat-month">-</div>
                 <div class="stat-label">Tháng này</div>
             </div>
             </div>
@@ -1491,7 +1387,48 @@
         </div>
     </div>
 
+    <script src="config.js"></script>
     <script>
+        // ===== CONFIGURATION =====
+        const API_BASE = CONFIG.BACKEND_URL + CONFIG.ENDPOINTS.DOCUMENTS;
+        
+        // ===== AUTHENTICATION =====
+        function getToken() {
+            return localStorage.getItem('token');
+        }
+        
+        async function ensureAuth() {
+            const token = getToken();
+            if (!token) {
+                window.location.href = 'login.html';
+                return false;
+            }
+            return true;
+        }
+        
+        async function fetchJSON(url, options = {}) {
+            const token = getToken();
+            const response = await fetch(url, {
+                ...options,
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    ...options.headers
+                }
+            });
+            
+            if (!response.ok) {
+                if (response.status === 401) {
+                    localStorage.removeItem('token');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                const error = await response.json().catch(() => ({ message: 'Unknown error' }));
+                throw new Error(error.message || `HTTP ${response.status}`);
+            }
+            
+            return await response.json();
+        }
+        
         // Create floating particles
         function createParticles() {
             const particlesContainer = document.querySelector('.particles');
@@ -1537,39 +1474,81 @@
         });
 
         // Handle file upload
-        function handleFiles(files) {
-            Array.from(files).forEach(file => {
+        async function handleFiles(files) {
+            for (const file of Array.from(files)) {
                 if (file.size > 10 * 1024 * 1024) {
                     alert(`File ${file.name} quá lớn. Vui lòng chọn file nhỏ hơn 10MB.`);
-                    return;
+                    continue;
                 }
                 
-                // Simulate upload
-                console.log('Uploading:', file.name);
-                // Here you would implement actual file upload
-            });
+                await uploadFile(file);
+            }
+        }
+        
+        // Upload file to server
+        async function uploadFile(file) {
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                const token = getToken();
+                const response = await fetch(API_BASE + '?action=upload', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert(`Upload thành công: ${file.name}`);
+                    loadDocuments(); // Reload documents list
+                    loadStats(); // Reload stats
+                } else {
+                    alert(`Lỗi upload: ${result.message || 'Không thể upload file'}`);
+                }
+            } catch (error) {
+                console.error('Upload error:', error);
+                alert(`Lỗi khi upload file: ${error.message}`);
+            }
         }
 
         // Search functionality
         const searchInput = document.getElementById('search-input');
-        const documentsGrid = document.getElementById('documents-grid');
+        let searchTimeout;
 
         searchInput.addEventListener('input', (e) => {
-            const searchTerm = e.target.value.toLowerCase();
-            const documentCards = documentsGrid.querySelectorAll('.document-card');
+            clearTimeout(searchTimeout);
+            const searchTerm = e.target.value.trim();
             
-            documentCards.forEach(card => {
-                const title = card.querySelector('.doc-title').textContent.toLowerCase();
-                if (title.includes(searchTerm)) {
-                    card.style.display = 'block';
+            searchTimeout = setTimeout(() => {
+                if (searchTerm.length > 0) {
+                    searchDocuments(searchTerm);
                 } else {
-                    card.style.display = 'none';
+                    loadDocuments();
                 }
-            });
+            }, 500);
         });
+        
+        // Search documents
+        async function searchDocuments(keyword) {
+            try {
+                const response = await fetchJSON(API_BASE + `?action=search&q=${encodeURIComponent(keyword)}`);
+                
+                if (response.success) {
+                    displayDocuments(response.data.documents || []);
+                }
+            } catch (error) {
+                console.error('Search error:', error);
+                alert('Lỗi khi tìm kiếm: ' + error.message);
+            }
+        }
 
         // Filter functionality
         const filterButtons = document.querySelectorAll('.filter-btn');
+        let currentFilter = 'all';
         
         filterButtons.forEach(button => {
             button.addEventListener('click', () => {
@@ -1577,18 +1556,165 @@
                 filterButtons.forEach(btn => btn.classList.remove('active'));
                 button.classList.add('active');
                 
-                const filter = button.dataset.filter;
-                const documentCards = documentsGrid.querySelectorAll('.document-card');
-                
-                documentCards.forEach(card => {
-                    if (filter === 'all' || card.dataset.type === filter) {
-                        card.style.display = 'block';
-                    } else {
-                        card.style.display = 'none';
-                    }
-                });
+                currentFilter = button.dataset.filter;
+                loadDocuments(currentFilter);
             });
         });
+        
+        // Load documents from API
+        async function loadDocuments(fileType = 'all') {
+            try {
+                document.getElementById('loading-documents').style.display = 'flex';
+                document.getElementById('empty-state').style.display = 'none';
+                
+                let url = API_BASE + '?action=list';
+                if (fileType !== 'all') {
+                    url += `&file_type=${fileType}`;
+                }
+                
+                const response = await fetchJSON(url);
+                
+                if (response.success) {
+                    const documents = response.data.documents || [];
+                    displayDocuments(documents);
+                } else {
+                    throw new Error(response.message || 'Không thể tải danh sách tài liệu');
+                }
+            } catch (error) {
+                console.error('Load documents error:', error);
+                document.getElementById('documents-grid').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">⚠️</div>
+                        <div class="empty-title">Lỗi khi tải tài liệu</div>
+                        <div class="empty-subtitle">${error.message}</div>
+                    </div>
+                `;
+            } finally {
+                document.getElementById('loading-documents').style.display = 'none';
+            }
+        }
+        
+        // Display documents in grid
+        function displayDocuments(documents) {
+            const grid = document.getElementById('documents-grid');
+            const loadingEl = document.getElementById('loading-documents');
+            const emptyEl = document.getElementById('empty-state');
+            
+            // Remove loading and empty state
+            loadingEl.style.display = 'none';
+            
+            if (documents.length === 0) {
+                emptyEl.style.display = 'block';
+                // Remove all document cards except loading and empty state
+                const cards = grid.querySelectorAll('.document-card');
+                cards.forEach(card => card.remove());
+                return;
+            }
+            
+            emptyEl.style.display = 'none';
+            
+            // Remove existing document cards (but keep loading and empty state)
+            const cards = grid.querySelectorAll('.document-card');
+            cards.forEach(card => card.remove());
+            
+            // Add new document cards
+            documents.forEach(doc => {
+                const card = createDocumentCard(doc);
+                grid.appendChild(card);
+            });
+        }
+        
+        // Create document card element
+        function createDocumentCard(doc) {
+            const card = document.createElement('div');
+            card.className = 'document-card slide-in';
+            card.dataset.type = getFileTypeFromMime(doc.file_type);
+            card.dataset.id = doc.id;
+            
+            const fileIcon = getFileIcon(doc.file_type);
+            const fileSize = formatFileSize(doc.file_size);
+            const createdDate = formatDate(doc.created_at);
+            
+            card.innerHTML = `
+                <div class="doc-header">
+                    <span class="doc-icon">${fileIcon}</span>
+                    <div class="doc-menu">
+                        <button class="doc-menu-btn" onclick="showDocumentMenu(event, ${doc.id})">⋮</button>
+                    </div>
+                </div>
+                <div class="doc-content">
+                    <h3 class="doc-title">${escapeHtml(doc.original_name || doc.filename)}</h3>
+                    <div class="doc-meta">
+                        Ngày tải: ${createdDate} • <span class="doc-size">${fileSize}</span>
+                    </div>
+                    <div class="doc-actions">
+                        <button class="doc-action-btn" onclick="viewDocument(${doc.id})">👁️ Xem</button>
+                        <button class="doc-action-btn primary" onclick="analyzeDocumentById(${doc.id})">🤖 Phân tích AI</button>
+                    </div>
+                </div>
+            `;
+            
+            return card;
+        }
+        
+        // Helper functions
+        function getFileTypeFromMime(mimeType) {
+            if (!mimeType) return 'file';
+            if (mimeType.includes('pdf')) return 'pdf';
+            if (mimeType.includes('word') || mimeType.includes('document')) return 'doc';
+            if (mimeType.includes('text') || mimeType.includes('plain')) return 'txt';
+            if (mimeType.includes('csv') || mimeType.includes('excel')) return 'csv';
+            return 'file';
+        }
+        
+        function getFileIcon(mimeType) {
+            const type = getFileTypeFromMime(mimeType);
+            const icons = {
+                'pdf': '📄',
+                'doc': '📝',
+                'txt': '📋',
+                'csv': '📊',
+                'file': '📁'
+            };
+            return icons[type] || '📁';
+        }
+        
+        function formatFileSize(bytes) {
+            if (!bytes) return '0 B';
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+        
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('vi-VN');
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Load stats
+        async function loadStats() {
+            try {
+                const response = await fetchJSON(API_BASE + '?action=stats');
+                
+                if (response.success) {
+                    const stats = response.data;
+                    document.getElementById('stat-total').textContent = stats.total_files || 0;
+                    document.getElementById('stat-size').textContent = formatFileSize(stats.total_size || 0);
+                    // Note: analyzed and this month stats need to be calculated separately
+                    document.getElementById('stat-analyzed').textContent = '-';
+                    document.getElementById('stat-month').textContent = '-';
+                }
+            } catch (error) {
+                console.error('Load stats error:', error);
+            }
+        }
 
         // Slide in animation on scroll
         document.addEventListener('DOMContentLoaded', function() {
@@ -1628,85 +1754,110 @@
             });
         });
 
-        // Document actions
-        document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('doc-action-btn')) {
-                const action = e.target.textContent;
-                const documentTitle = e.target.closest('.document-card').querySelector('.doc-title').textContent;
-                
-                if (action === 'Phân tích AI') {
-                    alert(`Đang phân tích tài liệu: ${documentTitle}`);
-                    // Here you would implement AI analysis
-                } else if (action === 'Xem') {
-                    alert(`Đang mở tài liệu: ${documentTitle}`);
-                    // Here you would implement document viewer
-                }
+        // Document menu
+        function showDocumentMenu(event, docId) {
+            event.stopPropagation();
+            // Simple menu for now - can be enhanced with dropdown
+            if (confirm('Bạn có muốn xóa tài liệu này?')) {
+                deleteDocument(docId);
             }
-        });
+        }
+        
+        // Delete document
+        async function deleteDocument(docId) {
+            try {
+                const response = await fetchJSON(API_BASE + `?action=delete&id=${docId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.success) {
+                    alert('Xóa tài liệu thành công!');
+                    loadDocuments();
+                    loadStats();
+                } else {
+                    alert('Lỗi: ' + (response.message || 'Không thể xóa tài liệu'));
+                }
+            } catch (error) {
+                console.error('Delete error:', error);
+                alert('Lỗi khi xóa tài liệu: ' + error.message);
+            }
+        }
 
         let currentDocument = null;
 
         // Document viewing functionality
-        function viewDocument(element) {
-            const card = element.closest('.document-card');
-            const title = card.querySelector('.doc-title').textContent;
-            const meta = card.querySelector('.doc-meta').textContent;
-            const type = card.dataset.type;
-            
-            currentDocument = {
-                title: title,
-                meta: meta,
-                type: type
-            };
+        async function viewDocument(docId) {
+            try {
+                const response = await fetchJSON(API_BASE + `?action=get&id=${docId}`);
+                
+                if (response.success) {
+                    const doc = response.data;
+                    currentDocument = doc;
 
-            // Populate modal
-            document.getElementById('modalTitle').textContent = title;
-            
-            // Create document info
-            const docInfo = document.getElementById('docInfo');
-            docInfo.innerHTML = `
-                <div class="info-item">
-                    <div class="info-label">Tên tài liệu</div>
-                    <div class="info-value">${title}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Loại file</div>
-                    <div class="info-value">${type.toUpperCase()}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Ngày tải</div>
-                    <div class="info-value">${meta.split('•')[0].replace('Ngày tải:', '').trim()}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Kích thước</div>
-                    <div class="info-value">${meta.split('•')[1].trim()}</div>
-                </div>
-            `;
+                    // Populate modal
+                    document.getElementById('modalTitle').textContent = doc.original_name || doc.filename;
+                    
+                    // Create document info
+                    const docInfo = document.getElementById('docInfo');
+                    docInfo.innerHTML = `
+                        <div class="info-item">
+                            <div class="info-label">Tên tài liệu</div>
+                            <div class="info-value">${escapeHtml(doc.original_name || doc.filename)}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Loại file</div>
+                            <div class="info-value">${doc.file_type}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Ngày tải</div>
+                            <div class="info-value">${formatDate(doc.created_at)}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Kích thước</div>
+                            <div class="info-value">${formatFileSize(doc.file_size)}</div>
+                        </div>
+                    `;
 
-            // Simulate document content based on type
-            const docPreview = document.getElementById('docPreview');
-            docPreview.innerHTML = generateDocumentPreview(type, title);
+                    // Display document content
+                    const docPreview = document.getElementById('docPreview');
+                    if (doc.content) {
+                        docPreview.textContent = doc.content;
+                    } else {
+                        docPreview.textContent = 'Nội dung không có sẵn. Vui lòng tải xuống file để xem.';
+                    }
 
-            // Show modal
-            showModal('documentModal');
+                    // Show modal
+                    showModal('documentModal');
+                } else {
+                    alert('Lỗi: ' + (response.message || 'Không thể tải tài liệu'));
+                }
+            } catch (error) {
+                console.error('View document error:', error);
+                alert('Lỗi khi xem tài liệu: ' + error.message);
+            }
         }
 
         // AI Analysis functionality
-        function analyzeDocument(element) {
-            const card = element.closest('.document-card');
-            const title = card.querySelector('.doc-title').textContent;
-            const type = card.dataset.type;
-            
-            currentDocument = {
-                title: title,
-                type: type
-            };
+        async function analyzeDocumentById(docId) {
+            try {
+                const response = await fetchJSON(API_BASE + `?action=get&id=${docId}`);
+                
+                if (response.success) {
+                    const doc = response.data;
+                    currentDocument = doc;
 
-            // Show analysis modal
-            showModal('analysisModal');
-            
-            // Start analysis
-            startAIAnalysis(title, type);
+                    // Show analysis modal
+                    showModal('analysisModal');
+                    
+                    // Start analysis
+                    startAIAnalysis(doc.original_name || doc.filename, getFileTypeFromMime(doc.file_type), doc.content);
+                } else {
+                    alert('Lỗi: ' + (response.message || 'Không thể tải tài liệu'));
+                }
+            } catch (error) {
+                console.error('Analyze document error:', error);
+                alert('Lỗi khi phân tích tài liệu: ' + error.message);
+            }
         }
 
         function generateDocumentPreview(type, title) {
@@ -1808,7 +1959,7 @@ Location: Conference Room A
             return previews[type] || `Không thể xem trước loại file ${type.toUpperCase()}`;
         }
 
-        function startAIAnalysis(title, type) {
+        function startAIAnalysis(title, type, content) {
             const analysisContent = document.getElementById('analysisContent');
             
             // Show loading state
@@ -1822,7 +1973,7 @@ Location: Conference Room A
                 </div>
             `;
 
-            // Simulate progress
+            // Simulate progress (in real implementation, this would call AI API)
             let progress = 0;
             const progressInterval = setInterval(() => {
                 progress += Math.random() * 15;
@@ -1833,51 +1984,55 @@ Location: Conference Room A
                 if (progress >= 100) {
                     clearInterval(progressInterval);
                     setTimeout(() => {
-                        showAnalysisResults(title, type);
+                        showAnalysisResults(title, type, content);
                     }, 500);
                 }
             }, 300);
         }
 
-        function showAnalysisResults(title, type) {
+        function showAnalysisResults(title, type, content) {
             const analysisContent = document.getElementById('analysisContent');
             
-            const analysisResults = {
-                pdf: {
-                    summary: "Tài liệu này cung cấp cái nhìn tổng quan về xu hướng AI trong năm 2024, tập trung vào các công nghệ mới nổi và ứng dụng thực tế.",
-                    keywords: ["AI", "Machine Learning", "Deep Learning", "Natural Language Processing", "Computer Vision", "Automation"],
-                    sentiment: "Tích cực",
-                    complexity: "Trung bình",
-                    readability: "85%",
-                    topics: ["Công nghệ AI", "Xu hướng 2024", "Ứng dụng thực tế", "Phát triển ML"]
-                },
-                doc: {
-                    summary: "Kế hoạch marketing chi tiết cho quý 4 năm 2024 với mục tiêu tăng trưởng 25% doanh thu và mở rộng thị trường.",
-                    keywords: ["Marketing", "Q4 2024", "Digital Marketing", "Social Media", "SEO", "Doanh thu"],
-                    sentiment: "Tích cực",
-                    complexity: "Đơn giản",
-                    readability: "92%",
-                    topics: ["Chiến lược Marketing", "Ngân sách", "Kênh truyền thông", "KPI"]
-                },
-                csv: {
-                    summary: "Dữ liệu bán hàng 9 tháng đầu năm 2024 cho thấy xu hướng tăng trưởng ổn định với tỷ lệ chuyển đổi cải thiện đáng kể.",
-                    keywords: ["Doanh thu", "Khách hàng", "Chuyển đổi", "Tăng trưởng", "Sales", "Revenue"],
-                    sentiment: "Tích cực",
-                    complexity: "Đơn giản",
-                    readability: "95%",
-                    topics: ["Phân tích doanh số", "Xu hướng khách hàng", "Hiệu suất bán hàng"]
-                },
-                txt: {
-                    summary: "Biên bản họp team phát triển sản phẩm thảo luận về roadmap Q4, phản hồi người dùng và phân bổ tài nguyên.",
-                    keywords: ["Meeting", "Product Development", "Roadmap", "Mobile App", "AI Feature", "Beta Testing"],
-                    sentiment: "Trung tính",
-                    complexity: "Đơn giản",
-                    readability: "88%",
-                    topics: ["Phát triển sản phẩm", "Kế hoạch Q4", "Feedback", "Resource Planning"]
+            // Basic analysis based on content
+            // In real implementation, this would call AI service
+            let summary = "Tài liệu đã được phân tích thành công.";
+            let keywords = [];
+            let sentiment = "Trung tính";
+            let complexity = "Trung bình";
+            let readability = "85%";
+            let topics = [];
+            
+            if (content) {
+                // Simple keyword extraction (in real app, use AI)
+                const words = content.toLowerCase().match(/\b\w{4,}\b/g) || [];
+                const wordCount = {};
+                words.forEach(word => {
+                    wordCount[word] = (wordCount[word] || 0) + 1;
+                });
+                keywords = Object.keys(wordCount)
+                    .sort((a, b) => wordCount[b] - wordCount[a])
+                    .slice(0, 6);
+                
+                summary = content.substring(0, 200) + (content.length > 200 ? '...' : '');
+                
+                // Determine complexity based on content length
+                if (content.length < 1000) {
+                    complexity = "Đơn giản";
+                } else if (content.length > 5000) {
+                    complexity = "Phức tạp";
                 }
+                
+                topics = keywords.slice(0, 4);
+            }
+            
+            const result = {
+                summary: summary,
+                keywords: keywords.length > 0 ? keywords : ["Tài liệu", "Phân tích", "Nội dung"],
+                sentiment: sentiment,
+                complexity: complexity,
+                readability: readability,
+                topics: topics.length > 0 ? topics : ["Chủ đề chính"]
             };
-
-            const result = analysisResults[type] || analysisResults.pdf;
             
             analysisContent.innerHTML = `
                 <div class="analysis-section">
@@ -1946,13 +2101,34 @@ Location: Conference Room A
 
         // Additional functions
         function downloadDocument() {
-            alert('Đang tải xuống tài liệu: ' + currentDocument.title);
+            if (!currentDocument || !currentDocument.id) {
+                alert('Không có tài liệu để tải xuống');
+                return;
+            }
+            
+            // Download file
+            const token = getToken();
+            const url = CONFIG.BACKEND_URL + '/data/uploads/' + currentDocument.filename;
+            
+            // Create download link
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = currentDocument.original_name || currentDocument.filename;
+            link.setAttribute('download', currentDocument.original_name || currentDocument.filename);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
 
         function openAIAnalysis() {
+            if (!currentDocument || !currentDocument.id) {
+                alert('Không có tài liệu để phân tích');
+                return;
+            }
+            
             closeModal('documentModal');
             setTimeout(() => {
-                analyzeDocument({closest: () => ({querySelector: () => ({textContent: currentDocument.title}), dataset: {type: currentDocument.type}})});
+                analyzeDocumentById(currentDocument.id);
             }, 300);
         }
 
@@ -1971,17 +2147,13 @@ Location: Conference Room A
             }
         });
 
-        // Updated document actions
-        document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('doc-action-btn')) {
-                const action = e.target.textContent.trim();
-                
-                if (action === 'Xem' || action === '👁️ Xem') {
-                    viewDocument(e.target);
-                } else if (action === 'Phân tích AI' || action === '🤖 Phân tích AI') {
-                    analyzeDocument(e.target);
-                }
-            }
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', async function() {
+            if (!await ensureAuth()) return;
+            
+            // Load documents and stats
+            await loadDocuments();
+            await loadStats();
         });
     </script>
 </body>
