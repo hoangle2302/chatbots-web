@@ -415,105 +415,38 @@
             border: 2px solid var(--primary);
             border-radius: 20px;
             padding: 30px;
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s ease;
             position: relative;
-            overflow: hidden;
-            cursor: pointer;
-            transform-style: preserve-3d;
-        }
-
-        .document-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, var(--primary), transparent);
-            opacity: 0.1;
-            transition: left 0.6s ease;
-        }
-
-        .document-card::after {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, var(--primary), transparent);
-            opacity: 0;
-            transition: opacity 0.4s ease;
-        }
-
-        .document-card:hover::before {
-            left: 100%;
-        }
-
-        .document-card:hover::after {
-            opacity: 0.05;
+            overflow: visible;
         }
 
         .document-card:hover {
-            transform: translateY(-8px) rotateX(5deg) rotateY(5deg);
-            box-shadow: 0 25px 50px var(--primary), 0 0 30px var(--primary);
-            background: var(--primary);
-            color: var(--secondary);
-            border-color: var(--secondary);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            border-color: var(--primary);
+        }
+        
+        .document-card .doc-content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .document-card .doc-actions {
+            position: relative;
+            z-index: 10;
         }
 
-        /* Enhanced document card hover effects for all child elements */
+        /* Simplified hover effects */
         .document-card:hover .doc-title {
-            color: var(--secondary);
+            color: var(--primary);
         }
 
         .document-card:hover .doc-meta {
-            color: var(--secondary);
-            opacity: 0.9;
-        }
-
-        .document-card:hover .doc-size {
-            color: var(--secondary);
+            color: var(--primary);
         }
 
         .document-card:hover .doc-icon {
-            color: var(--secondary);
-            opacity: 1;
-            transform: scale(1.1) rotate(5deg);
-        }
-
-        .document-card:hover .doc-menu-btn {
-            color: var(--secondary);
-            opacity: 1;
-        }
-
-        .document-card:hover .doc-menu-btn:hover {
-            background: var(--secondary);
-            color: var(--primary);
-        }
-
-        .document-card:hover .doc-action-btn {
-            border-color: var(--secondary);
-            background: var(--primary);
-            color: var(--secondary);
-        }
-
-        .document-card:hover .doc-action-btn:hover {
-            background: var(--secondary);
-            color: var(--primary);
-            transform: translateY(-2px) scale(1.05);
-        }
-
-        .document-card:hover .doc-action-btn.primary {
-            background: var(--secondary);
-            color: var(--primary);
-            border-color: var(--secondary);
-        }
-
-        .document-card:hover .doc-action-btn.primary:hover {
-            background: var(--primary);
-            color: var(--secondary);
-            transform: translateY(-2px) scale(1.05);
+            transform: scale(1.1);
         }
 
         /* Stats Bar */
@@ -1085,156 +1018,86 @@
 
         .doc-actions {
             display: flex;
-            gap: 12px;
+            gap: 8px;
             margin-top: 25px;
+            flex-wrap: wrap;
         }
 
         .doc-action-btn {
             flex: 1;
-            padding: 12px 16px;
+            min-width: 100px;
+            padding: 10px 16px;
             border: 2px solid var(--primary);
             border-radius: 12px;
             background: var(--secondary);
             color: var(--primary);
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
+            transition: background 0.3s ease, color 0.3s ease, transform 0.2s ease;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 6px;
-            min-height: 44px;
+            min-height: 42px;
+            white-space: nowrap;
+            user-select: none;
         }
-
-        .doc-action-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
+        
+        .doc-action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .doc-action-btn:not(:disabled):hover {
             background: var(--primary);
-            transition: left 0.3s ease;
-            z-index: -1;
-        }
-
-        .doc-action-btn:hover::before {
-            left: 0;
-        }
-
-        .doc-action-btn:hover {
             color: var(--secondary);
-            transform: translateY(-2px) scale(1.05);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        .doc-action-btn:not(:disabled):active {
+            transform: translateY(0);
         }
 
         .doc-action-btn.primary {
             background: var(--primary);
             color: var(--secondary);
             border-color: var(--primary);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
-
-        .doc-action-btn.primary::before {
-            background: var(--secondary);
-        }
-
-        .doc-action-btn.primary:hover {
+        
+        .doc-action-btn.primary:not(:disabled):hover {
             background: var(--secondary);
             color: var(--primary);
             border-color: var(--primary);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
         }
 
-        .document-card:hover .doc-action-btn {
+        .document-card:hover .doc-action-btn:not(:disabled) {
             border-color: var(--secondary);
+        }
+        
+        .document-card:hover .doc-action-btn:not(.primary):not(:disabled):hover {
+            background: var(--secondary);
+            color: var(--primary);
+        }
+
+        .document-card:hover .doc-action-btn.primary:not(:disabled):hover {
             background: var(--primary);
             color: var(--secondary);
         }
-
-        .document-card:hover .doc-action-btn::before {
-            background: var(--secondary);
+        
+        /* Đảm bảo download button luôn clickable */
+        .doc-action-btn.download-btn {
+            position: relative;
+            z-index: 1000;
         }
-
-        .document-card:hover .doc-action-btn:hover {
-            background: var(--secondary);
-            color: var(--primary);
-            transform: translateY(-3px) scale(1.08);
-            box-shadow: 0 12px 30px rgba(255, 255, 255, 0.3);
+        
+        /* Loại bỏ mọi overlay có thể chặn click */
+        .doc-actions * {
+            pointer-events: auto;
         }
-
-        .document-card:hover .doc-action-btn.primary {
-            background: var(--secondary);
-            color: var(--primary);
-            border-color: var(--secondary);
-        }
-
-        .document-card:hover .doc-action-btn.primary::before {
-            background: var(--primary);
-        }
-
-        .document-card:hover .doc-action-btn.primary:hover {
-            background: var(--primary);
-            color: var(--secondary);
-            transform: translateY(-3px) scale(1.08);
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
-        }
-
-        /* Add icons to action buttons */
-        .doc-action-btn:first-child::before {
-            content: '👁️ ';
-            position: static;
-            background: none;
-            left: auto;
-            width: auto;
-            height: auto;
-            z-index: auto;
-            font-size: 14px;
-            margin-right: 4px;
-        }
-
-        .doc-action-btn.primary::before {
-            content: '🤖 ';
-            position: static;
-            background: none;
-            left: auto;
-            width: auto;
-            height: auto;
-            z-index: auto;
-            font-size: 14px;
-            margin-right: 4px;
-        }
-
-        /* Fix the sliding background effect */
-        .doc-action-btn::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: var(--primary);
-            transition: left 0.3s ease;
-            z-index: -1;
-        }
-
-        .doc-action-btn:hover::after {
-            left: 0;
-        }
-
-        .doc-action-btn.primary::after {
-            background: var(--secondary);
-        }
-
-        .document-card:hover .doc-action-btn::after {
-            background: var(--secondary);
-        }
-
-        .document-card:hover .doc-action-btn.primary::after {
-            background: var(--primary);
+        
+        .document-card .doc-actions .doc-action-btn {
+            pointer-events: auto !important;
         }
 
         /* Add subtle animation to the entire card content */
@@ -1428,6 +1291,158 @@
             
             return await response.json();
         }
+        
+        // ===== DOWNLOAD FUNCTION (Define early) =====
+        // Download document by ID - Global function
+        window.downloadDocumentById = async function downloadDocumentById(buttonOrId, filename, originalName) {
+            let button = null;
+            let docId, docFilename, docOriginalName;
+            
+            try {
+                console.log('📥 downloadDocumentById called with:', { buttonOrId, filename, originalName });
+                
+                // Nếu là button element, lấy data từ attributes
+                if (typeof buttonOrId === 'object' && buttonOrId !== null && buttonOrId.nodeType === 1) {
+                    button = buttonOrId;
+                    docId = button.getAttribute('data-doc-id');
+                    docFilename = button.getAttribute('data-filename');
+                    docOriginalName = button.getAttribute('data-original-name');
+                    console.log('📋 Extracted data:', { docId, docFilename, docOriginalName });
+                } else {
+                    // Nếu là ID (backward compatibility)
+                    docId = buttonOrId;
+                    docFilename = filename;
+                    docOriginalName = originalName;
+                }
+                
+                if (!docId) {
+                    alert('Không tìm thấy ID tài liệu');
+                    return;
+                }
+                
+                const token = getToken();
+                if (!token) {
+                    alert('Vui lòng đăng nhập để tải tài liệu');
+                    return;
+                }
+                
+                // Hiển thị loading state
+                if (button) {
+                    const originalHTML = button.innerHTML;
+                    button.innerHTML = '⏳ Đang tải...';
+                    button.disabled = true;
+                    
+                    // Restore function
+                    const restoreButton = () => {
+                        button.innerHTML = originalHTML;
+                        button.disabled = false;
+                    };
+                    
+                    // Sử dụng endpoint download với authentication
+                    const url = API_BASE + `?action=download&id=${docId}`;
+                    console.log('🌐 Download URL:', url);
+                    
+                    try {
+                        // Fetch file với Authorization header
+                        const response = await fetch(url, {
+                            method: 'GET',
+                            headers: {
+                                'Authorization': `Bearer ${token}`
+                            }
+                        });
+                        
+                        console.log('📡 Response status:', response.status);
+                        
+                        // Kiểm tra response
+                        if (!response.ok) {
+                            const errorText = await response.text().catch(() => '');
+                            let errorMessage = 'Không thể tải tài liệu';
+                            
+                            try {
+                                const errorData = JSON.parse(errorText);
+                                errorMessage = errorData.message || errorMessage;
+                            } catch (e) {
+                                errorMessage = errorText || response.statusText || errorMessage;
+                            }
+                            
+                            throw new Error(errorMessage + ' (Status: ' + response.status + ')');
+                        }
+                        
+                        // Lấy blob từ response
+                        const blob = await response.blob();
+                        console.log('📦 Blob received:', { size: blob.size, type: blob.type });
+                        
+                        if (!blob || blob.size === 0) {
+                            throw new Error('File trống hoặc không thể tải được');
+                        }
+                        
+                        // Lấy filename từ header hoặc dùng originalName
+                        let downloadFilename = docOriginalName || docFilename;
+                        const contentDisposition = response.headers.get('Content-Disposition');
+                        console.log('📝 Content-Disposition:', contentDisposition);
+                        
+                        if (contentDisposition) {
+                            // Try to extract filename from Content-Disposition header
+                            const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+                            const matches = filenameRegex.exec(contentDisposition);
+                            if (matches != null && matches[1]) {
+                                downloadFilename = matches[1].replace(/['"]/g, '');
+                                // Decode URI if needed
+                                try {
+                                    downloadFilename = decodeURIComponent(downloadFilename);
+                                } catch (e) {
+                                    // If decoding fails, use as is
+                                }
+                            }
+                        }
+                        
+                        console.log('💾 Final filename:', downloadFilename);
+                        
+                        // Tạo download link và trigger download
+                        const blobUrl = window.URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = blobUrl;
+                        link.download = downloadFilename;
+                        link.style.display = 'none';
+                        
+                        // Append to body
+                        document.body.appendChild(link);
+                        console.log('🔗 Download link created');
+                        
+                        // Trigger click
+                        link.click();
+                        console.log('👆 Download link clicked');
+                        
+                        // Clean up
+                        setTimeout(() => {
+                            document.body.removeChild(link);
+                            window.URL.revokeObjectURL(blobUrl);
+                            console.log('🧹 Cleaned up');
+                        }, 200);
+                        
+                        restoreButton();
+                        console.log('✅ File downloaded successfully:', downloadFilename);
+                        
+                    } catch (fetchError) {
+                        console.error('❌ Download error:', fetchError);
+                        alert('Lỗi khi tải tài liệu: ' + fetchError.message);
+                        restoreButton();
+                    }
+                } else {
+                    // Không có button, vẫn tải được
+                    const url = API_BASE + `?action=download&id=${docId}`;
+                    window.open(url, '_blank');
+                }
+                
+            } catch (error) {
+                console.error('❌ General error:', error);
+                alert('Lỗi khi tải tài liệu: ' + error.message);
+                if (button) {
+                    button.innerHTML = '📥 Tải xuống';
+                    button.disabled = false;
+                }
+            }
+        };
         
         // Create floating particles
         function createParticles() {
@@ -1649,10 +1664,56 @@
                     </div>
                     <div class="doc-actions">
                         <button class="doc-action-btn" onclick="viewDocument(${doc.id})">👁️ Xem</button>
+                        <button class="doc-action-btn download-btn" data-doc-id="${doc.id}" data-filename="${escapeHtml(doc.filename)}" data-original-name="${escapeHtml(doc.original_name || doc.filename)}">📥 Tải xuống</button>
                         <button class="doc-action-btn primary" onclick="analyzeDocumentById(${doc.id})">🤖 Phân tích AI</button>
                     </div>
                 </div>
             `;
+            
+            // Attach download event listener directly
+            const downloadBtn = card.querySelector('.download-btn');
+            if (downloadBtn) {
+                // Remove any existing onclick handlers
+                downloadBtn.removeAttribute('onclick');
+                
+                // Add click event listener
+                downloadBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    
+                    console.log('🔵 Download button clicked!', {
+                        button: this,
+                        docId: this.getAttribute('data-doc-id'),
+                        filename: this.getAttribute('data-filename'),
+                        originalName: this.getAttribute('data-original-name'),
+                        hasFunction: typeof window.downloadDocumentById === 'function'
+                    });
+                    
+                    // Ensure function exists
+                    if (typeof window.downloadDocumentById === 'function') {
+                        try {
+                            window.downloadDocumentById(this);
+                        } catch (error) {
+                            console.error('❌ Error calling downloadDocumentById:', error);
+                            alert('Lỗi: ' + error.message);
+                        }
+                    } else {
+                        console.error('❌ downloadDocumentById function not found!');
+                        alert('Lỗi: Hàm download không tồn tại. Vui lòng reload trang.');
+                    }
+                    
+                    return false;
+                }, true); // Use capture phase to ensure it fires first
+                
+                // Also make sure button is clickable
+                downloadBtn.style.cursor = 'pointer';
+                downloadBtn.style.pointerEvents = 'auto';
+                downloadBtn.style.position = 'relative';
+                downloadBtn.style.zIndex = '1000';
+            } else {
+                console.warn('⚠️ Download button not found in card!');
+            }
             
             return card;
         }
@@ -2099,25 +2160,23 @@ Location: Conference Room A
             document.body.style.overflow = 'auto';
         }
 
-        // Additional functions
+        // Download document from modal
         function downloadDocument() {
             if (!currentDocument || !currentDocument.id) {
                 alert('Không có tài liệu để tải xuống');
                 return;
             }
             
-            // Download file
-            const token = getToken();
-            const url = CONFIG.BACKEND_URL + '/data/uploads/' + currentDocument.filename;
-            
-            // Create download link
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = currentDocument.original_name || currentDocument.filename;
-            link.setAttribute('download', currentDocument.original_name || currentDocument.filename);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            // Sử dụng hàm downloadDocumentById
+            if (typeof window.downloadDocumentById === 'function') {
+                window.downloadDocumentById(
+                    currentDocument.id,
+                    currentDocument.filename,
+                    currentDocument.original_name || currentDocument.filename
+                );
+            } else {
+                alert('Lỗi: Hàm download không tồn tại');
+            }
         }
 
         function openAIAnalysis() {
