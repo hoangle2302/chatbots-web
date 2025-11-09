@@ -142,7 +142,8 @@ function handleRegister($user, $log, $auth) {
                     'email' => $userData['email'],
                     'display_name' => $userData['display_name'],
                     'role' => $userData['role'],
-                    'credits' => $userData['credits'] ?? 0
+                    'credits' => $userData['credits'] ?? 0,
+                    'last_daily_credit_at' => $userData['last_daily_credit_at'] ?? null
                 ],
                 'expires_in' => 24 * 60 * 60 // 24 hours
             ]
@@ -194,6 +195,22 @@ function handleLogin($user, $log, $auth) {
     
     // Tạo token
     $token = $auth->generateToken($userData['id'], $userData['username'], $userData['role']);
+
+    // Cộng credit hàng ngày nếu cần
+    $dailyBonus = $user->grantDailyCreditsIfNeeded($userData['id'], 5);
+    if (!empty($dailyBonus['granted'])) {
+        $userData['credits'] = $dailyBonus['credits'];
+        $userData['last_daily_credit_at'] = $dailyBonus['last_daily_credit_at'];
+
+        // Ghi log thưởng daily credit
+        $log->user_id = $userData['id'];
+        $log->action = 'daily_credit_bonus';
+        $log->detail = 'Hệ thống cộng 5 credits hàng ngày khi đăng nhập.';
+        $log->create();
+    } elseif ($dailyBonus['credits'] !== null) {
+        $userData['credits'] = $dailyBonus['credits'];
+        $userData['last_daily_credit_at'] = $dailyBonus['last_daily_credit_at'];
+    }
     
     // Log hoạt động
     $log->user_id = $userData['id'];
@@ -212,7 +229,8 @@ function handleLogin($user, $log, $auth) {
                 'email' => $userData['email'],
                 'display_name' => $userData['display_name'],
                 'role' => $userData['role'],
-                'credits' => $userData['credits'] ?? 0
+                'credits' => $userData['credits'] ?? 0,
+                'last_daily_credit_at' => $userData['last_daily_credit_at'] ?? null
             ],
             'expires_in' => 24 * 60 * 60 // 24 hours
         ]
@@ -330,6 +348,13 @@ function handleGetProfile($user, $auth) {
         return;
     }
     
+    // Cộng credit hàng ngày nếu cần
+    $bonus = $user->grantDailyCreditsIfNeeded($userInfo['id'], 5);
+    if ($bonus['credits'] !== null) {
+        $userInfo['credits'] = $bonus['credits'];
+        $userInfo['last_daily_credit_at'] = $bonus['last_daily_credit_at'];
+    }
+
     // Xóa password khỏi response
     unset($userInfo['password']);
     
@@ -364,6 +389,13 @@ function handleGetMe($user, $auth) {
         return;
     }
     
+    // Cộng credit hàng ngày nếu cần
+    $bonus = $user->grantDailyCreditsIfNeeded($userInfo['id'], 5);
+    if ($bonus['credits'] !== null) {
+        $userInfo['credits'] = $bonus['credits'];
+        $userInfo['last_daily_credit_at'] = $bonus['last_daily_credit_at'];
+    }
+
     // Xóa password khỏi response
     unset($userInfo['password']);
     
