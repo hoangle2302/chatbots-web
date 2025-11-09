@@ -565,7 +565,82 @@ function addMessage(content, type, saveToHistory = true) {
         messageDiv.classList.add('error');
     }
 
+    // Create avatar for message (assistant or user)
+    try {
+        const avatar = document.createElement('div');
+        avatar.className = 'message-avatar';
+
+        // choose avatar icon: prefer provider-based for assistant
+        if (messageDiv.classList.contains('assistant')) {
+            // try to pick icon based on selected model
+            let modelText = '';
+            const select = document.getElementById('model-select');
+            if (select && select.selectedOptions && select.selectedOptions[0]) {
+                modelText = (select.selectedOptions[0].value || select.selectedOptions[0].textContent || '').toLowerCase();
+            } else if (localStorage.getItem('selected_model')) {
+                modelText = localStorage.getItem('selected_model').toLowerCase();
+            }
+
+            if (modelText.includes('claude') || modelText.includes('anthropic')) avatar.textContent = '🧠';
+            else if (modelText.includes('gemini') || modelText.includes('google')) avatar.textContent = '🔷';
+            else if (modelText.includes('dall') || modelText.includes('image') || modelText.includes('mj')) avatar.textContent = '🎨';
+            else avatar.textContent = '🤖';
+        } else {
+            // user avatar
+            // attempt to use username initial if available
+            let userInitial = '';
+            try {
+                const user = JSON.parse(localStorage.getItem('user') || 'null');
+                if (user && user.username) userInitial = String(user.username).trim().charAt(0).toUpperCase();
+            } catch (e) {}
+            avatar.textContent = userInitial || '👤';
+        }
+
+        // Insert avatar before content so CSS flex handles positioning (row / row-reverse)
+        messageDiv.appendChild(avatar);
+    } catch (e) {
+        console.debug('Không thể tạo avatar cho message:', e?.message);
+    }
+
     messageDiv.appendChild(createMessageContent(content));
+    
+    // If assistant message, inject a small model-info showing the currently selected model
+    if (messageDiv.classList.contains('assistant')) {
+        try {
+            const select = document.getElementById('model-select');
+            let modelText = 'Chưa chọn';
+            if (select && select.selectedOptions && select.selectedOptions[0]) {
+                // Prefer visible text, fall back to value
+                modelText = (select.selectedOptions[0].textContent || select.selectedOptions[0].value).trim();
+            } else if (window.APP_CONFIG && window.APP_CONFIG.DEFAULT_MODEL) {
+                modelText = window.APP_CONFIG.DEFAULT_MODEL;
+            } else if (localStorage.getItem('selected_model')) {
+                modelText = localStorage.getItem('selected_model');
+            }
+
+            const modelInfo = document.createElement('div');
+            modelInfo.className = 'model-info';
+            const label = document.createElement('span');
+            label.textContent = 'Model:';
+            const name = document.createElement('strong');
+            name.className = 'model-name-inline';
+            name.textContent = modelText;
+
+            modelInfo.appendChild(label);
+            modelInfo.appendChild(name);
+
+            // Insert model info into the message-content wrapper (top of message body)
+            const contentWrapper = messageDiv.querySelector('.message-content');
+            if (contentWrapper) {
+                contentWrapper.insertBefore(modelInfo, contentWrapper.firstChild);
+            } else {
+                // fallback: insert at top of messageDiv
+                messageDiv.insertBefore(modelInfo, messageDiv.firstChild);
+            }
+        } catch (e) {
+            console.debug('Không thể thêm model-info vào message:', e?.message);
+        }
+    }
     
     console.log('🔍 Created messageDiv:', messageDiv);
     console.log('🔍 Appending to container...');
@@ -593,21 +668,84 @@ function showTypingIndicator() {
     const messagesContainer = document.getElementById('chat-area');
     if (!messagesContainer) return;
     
+    // Build a chat-style bubble for typing indicator (avatar + message-content + typing dots)
     const typingDiv = document.createElement('div');
     typingDiv.className = 'message assistant loading';
-    typingDiv.innerHTML = `
-        <div class="loading">
-            <span>AI đang suy nghĩ</span>
-            <div class="loading-dots">
-                <div class="loading-dot"></div>
-                <div class="loading-dot"></div>
-                <div class="loading-dot"></div>
-            </div>
-        </div>
-    `;
-    
+
+    // Avatar
+    try {
+        const avatar = document.createElement('div');
+        avatar.className = 'message-avatar';
+        // pick assistant icon similar to addMessage
+        let modelText = '';
+        const select = document.getElementById('model-select');
+        if (select && select.selectedOptions && select.selectedOptions[0]) {
+            modelText = (select.selectedOptions[0].value || select.selectedOptions[0].textContent || '').toLowerCase();
+        } else if (localStorage.getItem('selected_model')) {
+            modelText = localStorage.getItem('selected_model').toLowerCase();
+        }
+        if (modelText.includes('claude') || modelText.includes('anthropic')) avatar.textContent = '🧠';
+        else if (modelText.includes('gemini') || modelText.includes('google')) avatar.textContent = '🔷';
+        else if (modelText.includes('dall') || modelText.includes('image') || modelText.includes('mj')) avatar.textContent = '🎨';
+        else avatar.textContent = '🤖';
+        typingDiv.appendChild(avatar);
+    } catch (e) { console.debug('avatar for typing failed', e?.message); }
+
+    // Message content wrapper
+    const contentWrapper = document.createElement('div');
+    contentWrapper.className = 'message-content';
+
+    // Optionally add model-info inside content wrapper
+    try {
+        const select = document.getElementById('model-select');
+        let modelText = 'Chưa chọn';
+        if (select && select.selectedOptions && select.selectedOptions[0]) {
+            modelText = (select.selectedOptions[0].textContent || select.selectedOptions[0].value).trim();
+        } else if (localStorage.getItem('selected_model')) {
+            modelText = localStorage.getItem('selected_model');
+        }
+        const modelInfo = document.createElement('div');
+        modelInfo.className = 'model-info';
+        const label = document.createElement('span'); label.textContent = 'Model:';
+        const name = document.createElement('strong'); name.className = 'model-name-inline'; name.textContent = modelText;
+        modelInfo.appendChild(label); modelInfo.appendChild(name);
+        contentWrapper.appendChild(modelInfo);
+    } catch (e) { /* ignore */ }
+
+    // Bubble with typing dots
+    const bubble = document.createElement('div');
+    bubble.className = 'typing-dots';
+    const statusSpan = document.createElement('span');
+    statusSpan.textContent = 'AI đang xử lý...';
+    statusSpan.style.marginRight = '8px';
+    bubble.appendChild(statusSpan);
+    for (let i=0;i<3;i++){
+        const dot = document.createElement('div');
+        dot.className = 'typing-dot';
+        bubble.appendChild(dot);
+    }
+
+    contentWrapper.appendChild(bubble);
+    typingDiv.appendChild(contentWrapper);
+
     messagesContainer.appendChild(typingDiv);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    // Also show a small header status if present
+    try {
+        const headerLoading = document.getElementById('loading');
+        if (headerLoading) {
+            console.debug('showTypingIndicator: setting header loading visible');
+            headerLoading.textContent = 'AI đang xử lý...';
+            // Force visible in case inline style or CSS hides it
+            headerLoading.style.display = 'inline-block';
+            headerLoading.style.visibility = 'visible';
+            headerLoading.style.opacity = '1';
+            // flash header background briefly to help visibility during debugging
+            const prevBg = headerLoading.style.backgroundColor;
+            headerLoading.style.backgroundColor = 'rgba(255,223,0,0.9)';
+            setTimeout(() => { headerLoading.style.backgroundColor = prevBg; }, 700);
+        }
+    } catch (e) { console.debug('showTypingIndicator header set failed', e); }
 }
 
 // Ẩn typing indicator
@@ -617,6 +755,11 @@ function hideTypingIndicator() {
     if (loadingMessage) {
         loadingMessage.remove();
     }
+    // Hide header loading indicator if present
+    try {
+        const headerLoading = document.getElementById('loading');
+        if (headerLoading) headerLoading.style.display = 'none';
+    } catch (e) { /* ignore */ }
 }
 
 // ===== CLEAR FUNCTIONALITY =====
@@ -1147,6 +1290,7 @@ async function sendMessage() {
     if (!messageInput || !modelSelect) return;
 
     const message = messageInput.value.trim();
+    console.debug('sendMessage called - message length:', message.length, 'uploadedDocument present:', Boolean(uploadedDocument));
     const model = modelSelect.value;
 
     if (!message && !uploadedDocument) {
