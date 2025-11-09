@@ -868,6 +868,34 @@ async function init() {
 
         // Nạp lịch sử chat từ localStorage (nếu có)
         loadConversations();
+        
+        // Tự động xóa tất cả chat trên khung chat và hiển thị welcome screen sau mỗi lần F5
+        // Sử dụng setTimeout để đảm bảo loadConversations() đã hoàn thành
+        setTimeout(function() {
+            const chatArea = document.getElementById('chat-area');
+            if (chatArea) {
+                // Xóa tất cả messages trong chat area (giữ lại welcome-screen)
+                const messages = chatArea.querySelectorAll('.message');
+                messages.forEach(msg => msg.remove());
+                
+                // Xóa class has-messages để hiển thị lại welcome screen
+                chatArea.classList.remove('has-messages');
+                
+                // Đảm bảo welcome-screen được hiển thị
+                const welcomeScreen = document.getElementById('welcome-screen');
+                if (welcomeScreen) {
+                    welcomeScreen.style.display = 'block';
+                }
+                
+                console.log('🔄 Đã xóa tất cả chat và hiển thị welcome screen');
+            }
+            
+            // Reset current conversation
+            currentConversation = null;
+            
+            // Cập nhật lại danh sách conversations (bỏ highlight conversation cũ)
+            updateConversationsList();
+        }, 300);
 
         console.log('✅ Khởi tạo hoàn tất!');
 
@@ -1171,11 +1199,13 @@ async function loadChatHistoryFromServer() {
             // Lưu lại vào localStorage
             saveConversations();
             
-            // Nếu chưa có currentConversation, chọn conversation đầu tiên
-            if (!currentConversation && conversations.length > 0) {
-                currentConversation = conversations[0];
-                renderConversationMessages(currentConversation);
-            }
+            // Không tự động render conversation đầu tiên khi load
+            // Để khung chat luôn sạch và hiển thị welcome screen sau mỗi lần F5
+            // Người dùng có thể click vào conversation trong danh sách nếu muốn xem lại
+            // if (!currentConversation && conversations.length > 0) {
+            //     currentConversation = conversations[0];
+            //     renderConversationMessages(currentConversation);
+            // }
             
             updateConversationsList();
             console.log('✅ Merged history: ' + serverConversations.length + ' from server, ' + localConversations.length + ' from local');
@@ -1208,10 +1238,13 @@ function loadConversationsFromLocal() {
         conversations = [];
     }
 
-    if (!currentConversation && conversations.length > 0) {
-        currentConversation = conversations[0];
-        renderConversationMessages(currentConversation);
-    }
+    // Không tự động render conversation đầu tiên khi load
+    // Để khung chat luôn sạch và hiển thị welcome screen sau mỗi lần F5
+    // Người dùng có thể click vào conversation trong danh sách nếu muốn xem lại
+    // if (!currentConversation && conversations.length > 0) {
+    //     currentConversation = conversations[0];
+    //     renderConversationMessages(currentConversation);
+    // }
 
     updateConversationsList();
 }
@@ -1309,6 +1342,16 @@ async function sendMessage() {
     const formatMatch = message.match(/tạo\s+file\s+([\w.\-]+)/i);
     const resolvedFormat = formatMatch && formatMatch[1] ? resolveOutputFormat(formatMatch[1]) : null;
     const hasAttachment = Boolean(uploadedDocument);
+
+    // Ẩn welcome screen ngay khi người dùng bắt đầu chat
+    const chatArea = document.getElementById('chat-area');
+    const welcomeScreen = document.getElementById('welcome-screen');
+    if (chatArea) {
+        chatArea.classList.add('has-messages');
+    }
+    if (welcomeScreen) {
+        welcomeScreen.style.display = 'none';
+    }
 
     if (message) {
         addMessage(message, 'user');
