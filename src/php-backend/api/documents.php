@@ -46,6 +46,9 @@ switch ($method) {
             case 'get':
                 handleGetDocument($document, $current_user);
                 break;
+            case 'download':
+                handleDownloadDocument($document, $current_user);
+                break;
             case 'search':
                 handleSearchDocuments($document, $current_user);
                 break;
@@ -233,6 +236,139 @@ function handleGetDocument($document, $current_user) {
             'message' => 'Internal server error',
             'code' => 'INTERNAL_ERROR'
         ]);
+    }
+}
+
+/**
+ * Handle download document
+ */
+function handleDownloadDocument($document, $current_user) {
+    try {
+        $document_id = $_GET['id'] ?? '';
+        
+        if (empty($document_id)) {
+            // Return JSON error
+            http_response_code(400);
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => false,
+                'message' => 'Document ID is required',
+                'code' => 'MISSING_ID'
+            ]);
+            exit;
+        }
+        
+        // Check if document belongs to user
+        if (!$document->belongsToUser($document_id, $current_user['user_id'])) {
+            http_response_code(404);
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => false,
+                'message' => 'Document not found',
+                'code' => 'NOT_FOUND'
+            ]);
+            exit;
+        }
+        
+        $doc = $document->getById($document_id);
+        
+        if (!$doc) {
+            http_response_code(404);
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => false,
+                'message' => 'Document not found',
+                'code' => 'NOT_FOUND'
+            ]);
+            exit;
+        }
+        
+        // Get file path - try multiple locations
+        $file_path = $doc['file_path'];
+        $filename = $doc['filename'];
+        
+        // List of possible upload directories
+        $possible_dirs = [
+            $file_path, // Try original path first
+            __DIR__ . '/../../data/uploads/' . $filename,
+            __DIR__ . '/../../../data/uploads/' . $filename,
+            __DIR__ . '/../../src/data/uploads/' . $filename,
+            __DIR__ . '/../../../src/data/uploads/' . $filename,
+        ];
+        
+        // Find the file
+        $found_file = null;
+        foreach ($possible_dirs as $path) {
+            if (file_exists($path)) {
+                $found_file = $path;
+                break;
+            }
+        }
+        
+        // If file not found, return error
+        if (!$found_file) {
+            http_response_code(404);
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => false,
+                'message' => 'File not found on server. Tried paths: ' . implode(', ', $possible_dirs),
+                'code' => 'FILE_NOT_FOUND'
+            ]);
+            exit;
+        }
+        
+        $file_path = $found_file;
+        
+        // Get file info
+        $file_size = filesize($file_path);
+        $file_type = $doc['file_type'] ?? mime_content_type($file_path);
+        $original_name = $doc['original_name'] ?? $doc['filename'];
+        
+        // Clean output buffer
+        if (ob_get_level()) {
+            ob_end_clean();
+        }
+        
+        // Clear all previous headers
+        header_remove();
+        
+        // Set headers for file download
+        header('Content-Type: ' . ($file_type ?: 'application/octet-stream'));
+        header('Content-Disposition: attachment; filename="' . addslashes($original_name) . '"');
+        header('Content-Length: ' . $file_size);
+        header('Content-Transfer-Encoding: binary');
+        header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+        header('Pragma: public');
+        header('Expires: 0');
+        header('Access-Control-Allow-Origin: *');
+        header('Access-Control-Allow-Methods: GET, OPTIONS');
+        header('Access-Control-Allow-Headers: Authorization');
+        
+        // Disable output buffering
+        @ini_set('output_buffering', 'Off');
+        @ini_set('zlib.output_compression', 'Off');
+        
+        // Output file
+        readfile($file_path);
+        exit;
+        
+    } catch (Exception $e) {
+        error_log("Download document error: " . $e->getMessage());
+        error_log("Stack trace: " . $e->getTraceAsString());
+        
+        // Clean output buffer
+        if (ob_get_level()) {
+            ob_end_clean();
+        }
+        
+        http_response_code(500);
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => false,
+            'message' => 'Internal server error: ' . $e->getMessage(),
+            'code' => 'INTERNAL_ERROR'
+        ]);
+        exit;
     }
 }
 
