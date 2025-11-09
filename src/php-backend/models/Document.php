@@ -11,10 +11,13 @@ class Document {
     public $id;
     public $user_id;
     public $filename;
+    public $original_name;
     public $file_path;
     public $file_size;
     public $file_type;
+    public $content;
     public $created_at;
+    public $updated_at;
     
     public function __construct($db) {
         $this->conn = $db;
@@ -25,21 +28,24 @@ class Document {
      */
     public function create() {
         $query = "INSERT INTO " . $this->table_name . " 
-                  (user_id, filename, file_path, file_size, file_type) 
-                  VALUES (:user_id, :filename, :file_path, :file_size, :file_type)";
+                  (user_id, filename, original_name, file_path, file_size, file_type, content) 
+                  VALUES (:user_id, :filename, :original_name, :file_path, :file_size, :file_type, :content)";
         
         $stmt = $this->conn->prepare($query);
         
         // Sanitize input
         $this->filename = htmlspecialchars(strip_tags($this->filename));
+        $this->original_name = htmlspecialchars(strip_tags($this->original_name ?? ''));
         $this->file_path = htmlspecialchars(strip_tags($this->file_path));
         $this->file_type = htmlspecialchars(strip_tags($this->file_type));
         
         $stmt->bindParam(":user_id", $this->user_id);
         $stmt->bindParam(":filename", $this->filename);
+        $stmt->bindParam(":original_name", $this->original_name);
         $stmt->bindParam(":file_path", $this->file_path);
         $stmt->bindParam(":file_size", $this->file_size);
         $stmt->bindParam(":file_type", $this->file_type);
+        $stmt->bindParam(":content", $this->content);
         
         if ($stmt->execute()) {
             $this->id = $this->conn->lastInsertId();
@@ -63,15 +69,104 @@ class Document {
     /**
      * Lấy documents theo user ID
      */
-    public function getByUserId($userId, $limit = 50) {
+    public function getByUserId($userId, $limit = 50, $offset = 0) {
         $query = "SELECT * FROM " . $this->table_name . " 
                   WHERE user_id = :user_id 
                   ORDER BY created_at DESC 
-                  LIMIT :limit";
+                  LIMIT :limit OFFSET :offset";
         
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(":user_id", $userId);
         $stmt->bindParam(":limit", $limit, PDO::PARAM_INT);
+        $stmt->bindParam(":offset", $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    
+    /**
+     * Đếm số documents theo user ID
+     */
+    public function getCountByUserId($userId) {
+        $query = "SELECT COUNT(*) as total FROM " . $this->table_name . " WHERE user_id = :user_id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":user_id", $userId);
+        $stmt->execute();
+        
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result['total'] ?? 0;
+    }
+    
+    /**
+     * Lấy documents theo file type
+     */
+    public function getByFileType($userId, $fileType, $limit = 50, $offset = 0) {
+        $query = "SELECT * FROM " . $this->table_name . " 
+                  WHERE user_id = :user_id AND file_type LIKE :file_type
+                  ORDER BY created_at DESC 
+                  LIMIT :limit OFFSET :offset";
+        
+        $stmt = $this->conn->prepare($query);
+        $fileTypePattern = '%' . $fileType . '%';
+        $stmt->bindParam(":user_id", $userId);
+        $stmt->bindParam(":file_type", $fileTypePattern);
+        $stmt->bindParam(":limit", $limit, PDO::PARAM_INT);
+        $stmt->bindParam(":offset", $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    
+    /**
+     * Tìm kiếm documents
+     */
+    public function searchByUserId($userId, $keyword, $limit = 50, $offset = 0) {
+        $query = "SELECT * FROM " . $this->table_name . " 
+                  WHERE user_id = :user_id 
+                  AND (original_name LIKE :keyword OR filename LIKE :keyword OR content LIKE :keyword)
+                  ORDER BY created_at DESC 
+                  LIMIT :limit OFFSET :offset";
+        
+        $stmt = $this->conn->prepare($query);
+        $searchPattern = '%' . $keyword . '%';
+        $stmt->bindParam(":user_id", $userId);
+        $stmt->bindParam(":keyword", $searchPattern);
+        $stmt->bindParam(":limit", $limit, PDO::PARAM_INT);
+        $stmt->bindParam(":offset", $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    
+    /**
+     * Kiểm tra document thuộc về user
+     */
+    public function belongsToUser($documentId, $userId) {
+        $query = "SELECT COUNT(*) as count FROM " . $this->table_name . " 
+                  WHERE id = :id AND user_id = :user_id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":id", $documentId);
+        $stmt->bindParam(":user_id", $userId);
+        $stmt->execute();
+        
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return ($result['count'] ?? 0) > 0;
+    }
+    
+    /**
+     * Lấy thống kê file
+     */
+    public function getFileStats($userId) {
+        $query = "SELECT 
+                    file_type,
+                    COUNT(*) as count_by_type,
+                    SUM(file_size) as total_size
+                  FROM " . $this->table_name . " 
+                  WHERE user_id = :user_id
+                  GROUP BY file_type";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":user_id", $userId);
         $stmt->execute();
         
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -122,9 +217,13 @@ class Document {
     /**
      * Xóa document
      */
-    public function delete($id) {
+    public function delete() {
+        if (!$this->id) {
+            return false;
+        }
+        
         // Lấy thông tin file trước khi xóa
-        $document = $this->getById($id);
+        $document = $this->getById($this->id);
         if (!$document) {
             return false;
         }
@@ -135,9 +234,10 @@ class Document {
         }
         
         // Xóa record trong database
-        $query = "DELETE FROM " . $this->table_name . " WHERE id = :id";
+        $query = "DELETE FROM " . $this->table_name . " WHERE id = :id AND user_id = :user_id";
         $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(":id", $id);
+        $stmt->bindParam(":id", $this->id);
+        $stmt->bindParam(":user_id", $this->user_id);
         
         return $stmt->execute();
     }
