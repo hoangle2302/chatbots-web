@@ -19,6 +19,7 @@ class User {
     public $last_login_at;
     public $created_at;
     public $credits;
+    public $last_daily_credit_at;
     
     public function __construct($db) {
         $this->conn = $db;
@@ -170,6 +171,89 @@ class User {
         $stmt->bindParam(":amount", $amount);
         $stmt->bindParam(":id", $userId);
         return $stmt->execute();
+    }
+
+    /**
+     * Cộng credits hàng ngày cho user (nếu chưa nhận trong ngày)
+     */
+    public function grantDailyCreditsIfNeeded($userId, $amount = 5) {
+        if ($amount <= 0) {
+            return [
+                'granted' => false,
+                'credits' => null,
+                'last_daily_credit_at' => null
+            ];
+        }
+
+        $query = "SELECT credits, last_daily_credit_at FROM " . $this->table_name . " WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(":id", $userId, PDO::PARAM_INT);
+        $stmt->execute();
+        $userRow = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$userRow) {
+            return [
+                'granted' => false,
+                'credits' => null,
+                'last_daily_credit_at' => null
+            ];
+        }
+
+        $lastGrantedAt = $userRow['last_daily_credit_at'] ?? null;
+        $now = new DateTime('now');
+        $todayKey = $now->format('Y-m-d');
+        $alreadyGranted = false;
+
+        if (!empty($lastGrantedAt)) {
+            try {
+                $lastDate = new DateTime($lastGrantedAt);
+                $alreadyGranted = $lastDate->format('Y-m-d') >= $todayKey;
+            } catch (Exception $e) {
+                $alreadyGranted = false;
+            }
+        }
+
+        if ($alreadyGranted) {
+            return [
+                'granted' => false,
+                'credits' => intval($userRow['credits']),
+                'last_daily_credit_at' => $lastGrantedAt
+            ];
+        }
+
+        $grantedAt = $now->format('Y-m-d H:i:s');
+        $todayParam = $todayKey;
+        $updateQuery = "UPDATE " . $this->table_name . " 
+                        SET credits = credits + :amount, 
+                            last_daily_credit_at = :granted_at, 
+                            updated_at = CURRENT_TIMESTAMP 
+                        WHERE id = :id 
+                          AND (last_daily_credit_at IS NULL OR date(last_daily_credit_at) < :today_key)";
+        $updateStmt = $this->conn->prepare($updateQuery);
+        $updateStmt->bindParam(":amount", $amount, PDO::PARAM_INT);
+        $updateStmt->bindParam(":granted_at", $grantedAt);
+        $updateStmt->bindParam(":id", $userId, PDO::PARAM_INT);
+        $updateStmt->bindParam(":today_key", $todayParam);
+        $updateStmt->execute();
+
+        if ($updateStmt->rowCount() === 0) {
+            return [
+                'granted' => false,
+                'credits' => intval($userRow['credits']),
+                'last_daily_credit_at' => $userRow['last_daily_credit_at']
+            ];
+        }
+
+        $refreshStmt = $this->conn->prepare("SELECT credits, last_daily_credit_at FROM " . $this->table_name . " WHERE id = :id");
+        $refreshStmt->bindParam(":id", $userId, PDO::PARAM_INT);
+        $refreshStmt->execute();
+        $updatedRow = $refreshStmt->fetch(PDO::FETCH_ASSOC);
+
+        return [
+            'granted' => true,
+            'credits' => intval($updatedRow['credits'] ?? $userRow['credits']),
+            'last_daily_credit_at' => $updatedRow['last_daily_credit_at'] ?? $grantedAt
+        ];
     }
     
     /**
