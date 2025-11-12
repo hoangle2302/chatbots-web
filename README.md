@@ -25,7 +25,7 @@
 
 ## ✨ Tính năng nổi bật
 
-### 👤 Người dùng cuối
+### 👤 Người dùng 
 
 - **💬 Chat với 500+ AI Models**
   - GPT-4, Claude 3.5, Gemini Pro, Qwen, DeepSeek, Doubao...
@@ -73,7 +73,7 @@
   - Cấu hình môi trường
   - Xem logs hệ thống
 
-### 🚀 FastAPI AI Tool
+### 🚀 AI Tool
 
 - **🔄 Xử lý tài liệu**
   - Trích xuất nội dung từ PDF, DOCX, XLSX, TXT
