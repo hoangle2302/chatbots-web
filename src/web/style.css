@@ -4618,8 +4618,8 @@ body.document-manager-page .navbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    max-width: 1400px;
-    margin: 0 auto;
+    width: 100%;
+    margin: 0;
 }
 
 body.document-manager-page .nav-brand {
@@ -4736,11 +4736,10 @@ body.document-manager-page main {
 }
 
 body.document-manager-page .document-container {
-    padding: 20px 30px 60px;
-    max-width: 1400px;
-    margin: 0 auto;
-    position: relative;
+    padding: 20px 20px 60px;
     width: 100%;
+    margin: 0;
+    position: relative;
     box-sizing: border-box;
 }
 
@@ -4766,8 +4765,8 @@ body.document-manager-page .page-subtitle {
     opacity: 0.85;
     font-weight: 400;
     line-height: 1.5;
-    max-width: 600px;
-    margin: 0 auto;
+    width: 100%;
+    margin: 0;
 }
 
 /* Upload section */
