@@ -232,11 +232,16 @@
   <!-- Header -->
   <header class="header">
     <nav class="navbar">
+      <button class="mobile-menu-toggle" id="mobile-menu-toggle" aria-label="Toggle menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
       <div class="nav-brand">
         <span>🧠</span>
         <span>Thư Viện AI</span>
       </div>
-      <ul class="nav-menu">
+      <ul class="nav-menu" id="nav-menu">
         <li><a href="dashboard.html">Dashboard</a></li>
         <li><a href="index.html">Chat</a></li>
         <li><a href="document-manager.html">Tài liệu</a></li>
@@ -248,6 +253,7 @@
         <span>User</span>
       </div>
     </nav>
+    <div class="mobile-menu-overlay" id="mobile-menu-overlay"></div>
   </header>
 
   <!-- Main -->
@@ -368,6 +374,69 @@
         toggle.textContent = '−';
       }
     }
+  </script>
+  
+  <!-- Mobile Menu Toggle Script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+      const navMenu = document.getElementById('nav-menu');
+      const mobileMenuOverlay = document.getElementById('mobile-menu-overlay');
+      
+      function toggleMobileMenu() {
+        if (mobileMenuToggle && navMenu && mobileMenuOverlay) {
+          const isActive = navMenu.classList.contains('mobile-active');
+          
+          if (isActive) {
+            navMenu.classList.remove('mobile-active');
+            mobileMenuToggle.classList.remove('active');
+            mobileMenuOverlay.classList.remove('active');
+            document.body.style.overflow = '';
+          } else {
+            navMenu.classList.add('mobile-active');
+            mobileMenuToggle.classList.add('active');
+            mobileMenuOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+          }
+        }
+      }
+      
+      function closeMobileMenu() {
+        if (navMenu && mobileMenuToggle && mobileMenuOverlay) {
+          navMenu.classList.remove('mobile-active');
+          mobileMenuToggle.classList.remove('active');
+          mobileMenuOverlay.classList.remove('active');
+          document.body.style.overflow = '';
+        }
+      }
+      
+      if (mobileMenuToggle) {
+        mobileMenuToggle.addEventListener('click', toggleMobileMenu);
+      }
+      
+      if (mobileMenuOverlay) {
+        mobileMenuOverlay.addEventListener('click', closeMobileMenu);
+      }
+      
+      if (navMenu) {
+        const navLinks = navMenu.querySelectorAll('a');
+        navLinks.forEach(link => {
+          link.addEventListener('click', closeMobileMenu);
+        });
+      }
+      
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && navMenu && navMenu.classList.contains('mobile-active')) {
+          closeMobileMenu();
+        }
+      });
+      
+      window.addEventListener('resize', function() {
+        if (window.innerWidth > 768) {
+          closeMobileMenu();
+        }
+      });
+    });
   </script>
 </body>
 </html>
