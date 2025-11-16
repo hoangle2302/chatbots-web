@@ -2,8 +2,8 @@
 # PHP Backend Dockerfile
 # =========================
 
-# Base image
-FROM php:8.2-cli
+# Base image with FPM
+FROM php:8.2-fpm
 
 # Set working directory
 WORKDIR /var/www/html
