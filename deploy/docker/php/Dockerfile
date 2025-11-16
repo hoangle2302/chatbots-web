@@ -42,11 +42,13 @@ RUN chown -R www-data:www-data /var/www/html
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
 # -------------------------
-# Configure PHP-FPM logs to stdout/stderr
+# Configure PHP-FPM
 # -------------------------
+# 1. Logs → stdout/stderr
+# 2. Listen on 0.0.0.0:8000 so NGINX container can reach it
 RUN sed -i "s|^error_log = .*|error_log = /proc/self/fd/2|" /usr/local/etc/php-fpm.d/www.conf \
-    && sed -i "s|^;catch_workers_output = .*|catch_workers_output = yes|" /usr/local/etc/php-fpm.d/www.conf
-
+    && sed -i "s|^;catch_workers_output = .*|catch_workers_output = yes|" /usr/local/etc/php-fpm.d/www.conf \
+    && sed -i "s|^listen = .*|listen = 0.0.0.0:8000|" /usr/local/etc/php-fpm.d/www.conf
 # -------------------------
 # Expose FPM port (internal only)
 # -------------------------
