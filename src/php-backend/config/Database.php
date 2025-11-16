@@ -73,9 +73,26 @@ class Database {
                     $this->conn = new PDO("sqlite:" . $this->db_name);
                     $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
                 } else {
-                    $dsn = "mysql:host={$this->host};port={$this->port};dbname={$this->db_name};charset=utf8mb4";
-                    $this->conn = new PDO($dsn, $this->username, $this->password);
-                    $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                    // Retry logic for MySQL connection
+                    $maxRetries = 10;
+                    $connected = false;
+                    
+                    while (!$connected && $maxRetries--) {
+                        try {
+                            $dsn = "mysql:host={$this->host};port={$this->port};dbname={$this->db_name};charset=utf8mb4";
+                            $this->conn = new PDO($dsn, $this->username, $this->password);
+                            $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                            $connected = true;
+                        } catch (PDOException $e) {
+                            error_log("Waiting for MySQL... Retries left: " . ($maxRetries + 1));
+                            echo "Waiting for MySQL... \n";
+                            sleep(3);
+                        }
+                    }
+                    
+                    if (!$connected) {
+                        die("Could not connect to database!");
+                    }
                 }
                 
                 // Tạo schema nếu cần

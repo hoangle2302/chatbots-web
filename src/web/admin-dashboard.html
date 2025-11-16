@@ -978,7 +978,8 @@
     <script src="config.js"></script>
     <script>
         // ===== CONFIGURATION =====
-        const API = 'http://127.0.0.1:8000/api/admin';
+        const BACKEND_URL = window.CONFIG?.BACKEND_URL || 'http://103.77.243.190';
+        const API = BACKEND_URL + '/api/admin';
         
         // ===== AUTHENTICATION =====
         function getToken() {

@@ -118,6 +118,13 @@ try {
                     echo json_encode(['success' => true, 'data' => $adminInfo]);
                     break;
                 
+                case 'logs':
+                    requireAdmin($auth);
+                    $limit = isset($_GET['limit']) ? intval($_GET['limit']) : 50;
+                    $logs = getAuthLogs($log, $db, $limit);
+                    echo json_encode(['success' => true, 'data' => $logs]);
+                    break;
+                
                 default:
                     http_response_code(404);
                     echo json_encode(['success' => false, 'message' => 'Action không tồn tại']);
@@ -344,6 +351,47 @@ function getAvailableModels($qwen) {
     sort($all, SORT_NATURAL | SORT_FLAG_CASE);
     
     return $all;
+}
+
+/**
+ * Lấy auth logs (login, register, logout)
+ */
+function getAuthLogs($log, $db, $limit = 50) {
+    try {
+        // Stats
+        $statsQuery = "SELECT action, COUNT(*) as cnt FROM logs 
+                      WHERE action IN ('login_success', 'login_failed', 'user_registered', 'logout')
+                      GROUP BY action";
+        $stmt = $db->prepare($statsQuery);
+        $stmt->execute();
+        $stats = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $stats[$row['action']] = intval($row['cnt']);
+        }
+        
+        // Recent logs
+        $logsQuery = "SELECT l.action, l.created_at, l.detail, u.username 
+                     FROM logs l 
+                     LEFT JOIN users u ON l.user_id = u.id 
+                     WHERE l.action IN ('login_success', 'login_failed', 'user_registered', 'logout')
+                     ORDER BY l.created_at DESC 
+                     LIMIT :limit";
+        $stmt = $db->prepare($logsQuery);
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        $logs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        return [
+            'stats' => $stats,
+            'logs' => $logs
+        ];
+    } catch (Exception $e) {
+        error_log('Logs error: ' . $e->getMessage());
+        return [
+            'stats' => [],
+            'logs' => []
+        ];
+    }
 }
 
 /**

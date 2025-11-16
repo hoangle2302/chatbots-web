@@ -5,7 +5,7 @@
 
 const CONFIG = {
     // ===== BACKEND API =====
-    BACKEND_URL: 'http://127.0.0.1:8000',
+    BACKEND_URL: 'http://103.77.243.190',
     
     // ===== API KEY4U =====
     KEY4U: {

@@ -4,6 +4,8 @@
 */
 
 // ===== CẤU HÌNH =====
+const BACKEND_URL = window.CONFIG?.BACKEND_URL || 'http://103.77.243.190';
+
 let currentUser = null;
 let selectedCategory = '';
 let selectedProvider = '';
@@ -1131,7 +1133,7 @@ async function loadChatHistoryFromServer() {
             return;
         }
         
-        const response = await fetchAPI((window.APP_CONFIG?.BACKEND_URL || 'http://127.0.0.1:8000') + '/api/history');
+        const response = await fetchAPI(BACKEND_URL + '/api/user/history');
         
         if (response && response.success && Array.isArray(response.data?.history)) {
             const serverHistory = response.data.history;
@@ -1393,7 +1395,7 @@ async function sendMessage() {
                 }
             }
         } else {
-            const response = await fetchAPI('http://127.0.0.1:8000/api/chat-real.php', {
+            const response = await fetchAPI(BACKEND_URL + '/api/chat-real.php', {
                 method: 'POST',
                 body: JSON.stringify({
                     message,
@@ -1464,7 +1466,7 @@ async function processUploadedDocument(file, promptText = '', options = {}) {
         headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch('http://127.0.0.1:8000/api/ai-tool', {
+    const response = await fetch(BACKEND_URL + '/api/ai-tool', {
         method: 'POST',
         headers,
         body: formData
