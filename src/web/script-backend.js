@@ -4,7 +4,8 @@
 */
 
 // ===== CẤU HÌNH =====
-const BACKEND_URL = window.CONFIG?.BACKEND_URL || 'http://103.77.243.190';
+// Sử dụng BACKEND_URL từ CONFIG (đã được cấu hình trong config.js)
+const BACKEND_URL = window.CONFIG?.BACKEND_URL || window.location.origin;
 // Expose BACKEND_URL to window for inline scripts
 window.BACKEND_URL = BACKEND_URL;
 

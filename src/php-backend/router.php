@@ -25,11 +25,19 @@ $uri = preg_replace('/\.php$/', '', $uri);
 // Log request
 error_log("Request: $method $uri");
 
-// Route to appropriate file
-if ($uri === '/api/health' || $uri === '/health') {
-    require __DIR__ . '/api/health.php';
-    exit;
-}
+// Route to appropriate file with error handling
+try {
+    if ($uri === '/api/health' || $uri === '/health') {
+        if (file_exists(__DIR__ . '/api/health.php')) {
+            require __DIR__ . '/api/health.php';
+            exit;
+        } else {
+            error_log("File not found: /api/health.php");
+            http_response_code(404);
+            echo json_encode(['success' => false, 'error' => 'Health endpoint not found']);
+            exit;
+        }
+    }
 
 // Route /api/auth.php?action=... or /api/auth/...
 if (preg_match('/^\/api\/auth\/(\w+)$/', $uri, $matches)) {
@@ -101,5 +109,22 @@ if ($uri === '/' || $uri === '') {
 }
 
 // Fallback to index.php for other routes
-require __DIR__ . '/index.php';
+if (file_exists(__DIR__ . '/index.php')) {
+    require __DIR__ . '/index.php';
+} else {
+    error_log("Critical: index.php not found!");
+    http_response_code(500);
+    echo json_encode(['success' => false, 'error' => 'Server configuration error']);
+    exit;
+}
+} catch (Exception $e) {
+    error_log("Router error: " . $e->getMessage());
+    http_response_code(500);
+    echo json_encode([
+        'success' => false, 
+        'error' => 'Internal server error',
+        'message' => $e->getMessage()
+    ]);
+    exit;
+}
 ?>
