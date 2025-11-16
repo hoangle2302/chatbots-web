@@ -57,7 +57,11 @@
         </div>
     </div>
 
+    <script src="config.js"></script>
     <script>
+        // Cấu hình backend URL
+        const BACKEND_URL = window.CONFIG?.BACKEND_URL || 'http://103.77.243.190';
+        
         // Function để toggle password visibility
         function togglePassword(fieldId) {
             const passwordField = document.getElementById(fieldId);
@@ -164,7 +168,7 @@
                 loading.style.display = 'block';
                 
                 try {
-                    const response = await fetch('http://127.0.0.1:8000/api/auth/login', {
+                    const response = await fetch(BACKEND_URL + '/api/auth.php?action=login', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',

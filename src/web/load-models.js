@@ -5,7 +5,8 @@
 
 class ModelLoader {
     constructor() {
-        this.apiUrl = 'http://127.0.0.1:8000/api/models.php';
+        const BACKEND_URL = window.CONFIG?.BACKEND_URL || 'http://103.77.243.190';
+        this.apiUrl = BACKEND_URL + '/api/models.php';
         this.models = null;
         this.defaultModel = 'qwen3-235b-a22b';
     }
