@@ -42,11 +42,17 @@ RUN chown -R www-data:www-data /var/www/html
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
 # -------------------------
-# Expose port for PHP server
+# Configure PHP-FPM logs to stdout/stderr
 # -------------------------
-EXPOSE 8000
+RUN sed -i "s|^error_log = .*|error_log = /proc/self/fd/2|" /usr/local/etc/php-fpm.d/www.conf \
+    && sed -i "s|^;catch_workers_output = .*|catch_workers_output = yes|" /usr/local/etc/php-fpm.d/www.conf
 
 # -------------------------
-# Start PHP built-in server & logs to stdout
+# Expose FPM port (internal only)
 # -------------------------
-CMD ["php", "-S", "0.0.0.0:8000", "-t", "/var/www/html"]
+EXPOSE 9000
+
+# -------------------------
+# Start PHP-FPM in foreground (for Docker)
+# -------------------------
+CMD ["php-fpm", "-F"]
