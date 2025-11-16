@@ -5,7 +5,8 @@
 
 const CONFIG = {
     // ===== BACKEND API =====
-    BACKEND_URL: 'http://103.77.243.190',
+    // Tự động sử dụng domain hiện tại (frontend và backend cùng domain)
+    BACKEND_URL: window.location.origin,
     
     // ===== API KEY4U =====
     KEY4U: {

@@ -38,8 +38,9 @@ services:
     environment:
       DB_HOST: mysql
       DB_NAME: thuvien_ai_pro
-      DB_USER: app
-      DB_PASS: app123
+      DB_USERNAME: app
+      DB_PASSWORD: app123
+      DB_PORT: 3306
     volumes:
       - ./src/php-backend:/var/www/html
       - php-docDb:/var/www/html/uploads

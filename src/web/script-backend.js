@@ -5,6 +5,8 @@
 
 // ===== CẤU HÌNH =====
 const BACKEND_URL = window.CONFIG?.BACKEND_URL || 'http://103.77.243.190';
+// Expose BACKEND_URL to window for inline scripts
+window.BACKEND_URL = BACKEND_URL;
 
 let currentUser = null;
 let selectedCategory = '';

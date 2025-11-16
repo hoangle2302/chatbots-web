@@ -866,13 +866,13 @@
     <!-- Script load models từ Key4U API -->
     <script>
         // Load models từ Key4U API
-        const BACKEND_URL = window.CONFIG?.BACKEND_URL || 'http://103.77.243.190';
+        // BACKEND_URL đã được khai báo trong script-backend.js
         
         async function loadModelsFromAPI() {
             try {
                 console.log('🔄 Loading models from Key4U API...');
                 
-                const response = await fetch(BACKEND_URL + '/api/models', {
+                const response = await fetch((window.BACKEND_URL || window.CONFIG?.BACKEND_URL || 'http://103.77.243.190') + '/api/models', {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json'
@@ -1120,7 +1120,7 @@
                         try {
                             const token = localStorage.getItem('token');
                             if (token) {
-                            const res = await fetch(BACKEND_URL + '/api/user/profile', {
+                            const res = await fetch((window.BACKEND_URL || window.CONFIG?.BACKEND_URL || 'http://103.77.243.190') + '/api/user/profile', {
                                 headers: { 'Authorization': 'Bearer ' + token }
                             });
 

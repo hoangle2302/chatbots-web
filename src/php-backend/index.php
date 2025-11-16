@@ -131,6 +131,7 @@ try {
             break;
             
         case '/api/history':
+        case '/api/user/history':
             if ($method === 'GET') {
                 handleGetHistory($db);
             } else {
