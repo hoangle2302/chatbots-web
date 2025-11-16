@@ -50,7 +50,7 @@ RUN sed -i "s|^error_log = .*|error_log = /proc/self/fd/2|" /usr/local/etc/php-f
 # -------------------------
 # Expose FPM port (internal only)
 # -------------------------
-EXPOSE 9000
+EXPOSE 8000
 
 # -------------------------
 # Start PHP-FPM in foreground (for Docker)
