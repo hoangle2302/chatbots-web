@@ -10,6 +10,9 @@ RUN apt-get update && apt-get install -y \
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
+# Copy PHP error config
+COPY deploy/docker/php/docker-php-errors.ini /usr/local/etc/php/conf.d/docker-php-errors.ini
+
 WORKDIR /var/www/html
 
 # Copy source code
