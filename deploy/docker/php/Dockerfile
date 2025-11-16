@@ -12,7 +12,7 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-# Copy source code relative to build context
+# Copy source code
 COPY src/php-backend/ /var/www/html/
 
 # Set permissions (important if mounting volume from host)
@@ -24,11 +24,10 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction
 EXPOSE 8000
 
 # =====================
-# Show logs in Docker stdout
+# Configure PHP-FPM logs to stdout/stderr
 # =====================
-# Configure PHP-FPM to log to stdout/stderr
-RUN sed -i "s/error_log = .*/error_log = \/proc\/self\/fd\/2/" /usr/local/etc/php-fpm.d/www.conf \
-    && sed -i "s/;catch_workers_output = .*/catch_workers_output = yes/" /usr/local/etc/php-fpm.d/www.conf
+RUN sed -i "s|^error_log = .*|error_log = /proc/self/fd/2|" /usr/local/etc/php-fpm.d/www.conf \
+    && sed -i "s|^;catch_workers_output = .*|catch_workers_output = yes|" /usr/local/etc/php-fpm.d/www.conf
 
-# Start PHP-FPM in foreground (so logs are visible in Docker)
+# Start PHP-FPM in foreground (logs visible in docker)
 CMD ["php-fpm", "-F"]
