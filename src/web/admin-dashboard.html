@@ -994,6 +994,17 @@
         const BACKEND_URL = window.CONFIG?.BACKEND_URL || window.location.origin;
         const API = window.CONFIG?.API?.url('ADMIN') || BACKEND_URL + window.CONFIG?.ENDPOINTS?.ADMIN || BACKEND_URL + '/api/admin';
         
+        // Helper function to escape string for use in JavaScript string literals
+        function escapeJs(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/\\/g, '\\\\')
+                .replace(/'/g, "\\'")
+                .replace(/"/g, '\\"')
+                .replace(/\n/g, '\\n')
+                .replace(/\r/g, '\\r');
+        }
+        
         // ===== AUTHENTICATION =====
         function getToken() {
             return localStorage.getItem('admin_token');
@@ -1079,12 +1090,12 @@
                             <td><strong>${user.username}</strong></td>
                             <td>${user.email}</td>
                             <td>
-                                <span class="badge ${roleClass}" onclick="toggleUserRole(${user.id}, '${user.role}', ${JSON.stringify(user.username)})" style="cursor: pointer;" title="Click để đổi role">
+                                <span class="badge ${roleClass}" onclick="toggleUserRole(${user.id}, '${escapeJs(user.role)}', '${escapeJs(user.username)}')" style="cursor: pointer;" title="Click để đổi role">
                                     ${user.role}
                                 </span>
                             </td>
                             <td>
-                                <span class="badge ${statusClass}" onclick="toggleUserStatus(${user.id}, ${user.is_active ? 1 : 0}, ${JSON.stringify(user.username)})" style="cursor: pointer;" title="Click để đổi status">
+                                <span class="badge ${statusClass}" onclick="toggleUserStatus(${user.id}, ${user.is_active ? 1 : 0}, '${escapeJs(user.username)}')" style="cursor: pointer;" title="Click để đổi status">
                                     ${statusText}
                                 </span>
                             </td>
@@ -1092,7 +1103,7 @@
                             <td>${createdDate}</td>
                             <td>
                                 <div class="action-buttons">
-                                    <button class="btn btn-sm btn-success" onclick="openEditCreditsModal(${user.id}, ${JSON.stringify(user.username)}, ${userCredits})" title="Edit Credits">
+                                    <button class="btn btn-sm btn-success" onclick="openEditCreditsModal(${user.id}, '${escapeJs(user.username)}', ${userCredits})" title="Edit Credits">
                                         💰 Credits
                                     </button>
                                     <button class="btn btn-sm btn-primary" onclick="editUser(${user.id})" title="Edit User">
@@ -1194,7 +1205,7 @@
             // Kiểm tra nếu admin đang cố thay đổi quyền của chính mình
             try {
                 const adminUserStr = localStorage.getItem('admin_user');
-                if (adminUserStr) {
+                if (adminUserStr && adminUserStr.trim()) {
                     const adminUser = JSON.parse(adminUserStr);
                     if (adminUser.id === userId) {
                         // Lấy thông tin user hiện tại
@@ -1239,7 +1250,7 @@
             // Kiểm tra nếu admin đang cố thay đổi quyền của chính mình
             try {
                 const adminUserStr = localStorage.getItem('admin_user');
-                if (adminUserStr) {
+                if (adminUserStr && adminUserStr.trim()) {
                     const adminUser = JSON.parse(adminUserStr);
                     if (adminUser.id === userId && currentRole === 'admin') {
                         alert('Bạn không thể tự xóa quyền admin của chính mình!');
@@ -1278,7 +1289,7 @@
             // Kiểm tra nếu admin đang cố vô hiệu hóa chính mình
             try {
                 const adminUserStr = localStorage.getItem('admin_user');
-                if (adminUserStr) {
+                if (adminUserStr && adminUserStr.trim()) {
                     const adminUser = JSON.parse(adminUserStr);
                     if (adminUser.id === userId && currentStatus === 1) {
                         alert('Bạn không thể tự vô hiệu hóa tài khoản của chính mình!');
@@ -1318,7 +1329,7 @@
             // Kiểm tra nếu admin đang cố xóa chính mình
             try {
                 const adminUserStr = localStorage.getItem('admin_user');
-                if (adminUserStr) {
+                if (adminUserStr && adminUserStr.trim()) {
                     const adminUser = JSON.parse(adminUserStr);
                     if (adminUser.id === userId) {
                         alert('Bạn không thể xóa tài khoản của chính mình!');
