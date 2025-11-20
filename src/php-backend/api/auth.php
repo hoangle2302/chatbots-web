@@ -36,7 +36,7 @@ switch ($method) {
     case 'POST':
         switch ($action) {
             case 'register':
-                handleRegister($user, $log);
+                handleRegister($user, $log, $auth);
                 break;
             case 'login':
                 handleLogin($user, $log, $auth);
@@ -68,7 +68,7 @@ switch ($method) {
 /**
  * Handle user registration
  */
-function handleRegister($user, $log) {
+function handleRegister($user, $log, $auth) {
     try {
         $input = json_decode(file_get_contents('php://input'), true);
         
@@ -148,14 +148,31 @@ function handleRegister($user, $log) {
             $log->detail = "User registered: {$username}";
             $log->create();
             
+            // Generate JWT token for automatic login
+            $token = $auth->generateToken(
+                $user->id,
+                $user->username,
+                $user->role
+            );
+            
+            // Log successful auto-login after registration
+            $log->user_id = $user->id;
+            $log->action = 'login_success';
+            $log->detail = "User auto-logged in after registration: {$username}";
+            $log->create();
+            
             http_response_code(201);
             echo json_encode([
                 'success' => true,
                 'message' => 'User registered successfully',
                 'data' => [
-                    'user_id' => $user->id,
-                    'username' => $user->username,
-                    'role' => $user->role
+                    'token' => $token,
+                    'user' => [
+                        'id' => $user->id,
+                        'username' => $user->username,
+                        'role' => $user->role
+                    ],
+                    'expires_in' => 24 * 60 * 60 // 24 hours in seconds
                 ]
             ]);
         } else {

@@ -69,6 +69,12 @@ try {
                     requireAdmin($auth);
                     handleModifyCredits($userModel, $log);
                     break;
+                
+                case 'add_credits':
+                    requireAdmin($auth);
+                    handleAddCredits($userModel, $log);
+                    break;
+                
                 default:
                     http_response_code(404);
                     echo json_encode(['success' => false, 'message' => 'Action không tồn tại']);
@@ -171,17 +177,73 @@ try {
                 
                 case 'add_credits':
                     requireAdmin($auth);
+                    // Cải thiện endpoint PUT để trả về thông tin chi tiết
                     $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
                     $input = json_decode(file_get_contents('php://input'), true) ?? [];
                     $amount = isset($input['amount']) ? intval($input['amount']) : 0;
-                    if ($id <= 0 || $amount === 0) {
+                    
+                    if ($id <= 0) {
                         http_response_code(400);
-                        echo json_encode(['success' => false, 'message' => 'ID hoặc số tiền không hợp lệ']);
+                        echo json_encode(['success' => false, 'message' => 'User ID không hợp lệ']);
                         break;
                     }
-                    $user = new User($db);
-                    $ok = $user->addCredits($id, $amount);
-                    echo json_encode(['success' => (bool)$ok]);
+                    
+                    if ($amount <= 0) {
+                        http_response_code(400);
+                        echo json_encode(['success' => false, 'message' => 'Số credits phải lớn hơn 0']);
+                        break;
+                    }
+                    
+                    // Kiểm tra user có tồn tại không
+                    $user = $userModel->getById($id);
+                    if (!$user) {
+                        http_response_code(404);
+                        echo json_encode(['success' => false, 'message' => 'Không tìm thấy user']);
+                        break;
+                    }
+                    
+                    $currentCredits = intval($user['credits'] ?? 0);
+                    
+                    // Cộng credits
+                    $userObj = new User($db);
+                    $ok = $userObj->addCredits($id, $amount);
+                    
+                    if ($ok) {
+                        // Lấy thông tin user sau khi cập nhật
+                        $updatedUser = $userModel->getById($id);
+                        $newCredits = intval($updatedUser['credits'] ?? $currentCredits + $amount);
+                        
+                        // Log action
+                        $token = $auth->getTokenFromRequest();
+                        $adminUser = $token ? $auth->getCurrentUser($token) : null;
+                        $adminId = $adminUser['user_id'] ?? null;
+                        $adminUsername = $adminUser['username'] ?? 'Unknown';
+                        
+                        $log->user_id = $adminId ?? $id;
+                        $log->action = 'admin_add_credits';
+                        $log->detail = "Admin {$adminUsername} cộng {$amount} credits cho user ID {$id} (từ {$currentCredits} thành {$newCredits})";
+                        $log->ip_address = $_SERVER['REMOTE_ADDR'] ?? null;
+                        $log->user_agent = $_SERVER['HTTP_USER_AGENT'] ?? null;
+                        $log->create();
+                        
+                        echo json_encode([
+                            'success' => true,
+                            'message' => 'Cộng credits thành công',
+                            'data' => [
+                                'user_id' => $id,
+                                'username' => $user['username'],
+                                'old_credits' => $currentCredits,
+                                'new_credits' => $newCredits,
+                                'amount_added' => $amount
+                            ]
+                        ]);
+                    } else {
+                        http_response_code(500);
+                        echo json_encode([
+                            'success' => false,
+                            'message' => 'Không thể cộng credits. Vui lòng thử lại.'
+                        ]);
+                    }
                     break;
                 
                 default:
@@ -576,6 +638,112 @@ function handleModifyCredits($userModel, $log) {
     } else {
         http_response_code(500);
         echo json_encode(['success' => false, 'message' => 'Không thể cập nhật credits']);
+    }
+}
+
+/**
+ * Xử lý cộng credits cho user (endpoint đơn giản)
+ * 
+ * POST /api/admin?action=add_credits
+ * Body: {
+ *   "user_id": 1,
+ *   "amount": 100
+ * }
+ * 
+ * Hoặc có thể truyền qua query: ?action=add_credits&user_id=1
+ * 
+ * Response: {
+ *   "success": true,
+ *   "message": "Cộng credits thành công",
+ *   "data": {
+ *     "user_id": 1,
+ *     "username": "user123",
+ *     "old_credits": 50,
+ *     "new_credits": 150,
+ *     "amount_added": 100
+ *   }
+ * }
+ */
+function handleAddCredits($userModel, $log) {
+    $input = json_decode(file_get_contents('php://input'), true);
+    
+    // Lấy user_id từ input hoặc query parameter
+    $userId = intval($input['user_id'] ?? $_GET['user_id'] ?? 0);
+    $amount = intval($input['amount'] ?? $input['credits'] ?? 0);
+    
+    // Validation
+    if ($userId <= 0) {
+        http_response_code(400);
+        echo json_encode([
+            'success' => false,
+            'message' => 'User ID không hợp lệ'
+        ]);
+        return;
+    }
+    
+    if ($amount <= 0) {
+        http_response_code(400);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Số credits phải lớn hơn 0'
+        ]);
+        return;
+    }
+    
+    // Kiểm tra user có tồn tại không
+    $user = $userModel->getById($userId);
+    if (!$user) {
+        http_response_code(404);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Không tìm thấy user'
+        ]);
+        return;
+    }
+    
+    $currentCredits = intval($user['credits'] ?? 0);
+    
+    // Sử dụng method addCredits của User model
+    $success = $userModel->addCredits($userId, $amount);
+    
+    if ($success) {
+        // Lấy thông tin user sau khi cập nhật
+        $updatedUser = $userModel->getById($userId);
+        $newCredits = intval($updatedUser['credits'] ?? $currentCredits + $amount);
+        
+        // Lấy admin info để log
+        $auth = new AuthMiddleware();
+        $token = $auth->getTokenFromRequest();
+        $adminUser = $token ? $auth->getCurrentUser($token) : null;
+        $adminId = $adminUser['user_id'] ?? null;
+        $adminUsername = $adminUser['username'] ?? 'Unknown';
+        
+        // Log action
+        $log->user_id = $adminId ?? $userId;
+        $log->action = 'admin_add_credits';
+        $log->detail = "Admin {$adminUsername} cộng {$amount} credits cho user ID {$userId} (từ {$currentCredits} thành {$newCredits})";
+        $log->ip_address = $_SERVER['REMOTE_ADDR'] ?? null;
+        $log->user_agent = $_SERVER['HTTP_USER_AGENT'] ?? null;
+        $log->create();
+        
+        http_response_code(200);
+        echo json_encode([
+            'success' => true,
+            'message' => 'Cộng credits thành công',
+            'data' => [
+                'user_id' => $userId,
+                'username' => $user['username'],
+                'old_credits' => $currentCredits,
+                'new_credits' => $newCredits,
+                'amount_added' => $amount
+            ]
+        ]);
+    } else {
+        http_response_code(500);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Không thể cộng credits. Vui lòng thử lại.'
+        ]);
     }
 }
 ?>

@@ -62,7 +62,7 @@ class AIQueryHistory {
             
             $query = "SELECT * FROM " . $this->table_name . " 
                       WHERE user_id = :user_id 
-                      ORDER BY created_at DESC 
+                      ORDER BY timestamp DESC 
                       LIMIT :limit";
             
             $stmt = $this->conn->prepare($query);
@@ -108,7 +108,7 @@ class AIQueryHistory {
     public function getByModel($model, $limit = 50) {
         $query = "SELECT * FROM " . $this->table_name . " 
                   WHERE model = :model 
-                  ORDER BY created_at DESC 
+                  ORDER BY timestamp DESC 
                   LIMIT :limit";
         
         $stmt = $this->conn->prepare($query);
@@ -126,7 +126,7 @@ class AIQueryHistory {
         $query = "SELECT h.*, u.username 
                   FROM " . $this->table_name . " h
                   LEFT JOIN users u ON h.user_id = u.id
-                  ORDER BY h.created_at DESC 
+                  ORDER BY h.timestamp DESC 
                   LIMIT :limit OFFSET :offset";
         
         $stmt = $this->conn->prepare($query);
@@ -162,7 +162,7 @@ class AIQueryHistory {
      */
     public function deleteOldHistory($days = 30) {
         $query = "DELETE FROM " . $this->table_name . " 
-                  WHERE created_at < DATE_SUB(NOW(), INTERVAL :days DAY)";
+                  WHERE timestamp < DATE_SUB(NOW(), INTERVAL :days DAY)";
         
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(":days", $days, PDO::PARAM_INT);

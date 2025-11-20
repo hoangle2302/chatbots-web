@@ -1136,7 +1136,8 @@ async function loadChatHistoryFromServer() {
             return;
         }
         
-        const response = await fetchAPI(BACKEND_URL + '/api/user/history');
+        const historyUrl = window.CONFIG?.API?.url('USER_HISTORY') || BACKEND_URL + '/api/user/history';
+        const response = await fetchAPI(historyUrl);
         
         if (response && response.success && Array.isArray(response.data?.history)) {
             const serverHistory = response.data.history;
@@ -1398,7 +1399,8 @@ async function sendMessage() {
                 }
             }
         } else {
-            const response = await fetchAPI(BACKEND_URL + '/api/chat-real.php', {
+            const chatUrl = window.CONFIG?.API?.url('CHAT_REAL') || BACKEND_URL + '/api/chat-real.php';
+            const response = await fetchAPI(chatUrl, {
                 method: 'POST',
                 body: JSON.stringify({
                     message,
@@ -1469,7 +1471,8 @@ async function processUploadedDocument(file, promptText = '', options = {}) {
         headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch(BACKEND_URL + '/api/ai-tool', {
+    const aiToolUrl = window.CONFIG?.API?.url('AI_TOOL') || BACKEND_URL + '/api/ai-tool';
+    const response = await fetch(aiToolUrl, {
         method: 'POST',
         headers,
         body: formData

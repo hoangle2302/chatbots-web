@@ -179,7 +179,8 @@
             loading.style.display = 'block';
             
             try {
-                const response = await fetch(BACKEND_URL + '/api/auth.php?action=register', {
+                const authUrl = window.CONFIG?.API?.url('AUTH_PHP') || BACKEND_URL + (window.CONFIG?.ENDPOINTS?.AUTH_PHP || '/api/auth.php');
+                const response = await fetch(window.CONFIG?.API?.urlWithParams('AUTH_PHP', {action: 'register'}) || authUrl + '?action=register', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

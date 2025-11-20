@@ -1270,7 +1270,8 @@
     <script src="config.js"></script>
     <script>
         // ===== CONFIGURATION =====
-        const API_BASE = CONFIG.BACKEND_URL + CONFIG.ENDPOINTS.DOCUMENTS;
+        // Sử dụng CONFIG.API.url() để tạo full URL từ endpoint key
+        const API_BASE = window.CONFIG?.API?.url('DOCUMENTS_PHP') || (CONFIG.BACKEND_URL + CONFIG.ENDPOINTS.DOCUMENTS_PHP) || (CONFIG.BACKEND_URL + '/api/documents.php');
         
         // ===== AUTHENTICATION =====
         function getToken() {

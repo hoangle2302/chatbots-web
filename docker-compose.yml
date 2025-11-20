@@ -11,10 +11,10 @@ services:
     container_name: mysql-db
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: Ri8WyKzif0R3UYng
       MYSQL_DATABASE: thuvien_ai_pro
       MYSQL_USER: app
-      MYSQL_PASSWORD: app123
+      MYSQL_PASSWORD: 3-PbdK6LzY&JGThH
     volumes:
       - ./deploy/data/database:/docker-entrypoint-initdb.d
       - mysql-data:/var/lib/mysql
@@ -39,8 +39,10 @@ services:
       DB_HOST: mysql
       DB_NAME: thuvien_ai_pro
       DB_USERNAME: app
-      DB_PASSWORD: app123
-      DB_PORT: 3306
+      DB_PASSWORD: 3-PbdK6LzY&JGThH
+      MYSQL_SSL_CA: ""       # empty disables SSL
+    expose:
+      - "8000"  # chỉ expose nội bộ cho NGINX
     volumes:
       - ./src/php-backend:/var/www/html
       - php-docDb:/var/www/html/uploads

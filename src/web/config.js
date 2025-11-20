@@ -1,64 +1,47 @@
 /*
     ⚙️ CẤU HÌNH HỆ THỐNG THƯ VIỆN AI
     Quản lý các thông số cấu hình cho frontend và backend
+    
+    📝 HƯỚNG DẪN SỬ DỤNG:
+    
+    1. THAY ĐỔI BACKEND_URL:
+       - Tìm dòng: BACKEND_URL: 'http://103.77.243.190',
+       - Thay đổi URL này khi deploy sang server khác
+       - Ví dụ: 'http://localhost:8000' hoặc 'https://your-domain.com'
+    
+    2. SỬ DỤNG TRONG CODE:
+       - Luôn sử dụng CONFIG.API.url() hoặc CONFIG.ENDPOINTS thay vì hardcode
+       - Ví dụ: CONFIG.API.url('AUTH_PHP') thay vì 'http://103.77.243.190/api/auth.php'
+       - Ví dụ: CONFIG.BACKEND_URL + CONFIG.ENDPOINTS.AUTH_PHP
+       
+    3. CÁC ENDPOINT CÓ SẴN:
+       - CONFIG.API.url('AUTH_PHP') -> '/api/auth.php'
+       - CONFIG.API.url('ADMIN') -> '/api/admin'
+       - CONFIG.API.url('CHAT_REAL') -> '/api/chat-real.php'
+       - CONFIG.API.url('DOCUMENTS_PHP') -> '/api/documents.php'
+       - Và nhiều endpoint khác trong CONFIG.ENDPOINTS
+       
+    4. TẠO URL VỚI QUERY PARAMS:
+       - CONFIG.API.urlWithParams('AUTH_PHP', {action: 'login'})
+       - Kết quả: 'http://backend-url/api/auth.php?action=login'
+       
+    5. LOAD CONFIG TRONG HTML:
+       - Đảm bảo load config.js trước các script khác
+       - <script src="config.js"></script>
+       - Sau đó sử dụng: window.CONFIG hoặc CONFIG (nếu đã load)
+       
+    ⚠️ LƯU Ý:
+    - KHÔNG hardcode URL trong các file code khác
+    - Chỉ thay đổi URL ở file config.js này
+    - Tất cả các file sẽ tự động sử dụng cấu hình từ file này
 */
-
-// ============================================
-// ⚙️ CẤU HÌNH HOST - DỄ BẢO TRÌ
-// ============================================
-// Thay đổi cấu hình ở đây khi deploy lên server mới hoặc đổi domain
-// Tất cả các file khác sẽ tự động sử dụng cấu hình này
-// ============================================
-
-const HOST_CONFIG = {
-    // 📍 Production host (IP hoặc domain server production)
-    // Thay đổi khi deploy lên server mới
-    PRODUCTION_HOST: 'http://103.77.243.190',
-    
-    // 🏠 Development host (localhost cho dev)
-    // Có thể thay đổi nếu dev server chạy ở port khác
-    DEVELOPMENT_HOST: 'http://localhost:8000',
-    
-    // 🔧 Chế độ môi trường
-    // true: Luôn dùng PRODUCTION_HOST (cho production)
-    // false: Tự động detect localhost hoặc dùng domain hiện tại (cho dev)
-    USE_PRODUCTION: true, // ⚠️ Đặt false khi test local, true khi deploy
-    
-    // 🌐 Custom domain (nếu có domain riêng với SSL)
-    // Đặt domain ở đây và set USE_PRODUCTION = true
-    // Ví dụ: 'https://yourdomain.com' hoặc 'https://api.yourdomain.com'
-    CUSTOM_HOST: null, // ⚠️ Đặt domain nếu có, ví dụ: 'https://yourdomain.com'
-};
-
-// Tính toán BACKEND_URL dựa trên cấu hình
-function getBackendUrl() {
-    // Nếu có CUSTOM_HOST, ưu tiên dùng nó
-    if (HOST_CONFIG.CUSTOM_HOST) {
-        return HOST_CONFIG.CUSTOM_HOST;
-    }
-    
-    // Nếu USE_PRODUCTION = true, dùng PRODUCTION_HOST
-    if (HOST_CONFIG.USE_PRODUCTION) {
-        return HOST_CONFIG.PRODUCTION_HOST;
-    }
-    
-    // Nếu đang chạy trên localhost, dùng DEVELOPMENT_HOST
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-        return HOST_CONFIG.DEVELOPMENT_HOST;
-    }
-    
-    // Mặc định: dùng domain hiện tại
-    return window.location.origin;
-}
 
 const CONFIG = {
     // ===== BACKEND API =====
-    // Tự động sử dụng cấu hình host từ HOST_CONFIG
-    BACKEND_URL: getBackendUrl(),
-    
-    // Expose HOST_CONFIG để dễ debug
-    HOST_CONFIG: HOST_CONFIG,
-    
+    // ⚠️ THAY ĐỔI URL NÀY KHI DEPLOY SANG SERVER KHÁC
+    // Ví dụ: 'http://localhost:8000' hoặc 'https://your-domain.com'
+    BACKEND_URL: 'http://103.77.243.190',
+
     // ===== API KEY4U =====
     KEY4U: {
         API_URL: "https://api.key4u.shop/v1/chat/completions",
@@ -97,16 +80,87 @@ const CONFIG = {
     
     // ===== API ENDPOINTS =====
     ENDPOINTS: {
-        AUTH: '/api/auth.php',
-        ADMIN: '/api/admin.php',
-        CHAT: '/api/chat-real.php',
-        HEALTH: '/api/health.php',
-        DOCUMENTS: '/api/documents.php'
+        AUTH: '/api/auth',
+        AUTH_PHP: '/api/auth.php', // Backward compatibility
+        ADMIN: '/api/admin',
+        ADMIN_PHP: '/api/admin.php', // Backward compatibility
+        CHAT: '/api/chat',
+        CHAT_REAL: '/api/chat-real.php',
+        HEALTH: '/api/health',
+        DOCUMENTS: '/api/documents',
+        DOCUMENTS_PHP: '/api/documents.php', // Backward compatibility
+        MODELS: '/api/models',
+        UPLOAD: '/api/upload',
+        AI_TOOL: '/api/ai-tool',
+        USER_PROFILE: '/api/user/profile',
+        USER_HISTORY: '/api/user/history',
+        LOGOUT: '/api/logout'
+    },
+    
+    // ===== HELPER FUNCTIONS =====
+    // Tạo full URL cho endpoint
+    getUrl: function(endpoint) {
+        // Nếu endpoint đã là full URL, return luôn
+        if (endpoint.startsWith('http://') || endpoint.startsWith('https://')) {
+            return endpoint;
+        }
+        
+        // Nếu endpoint bắt đầu bằng /, ghép với BACKEND_URL
+        if (endpoint.startsWith('/')) {
+            return this.BACKEND_URL + endpoint;
+        }
+        
+        // Nếu là key trong ENDPOINTS, lấy value
+        if (this.ENDPOINTS[endpoint]) {
+            return this.BACKEND_URL + this.ENDPOINTS[endpoint];
+        }
+        
+        // Nếu không, ghép trực tiếp
+        return this.BACKEND_URL + '/' + endpoint;
+    },
+    
+    // Lấy BACKEND_URL với fallback
+    getBackendUrl: function() {
+        return this.BACKEND_URL || window.location.origin;
     }
 };
 
 // Backward compatibility
 CONFIG.YESCALE = CONFIG.KEY4U;
 
+// Helper functions global để dễ sử dụng
+CONFIG.API = {
+    // Tạo full API URL
+    url: function(endpoint) {
+        return CONFIG.getUrl(endpoint);
+    },
+    
+    // Lấy endpoint từ key
+    endpoint: function(key) {
+        return CONFIG.ENDPOINTS[key] || key;
+    },
+    
+    // Tạo full URL với query params
+    urlWithParams: function(endpoint, params) {
+        const baseUrl = CONFIG.getUrl(endpoint);
+        if (!params || Object.keys(params).length === 0) {
+            return baseUrl;
+        }
+        const queryString = new URLSearchParams(params).toString();
+        return baseUrl + '?' + queryString;
+    }
+};
+
 // Export config để sử dụng trong các script khác
 window.CONFIG = CONFIG;
+
+// Backward compatibility - expose BACKEND_URL trực tiếp
+window.BACKEND_URL = CONFIG.getBackendUrl();
+
+// Log để debug (chỉ trong development)
+if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    console.log('⚙️ CONFIG loaded:', {
+        BACKEND_URL: CONFIG.BACKEND_URL,
+        ENDPOINTS: CONFIG.ENDPOINTS
+    });
+}

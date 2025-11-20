@@ -696,12 +696,17 @@
             color: var(--gray-900);
             font-size: 0.875rem;
             transition: var(--transition);
+            width: 100%;
         }
 
         .credit-action input:focus {
             outline: none;
             border-color: var(--primary);
             box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+        
+        .credit-action input:invalid {
+            border-color: var(--danger);
         }
 
         .credit-action .btn {
@@ -904,33 +909,40 @@
     <div id="editCreditsModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Edit Credits</h3>
+                <h3>💰 Cập Nhật Credits</h3>
                 <span class="modal-close" onclick="closeEditCreditsModal()">&times;</span>
             </div>
             <div class="modal-body">
                 <div class="user-info-card">
-                    <p><strong>User:</strong> <span id="editUserInfo"></span></p>
-                    <p><strong>Current Credits:</strong> <span id="currentCredits"></span></p>
+                    <p><strong>👤 User:</strong> <span id="editUserInfo"></span></p>
+                    <p><strong>💵 Credits hiện tại:</strong> <span id="currentCredits" style="color: var(--warning); font-weight: 700; font-size: 1.125rem;"></span></p>
                 </div>
                 
                 <div class="credit-actions">
                     <div class="credit-action">
-                        <label for="addCredits">Add Credits:</label>
-                        <input type="number" id="addCredits" placeholder="Enter credits to add" min="0">
-                        <button onclick="modifyCredits('add')" class="btn btn-success">Add</button>
+                        <label for="addCredits">Thêm Credits:</label>
+                        <input type="number" id="addCredits" placeholder="Nhập số credits muốn thêm" min="1" step="1">
+                        <button onclick="modifyCredits('add')" class="btn btn-success">➕ Thêm</button>
                     </div>
                     
                     <div class="credit-action">
-                        <label for="subtractCredits">Subtract Credits:</label>
-                        <input type="number" id="subtractCredits" placeholder="Enter credits to subtract" min="0">
-                        <button onclick="modifyCredits('subtract')" class="btn btn-warning">Subtract</button>
+                        <label for="subtractCredits">Trừ Credits:</label>
+                        <input type="number" id="subtractCredits" placeholder="Nhập số credits muốn trừ" min="1" step="1">
+                        <button onclick="modifyCredits('subtract')" class="btn btn-warning">➖ Trừ</button>
                     </div>
                     
                     <div class="credit-action">
-                        <label for="setCredits">Set Credits:</label>
-                        <input type="number" id="setCredits" placeholder="Enter new credits amount" min="0">
-                        <button onclick="modifyCredits('set')" class="btn btn-primary">Set</button>
+                        <label for="setCredits">Đặt Credits:</label>
+                        <input type="number" id="setCredits" placeholder="Nhập số credits mới" min="0" step="1">
+                        <button onclick="modifyCredits('set')" class="btn btn-primary">🔧 Đặt</button>
                     </div>
+                </div>
+                
+                <div style="margin-top: 1rem; padding: 0.75rem; background: var(--gray-50); border-radius: var(--radius); border: 1px solid var(--gray-200);">
+                    <p style="margin: 0; font-size: 0.75rem; color: var(--gray-600);">
+                        <strong>💡 Gợi ý:</strong> Bạn có thể thêm, trừ hoặc đặt credits cho user. 
+                        Khi trừ credits, nếu số trừ lớn hơn số hiện có, credits sẽ về 0 (không âm).
+                    </p>
                 </div>
             </div>
         </div>
@@ -978,9 +990,9 @@
     <script src="config.js"></script>
     <script>
         // ===== CONFIGURATION =====
-        // Sử dụng BACKEND_URL từ CONFIG (đã được cấu hình trong config.js)
+        // Sử dụng BACKEND_URL và ENDPOINTS từ CONFIG (đã được cấu hình trong config.js)
         const BACKEND_URL = window.CONFIG?.BACKEND_URL || window.location.origin;
-        const API = BACKEND_URL + '/api/admin';
+        const API = window.CONFIG?.API?.url('ADMIN') || BACKEND_URL + window.CONFIG?.ENDPOINTS?.ADMIN || BACKEND_URL + '/api/admin';
         
         // ===== AUTHENTICATION =====
         function getToken() {
@@ -1343,8 +1355,19 @@
             document.getElementById('currentCredits').textContent = currentCredits.toLocaleString();
             document.getElementById('editCreditsModal').style.display = 'block';
             
-            // Store current user ID for modification
+            // Store current user ID and credits for modification
             window.currentEditUserId = userId;
+            window.currentEditCredits = currentCredits;
+            
+            // Clear form
+            document.getElementById('addCredits').value = '';
+            document.getElementById('subtractCredits').value = '';
+            document.getElementById('setCredits').value = '';
+            
+            // Focus on first input
+            setTimeout(() => {
+                document.getElementById('addCredits').focus();
+            }, 100);
         }
         
         function closeEditCreditsModal() {
@@ -1353,33 +1376,95 @@
             document.getElementById('addCredits').value = '';
             document.getElementById('subtractCredits').value = '';
             document.getElementById('setCredits').value = '';
+            // Clear stored data
+            window.currentEditUserId = null;
+            window.currentEditCredits = null;
         }
         
         async function modifyCredits(action) {
             const userId = window.currentEditUserId;
-            if (!userId) return;
+            if (!userId) {
+                alert('Lỗi: Không tìm thấy user ID!');
+                return;
+            }
             
             let amount = 0;
             let operation = '';
+            let inputElement = null;
+            let buttonElement = null;
             
             switch(action) {
                 case 'add':
-                    amount = parseInt(document.getElementById('addCredits').value);
+                    inputElement = document.getElementById('addCredits');
+                    buttonElement = inputElement?.nextElementSibling;
+                    amount = parseInt(inputElement?.value);
                     operation = 'add';
                     break;
                 case 'subtract':
-                    amount = parseInt(document.getElementById('subtractCredits').value);
+                    inputElement = document.getElementById('subtractCredits');
+                    buttonElement = inputElement?.nextElementSibling;
+                    amount = parseInt(inputElement?.value);
                     operation = 'subtract';
                     break;
                 case 'set':
-                    amount = parseInt(document.getElementById('setCredits').value);
+                    inputElement = document.getElementById('setCredits');
+                    buttonElement = inputElement?.nextElementSibling;
+                    amount = parseInt(inputElement?.value);
                     operation = 'set';
                     break;
             }
             
-            if (isNaN(amount) || amount < 0) {
-                alert('Please enter a valid credits amount!');
+            // Validate input
+            if (!inputElement || !inputElement.value.trim()) {
+                alert('Vui lòng nhập số credits!');
+                inputElement?.focus();
                 return;
+            }
+            
+            if (isNaN(amount) || amount < 0) {
+                alert('Vui lòng nhập số credits hợp lệ (số nguyên dương)!');
+                inputElement?.focus();
+                return;
+            }
+            
+            if (amount === 0 && operation !== 'set') {
+                alert('Số credits phải lớn hơn 0!');
+                inputElement?.focus();
+                return;
+            }
+            
+            // Get current credits for confirmation
+            const currentCreditsText = document.getElementById('currentCredits').textContent;
+            const currentCredits = parseInt(currentCreditsText.replace(/[^\d]/g, '')) || 0;
+            let newCredits = currentCredits;
+            
+            switch(operation) {
+                case 'add':
+                    newCredits = currentCredits + amount;
+                    break;
+                case 'subtract':
+                    if (amount > currentCredits) {
+                        if (!confirm(`Số credits hiện tại là ${currentCredits.toLocaleString()}. Bạn muốn trừ ${amount.toLocaleString()}? Số credits sẽ thành ${Math.max(0, currentCredits - amount).toLocaleString()} (không âm).`)) {
+                            return;
+                        }
+                    }
+                    newCredits = Math.max(0, currentCredits - amount);
+                    break;
+                case 'set':
+                    if (amount !== currentCredits && !confirm(`Bạn có chắc muốn đặt credits từ ${currentCredits.toLocaleString()} thành ${amount.toLocaleString()}?`)) {
+                        return;
+                    }
+                    newCredits = amount;
+                    break;
+            }
+            
+            // Show loading on button
+            const originalButton = buttonElement;
+            let originalText = '';
+            if (originalButton) {
+                originalText = originalButton.innerHTML;
+                originalButton.disabled = true;
+                originalButton.innerHTML = '<span>⏳</span> Đang cập nhật...';
             }
             
             try {
@@ -1393,15 +1478,38 @@
                 });
                 
                 if (response.success) {
-                    alert('Credits updated successfully!');
+                    // Show success message
+                    showMessage('success', `✅ Cập nhật credits thành công! Từ ${currentCredits.toLocaleString()} thành ${response.data?.new_credits?.toLocaleString() || newCredits.toLocaleString()}.`);
                     closeEditCreditsModal();
                     loadUsers(); // Reload users list
                 } else {
-                    alert('Error: ' + response.message);
+                    alert('Lỗi: ' + (response.message || 'Không thể cập nhật credits'));
                 }
             } catch (error) {
-                alert('Error: ' + error.message);
+                alert('Lỗi: ' + error.message);
+            } finally {
+                // Restore button
+                if (originalButton && originalText) {
+                    originalButton.disabled = false;
+                    originalButton.innerHTML = originalText;
+                }
             }
+        }
+        
+        // Helper function to show messages
+        function showMessage(type, message) {
+            const container = document.getElementById('users-container');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message message-${type}`;
+            messageDiv.textContent = message;
+            container.insertBefore(messageDiv, container.firstChild);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (messageDiv.parentNode) {
+                    messageDiv.parentNode.removeChild(messageDiv);
+                }
+            }, 5000);
         }
         
         function logout() {

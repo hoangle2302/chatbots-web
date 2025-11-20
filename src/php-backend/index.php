@@ -274,11 +274,33 @@ function handleRegister($db) {
     }
     
     $userService = new UserService($db);
+    $auth = new AuthMiddleware();
     
     try {
         $user = $userService->register($input['username'], $input['password']);
         if ($user) {
-            sendSuccess(['message' => 'User registered successfully']);
+            // Tạo session
+            session_start();
+            $_SESSION['user_id'] = $user->id;
+            $_SESSION['username'] = $user->username;
+            
+            // Generate JWT token for automatic login
+            $token = $auth->generateToken(
+                $user->id,
+                $user->username,
+                $user->role ?? 'user'
+            );
+            
+            sendSuccess([
+                'message' => 'User registered successfully',
+                'token' => $token,
+                'user' => [
+                    'id' => $user->id,
+                    'username' => $user->username,
+                    'role' => $user->role ?? 'user'
+                ],
+                'expires_in' => 24 * 60 * 60 // 24 hours in seconds
+            ]);
         } else {
             sendError('Registration failed', 400);
         }

@@ -5,9 +5,9 @@
 
 class ModelLoader {
     constructor() {
-        // Sử dụng BACKEND_URL từ CONFIG (đã được cấu hình trong config.js)
+        // Sử dụng BACKEND_URL và ENDPOINTS từ CONFIG (đã được cấu hình trong config.js)
         const BACKEND_URL = window.CONFIG?.BACKEND_URL || window.location.origin;
-        this.apiUrl = BACKEND_URL + '/api/models.php';
+        this.apiUrl = window.CONFIG?.API?.url('MODELS') || BACKEND_URL + (window.CONFIG?.ENDPOINTS?.MODELS || '/api/models');
         this.models = null;
         this.defaultModel = 'qwen3-235b-a22b';
     }
