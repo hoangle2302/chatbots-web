@@ -3,6 +3,13 @@
  * Simple Router for PHP Development Server
  */
 
+// Log that router.php is being executed
+error_log("=== ROUTER.PHP EXECUTED ===");
+error_log("Router - Script: " . __FILE__);
+error_log("Router - REQUEST_URI: " . ($_SERVER['REQUEST_URI'] ?? 'NOT SET'));
+error_log("Router - SCRIPT_NAME: " . ($_SERVER['SCRIPT_NAME'] ?? 'NOT SET'));
+error_log("Router - SCRIPT_FILENAME: " . ($_SERVER['SCRIPT_FILENAME'] ?? 'NOT SET'));
+
 // Set CORS headers
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
@@ -16,17 +23,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 // Get request URI and method
-$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+// Try multiple sources for REQUEST_URI to handle different server configurations
+$requestUri = $_SERVER['REQUEST_URI'] ?? $_SERVER['REDIRECT_URL'] ?? '/';
+$uri = parse_url($requestUri, PHP_URL_PATH);
 $method = $_SERVER['REQUEST_METHOD'];
 
 // Remove .php extension from URI for routing (backward compatibility)
 $uri = preg_replace('/\.php$/', '', $uri);
 
-// Log request
-error_log("Request: $method $uri");
+// Normalize URI (remove trailing slash except for root)
+$uri = rtrim($uri, '/') ?: '/';
+
+// Log request with full debug info
+error_log("Router - REQUEST_URI: " . ($_SERVER['REQUEST_URI'] ?? 'NOT SET'));
+error_log("Router - Parsed URI: $uri");
+error_log("Router - Method: $method");
 
 // Route to appropriate file with error handling
 try {
+    // Test endpoint to verify router.php is being called
+    if ($uri === '/api/test-router') {
+        error_log("Router - Test endpoint called!");
+        http_response_code(200);
+        echo json_encode([
+            'success' => true,
+            'message' => 'Router.php is working!',
+            'uri' => $uri,
+            'request_uri' => $requestUri,
+            'method' => $method,
+            'server_vars' => [
+                'REQUEST_URI' => $_SERVER['REQUEST_URI'] ?? 'NOT SET',
+                'SCRIPT_NAME' => $_SERVER['SCRIPT_NAME'] ?? 'NOT SET',
+                'SCRIPT_FILENAME' => $_SERVER['SCRIPT_FILENAME'] ?? 'NOT SET'
+            ]
+        ]);
+        exit;
+    }
+    
     if ($uri === '/api/health' || $uri === '/health') {
         if (file_exists(__DIR__ . '/api/health.php')) {
             require __DIR__ . '/api/health.php';
@@ -86,12 +119,18 @@ if ($uri === '/api/ai-tool') {
 
 // Route /api/user/* endpoints to index.php
 if (strpos($uri, '/api/user/') === 0) {
+    error_log("Router - Routing to index.php for: $uri");
+    // Ensure REQUEST_URI is preserved for index.php
+    $_SERVER['REQUEST_URI'] = $requestUri;
     require __DIR__ . '/index.php';
     exit;
 }
 
 // Route /api/history to index.php
 if ($uri === '/api/history') {
+    error_log("Router - Routing to index.php for: $uri");
+    // Ensure REQUEST_URI is preserved for index.php
+    $_SERVER['REQUEST_URI'] = $requestUri;
     require __DIR__ . '/index.php';
     exit;
 }
@@ -108,15 +147,16 @@ if ($uri === '/' || $uri === '') {
     exit;
 }
 
-// Fallback to index.php for other routes
-if (file_exists(__DIR__ . '/index.php')) {
-    require __DIR__ . '/index.php';
-} else {
-    error_log("Critical: index.php not found!");
-    http_response_code(500);
-    echo json_encode(['success' => false, 'error' => 'Server configuration error']);
-    exit;
-}
+// Fallback: if no route matched, return 404
+error_log("Router - No route matched for: $uri");
+http_response_code(404);
+echo json_encode([
+    'success' => false,
+    'error' => 'Endpoint not found',
+    'path' => $uri,
+    'method' => $method
+]);
+exit;
 } catch (Exception $e) {
     error_log("Router error: " . $e->getMessage());
     http_response_code(500);
